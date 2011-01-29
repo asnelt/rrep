@@ -24,7 +24,7 @@
 #include <fcntl.h>
 
 #define PROGRAM_NAME "rrep"
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 
 #ifndef FALSE
 #define FALSE (0)
@@ -37,9 +37,15 @@
 
 
 /* pointer to buffer */
-static char *buffer = NULL;
+char *buffer = NULL;
 /* size of  buffer */
-static size_t buffer_size = 0;
+size_t buffer_size = 0;
+
+/* pointer to buffer for tmpfile replacement */
+char *file_buffer = NULL;
+/* size of file_buffer */
+size_t file_buffer_size = 0;
+
 
 void print_version()
 {
@@ -94,7 +100,7 @@ int read_line(FILE *fp, char **line, size_t *line_len, const char *file_name)
         nr = fread(buffer, sizeof(char), buffer_size-1, fp);
         if (nr != buffer_size-1 && ferror(fp))
         {
-            fprintf(stderr, "%s: could not read file %s.\n", PROGRAM_NAME, file_name);
+            fprintf(stderr, "%s: Could not read file %s.\n", PROGRAM_NAME, file_name);
             fclose(fp);
             return -2;
         }
@@ -139,7 +145,7 @@ int read_line(FILE *fp, char **line, size_t *line_len, const char *file_name)
                 nr = fread(buffer+search_pos, sizeof(char), buffer_size-search_pos-1, fp);
                 if (nr != buffer_size-search_pos-1 && ferror(fp))
                 {
-                    fprintf(stderr, "%s: could not read file %s.\n", PROGRAM_NAME, file_name);
+                    fprintf(stderr, "%s: Could not read file %s.\n", PROGRAM_NAME, file_name);
                     fclose(fp);
                     return -2;
                 }
@@ -152,7 +158,7 @@ int read_line(FILE *fp, char **line, size_t *line_len, const char *file_name)
                 tmp = realloc(buffer, buffer_size+INIT_BUFFER_SIZE);
                 if (tmp == NULL)
                 {
-                    fprintf(stderr, "%s: could not reallocate memory for buffer.\n", PROGRAM_NAME);
+                    fprintf(stderr, "%s: Could not reallocate memory for buffer.\n", PROGRAM_NAME);
                     fclose(fp);
                     return -2;
                 }
@@ -163,7 +169,7 @@ int read_line(FILE *fp, char **line, size_t *line_len, const char *file_name)
                 nr = fread(buffer+search_pos, sizeof(char), INIT_BUFFER_SIZE, fp);
                 if (nr != INIT_BUFFER_SIZE && ferror(fp))
                 {
-                    fprintf(stderr, "%s: could not read file %s.\n", PROGRAM_NAME, file_name);
+                    fprintf(stderr, "%s: Could not read file %s.\n", PROGRAM_NAME, file_name);
                     fclose(fp);
                     return -2;
                 }
@@ -188,16 +194,58 @@ int read_line(FILE *fp, char **line, size_t *line_len, const char *file_name)
     return 0;
 }
 
+int write_file_buffer(const char *string, const size_t string_len, char **pos)
+{
+    char *tmp;
+
+    /* check if remaining file_buffer space is sufficient */
+    while (file_buffer_size-(*pos-file_buffer) < string_len)
+    {
+        /* reallocate memory */
+        tmp = realloc(file_buffer, file_buffer_size+INIT_BUFFER_SIZE);
+        if (tmp == NULL)
+        {
+            fprintf(stderr, "%s: Could not reallocate memory for file_buffer.\n", PROGRAM_NAME);
+            return 1;
+        }
+        *pos = tmp + (*pos - file_buffer);
+        file_buffer = tmp;
+        file_buffer_size += INIT_BUFFER_SIZE;
+    }
+    /* copy string to file_buffer and increase pos */
+    memcpy(*pos, string, string_len*sizeof(char));
+    *pos += string_len;
+
+    return 0;
+}
+
 /*
     Copies in to out and replaces the string string1 by string2.
 */
-int replace_string(FILE *in, FILE *out, const char *string1, const char *string2, const char *file_name)
+int replace_string(FILE *in, FILE *out, const char *string1, const char *string2, const char *file_name, size_t *file_len)
 {
     size_t string1_len, line_len;
-    char *line, *start, *next;
+    char *line, *start, *next, *pos;
     int rr; /* return value of read_line */
 
     string1_len = strlen(string1);
+
+    if (out == NULL)
+    {
+        /* try to use file_buffer instead of tmpfile */
+        if (file_buffer == NULL)
+        {
+            file_buffer = (char*)malloc(INIT_BUFFER_SIZE * sizeof(char));
+            if (file_buffer == NULL)
+            {
+                fprintf(stderr, "%s: Could not allocate memory for file_buffer.\n", PROGRAM_NAME);
+                return 1;
+            }
+            buffer_size = INIT_BUFFER_SIZE;
+        }
+        /* current position in file_buffer */
+        pos = file_buffer;
+    }
 
     line = NULL;
     /* copy in to out with replaced string */
@@ -208,18 +256,38 @@ int replace_string(FILE *in, FILE *out, const char *string1, const char *string2
         while (next = strstr(start, string1))
         {
             *next = '\0';
-            fputs(start, out);
+            if (out == NULL)
+            {
+                if (write_file_buffer(start, strlen(start), &pos) != 0)
+                    return 1;
+                if (write_file_buffer(string2, strlen(string2), &pos) != 0)
+                    return 1;
+            }
+            else
+            {
+                fputs(start, out);
+                fputs(string2, out);
+            }
             start = next + string1_len;
-            fputs(string2, out);
         }
-        /* flush rest of line into out */
-        fwrite(start, sizeof(char), line_len-(start-line), out);
+        /* flush rest of line into out or file_buffer */
+        if (out == NULL)
+        {
+            if (write_file_buffer(start, line_len-(start-line), &pos) != 0)
+                return 1;
+        }
+        else
+            fwrite(start, sizeof(char), line_len-(start-line), out);
     }
+    /* set file_len if we are using file_buffer */
+    if (out == NULL && file_len != NULL)
+        *file_len = pos - file_buffer;
 
+    /* end of file reached? */
     if (rr == -1)
-        return FALSE;
+        return 0;
     else
-        return TRUE;
+        return 1;
 }
 
 /*
@@ -229,15 +297,15 @@ int process_file(const char *file_name, const char *string1, const char *string2
 {
     FILE *fp, *tmp;
     char *line, *start, *next;
-    size_t line_len;
+    size_t line_len, file_len;
     int rr; /* return value of read_line */
     int found_flag;
 
     fp = fopen(file_name, "r");
     if (fp == NULL)
     {
-        fprintf(stderr, "%s: could not open file '%s' for reading.\n", PROGRAM_NAME, file_name);
-        return TRUE;
+        fprintf(stderr, "%s: Could not open file '%s' for reading.\n", PROGRAM_NAME, file_name);
+        return 1;
     }
 
     /* first check whether file file_name contains string1 at all */
@@ -251,60 +319,70 @@ int process_file(const char *file_name, const char *string1, const char *string2
     if (rr < -1)
     {
         fclose(fp);
-        return TRUE;
+        return 1;
     }
 
     if (found_flag)
     {
         rewind(fp);
         tmp = tmpfile();
-        if (tmp == NULL)
-        {
-            fprintf(stderr, "%s: could not create a temporary file.\n", PROGRAM_NAME);
-            fclose(fp);
-            return TRUE;
-        }
-
-        /* copy f to tmp with replaced string */
-        if (replace_string(fp, tmp, string1, string2, file_name))
+        /* copy f to tmp or file_buffer with replaced string */
+        if (replace_string(fp, tmp, string1, string2, file_name, &file_len))
         {
             fclose(fp);
-            fclose(tmp);
-            return TRUE;
+            if (tmp != NULL)
+                fclose(tmp);
+            return 1;
         }
 
-        /* copy tmp back to f */
-        rewind(tmp);
+        /* copy from tmp or file_buffer back to f */
         fp = freopen(file_name, "w", fp);
         if (fp == NULL)
         {
-            fprintf(stderr, "%s: could not open file '%s' for writing.\n", PROGRAM_NAME, file_name);
-            fclose(tmp);
-            return TRUE;
+            fprintf(stderr, "%s: Could not open file '%s' for writing.\n", PROGRAM_NAME, file_name);
+            if (tmp != NULL)
+                fclose(tmp);
+            return 1;
         }
-        while (!feof(tmp))
+        if (tmp == NULL)
         {
-            line_len = fread(buffer, sizeof(char), buffer_size, tmp);
-            if (line_len != buffer_size && ferror(tmp))
+            /* use file_buffer */
+            if (fwrite(file_buffer, sizeof(char), file_len, fp) != file_len)
             {
-                fprintf(stderr, "%s: could not read temporary file.\n", PROGRAM_NAME);
+                fprintf(stderr, "%s: Could not overwrite file '%s'.\n", PROGRAM_NAME, file_name);
                 fclose(fp);
-                fclose(tmp);
-                return TRUE;
-            }
-            if (fwrite(buffer, sizeof(char), line_len, fp) != line_len)
-            {
-                fprintf(stderr, "%s: could not overwrite file '%s'.\n", PROGRAM_NAME, file_name);
-                fclose(fp);
-                fclose(tmp);
-                return TRUE;
+                return 1;
             }
         }
-        fclose(tmp);
+        else
+        {
+            /* use tmp */
+            rewind(tmp);
+            while (!feof(tmp))
+            {
+                line_len = fread(buffer, sizeof(char), buffer_size, tmp);
+                if (line_len != buffer_size && ferror(tmp))
+                {
+                    fprintf(stderr, "%s: Could not read temporary file.\n", PROGRAM_NAME);
+                    fclose(fp);
+                    fclose(tmp);
+                    return 1;
+                }
+                if (fwrite(buffer, sizeof(char), line_len, fp) != line_len)
+                {
+                    fprintf(stderr, "%s: Could not overwrite file '%s'.\n", PROGRAM_NAME, file_name);
+                    fclose(fp);
+                    fclose(tmp);
+                    return 1;
+                }
+            }
+            fclose(tmp);
+        }
+        printf("String found and replaced in file '%s'.\n", file_name);
     }
     fclose(fp);
 
-    return FALSE;
+    return 0;
 }
 
 /*
@@ -320,8 +398,8 @@ int process_dir(const char *string1, const char *string2)
     d = opendir(".");
     if (d == NULL)
     {
-        fprintf(stderr, "%s: could not open directory.\n", PROGRAM_NAME);
-        return TRUE;
+        fprintf(stderr, "%s: Could not open directory.\n", PROGRAM_NAME);
+        return 1;
     }
 
     while (entry = readdir(d))
@@ -339,7 +417,7 @@ int process_dir(const char *string1, const char *string2)
                 }
                 else
                 {
-                    fprintf(stderr, "%s: could not process directory '%s'.\n", PROGRAM_NAME, entry->d_name);
+                    fprintf(stderr, "%s: Could not process directory '%s'.\n", PROGRAM_NAME, entry->d_name);
                     failure_flag = TRUE;
                 }
             }
@@ -390,7 +468,7 @@ int main(int argc, char** argv)
     buffer = (char*)malloc(INIT_BUFFER_SIZE * sizeof(char));
     if (buffer == NULL)
     {
-        fprintf(stderr, "%s: could not allocate memory for buffer.\n", PROGRAM_NAME);
+        fprintf(stderr, "%s: Could not allocate memory for buffer.\n", PROGRAM_NAME);
         return EXIT_FAILURE;
     }
     buffer_size = INIT_BUFFER_SIZE;
@@ -400,7 +478,7 @@ int main(int argc, char** argv)
     if (argc < 4 || (argc == 4 && !strcmp(argv[3], "-")))
     {
         /* default input from stdin and output stdout */
-        if (replace_string(stdin, stdout, string1, string2, "stdin"))
+        if (replace_string(stdin, stdout, string1, string2, "stdin", NULL))
         {
             failure_flag = TRUE;
         }
@@ -412,7 +490,7 @@ int main(int argc, char** argv)
         omit_dir_flag = (wd < 0);
         if (omit_dir_flag)
         {
-            fprintf(stderr, "%s: could not save current working directory.\n", PROGRAM_NAME);
+            fprintf(stderr, "%s: Could not save current working directory.\n", PROGRAM_NAME);
             failure_flag = TRUE;
         }
 
@@ -421,7 +499,7 @@ int main(int argc, char** argv)
         {
             if (lstat(argv[i], &st) == -1)
             {
-                fprintf(stderr, "%s: could not process argument '%s'.\n", PROGRAM_NAME, argv[i]);
+                fprintf(stderr, "%s: Could not process argument '%s'.\n", PROGRAM_NAME, argv[i]);
                 failure_flag = TRUE;
             }
 
@@ -429,7 +507,7 @@ int main(int argc, char** argv)
             {
                 if (omit_dir_flag)
                 {
-                    printf("%s: omitting directory '%s'.\n", PROGRAM_NAME, argv[i]);
+                    printf("%s: Omitting directory '%s'.\n", PROGRAM_NAME, argv[i]);
                     continue;
                 }
                 if (!chdir(argv[i]))
@@ -440,7 +518,7 @@ int main(int argc, char** argv)
                 }
                 else
                 {
-                    fprintf(stderr, "%s: could not process directory '%s'.\n", PROGRAM_NAME, argv[i]);
+                    fprintf(stderr, "%s: Could not process directory '%s'.\n", PROGRAM_NAME, argv[i]);
                     failure_flag = TRUE;
                 }
             }
@@ -452,9 +530,12 @@ int main(int argc, char** argv)
 
     free(buffer);
     buffer = NULL;
+    free(file_buffer);
+    file_buffer = NULL;
 
     if (failure_flag)
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
 }
+
