@@ -1,0 +1,9 @@
+This is rrep, a recursive string replacement utility. It replaces its first
+command line argument by its second argument in the file and directory list
+that starts with its third argument. Directories are processed recursively.
+
+Example: rrep 'hello world' 'Hello, World!' menu.h main.c
+
+rrep is yet another rpl-type string replacement utility. Its goals are ease of
+use, robustness and wide deployability. The only dependency is the standard C
+library. GNU extensions are not required.

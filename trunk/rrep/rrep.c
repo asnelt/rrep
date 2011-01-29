@@ -19,12 +19,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
 #define PROGRAM_NAME "rrep"
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 
 #ifndef FALSE
 #define FALSE (0)
@@ -33,6 +34,7 @@
 #define TRUE (1)
 #endif
 
+/* initial size of the buffer for reading lines */
 #define INIT_BUFFER_SIZE (4096)
 
 
@@ -253,7 +255,7 @@ int replace_string(FILE *in, FILE *out, const char *string1, const char *string2
     {
         start = line;
         /* search for next string1 */
-        while (next = strstr(start, string1))
+        while ((next = strstr(start, string1)))
         {
             *next = '\0';
             if (out == NULL)
@@ -296,7 +298,7 @@ int replace_string(FILE *in, FILE *out, const char *string1, const char *string2
 int process_file(const char *file_name, const char *string1, const char *string2)
 {
     FILE *fp, *tmp;
-    char *line, *start, *next;
+    char *line;
     size_t line_len, file_len;
     int rr; /* return value of read_line */
     int found_flag;
@@ -378,7 +380,7 @@ int process_file(const char *file_name, const char *string1, const char *string2
             }
             fclose(tmp);
         }
-        printf("String found and replaced in file '%s'.\n", file_name);
+        printf("Replaced in '%s'.\n", file_name);
     }
     fclose(fp);
 
@@ -402,7 +404,7 @@ int process_dir(const char *string1, const char *string2)
         return 1;
     }
 
-    while (entry = readdir(d))
+    while ((entry = readdir(d)))
     {
         if (entry->d_type == DT_REG) /* regular file */
             failure_flag |= process_file(entry->d_name, string1, string2);
@@ -538,4 +540,3 @@ int main(int argc, char** argv)
 
     return EXIT_SUCCESS;
 }
-
