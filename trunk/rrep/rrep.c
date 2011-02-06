@@ -26,7 +26,7 @@
 #include <regex.h>
 
 #define PROGRAM_NAME "rrep"
-#define VERSION "1.1.0"
+#define VERSION "1.1.1"
 
 #define FALSE (0)
 #define TRUE (1)
@@ -34,591 +34,660 @@
 #define FAILURE (1)
 #define END_REACHED (2)
 
-/* initial size of the buffer for reading lines */
+/* Initial size of the buffer for reading lines.  */
 #define INIT_BUFFER_SIZE (4096)
 
 
-/* pointer to buffer */
+/* Pointer to buffer.  */
 char *buffer = NULL;
-/* size of  buffer */
+/* Size of  buffer.  */
 size_t buffer_size = 0;
 
-/* pointer to buffer for tmpfile replacement */
+/* Pointer to buffer for tmpfile replacement.  */
 char *file_buffer = NULL;
-/* size of file_buffer */
+/* Size of file_buffer.  */
 size_t file_buffer_size = 0;
 
 
-void print_version()
+void
+print_version ()
 {
-    printf("%s %s\n\n", PROGRAM_NAME, VERSION);
-    printf("Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>\n");
-    printf("License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
-    printf("This is free software: you are free to change and redistribute it.\n");
-    printf("There is NO WARRANTY, to the extent permitted by law.\n\n");
+  printf ("%s %s\n\n", PROGRAM_NAME, VERSION);
+  printf ("Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>\n");
+  printf ("License GPLv3+: GNU GPL version 3 or later");
+  printf (" <http://gnu.org/licenses/gpl.html>\n");
+  printf ("This is free software: you are free to change and");
+  printf (" redistribute it.\n");
+  printf ("There is NO WARRANTY, to the extent permitted by law.\n\n");
 }
 
-void print_usage()
+void
+print_usage ()
 {
-    printf("Usage: %s PATTERN STRING [FILE]...\n", PROGRAM_NAME);
+  printf ("Usage: %s PATTERN STRING [FILE]...\n", PROGRAM_NAME);
 }
 
-void print_help()
+void
+print_help ()
 {
-    print_usage();
-    printf("Replace PATTERN by STRING in each FILE or standard input.\n");
-    printf("PATTERN is a basic regular expression (BRE).\n");
-    printf("Example: %s 'hello world' 'Hello, World!' menu.h main.c\n\n", PROGRAM_NAME);
-    printf("Options:\n");
-    printf("  -v, --version  print version information and exit\n");
-    printf("  -h, --help     display this help and exit\n\n");
-    printf("If FILE is a directory, then the complete directory tree of FILE will be\n");
-    printf("processed. With no FILE, or when FILE is -, read standard input.\n");
-    printf("Exit status is %d if any error occurs, %d otherwise.\n", EXIT_FAILURE, EXIT_SUCCESS);
+  print_usage ();
+  printf ("Replace PATTERN by STRING in each FILE or standard");
+  printf (" input.\n");
+  printf ("PATTERN is a basic regular expression (BRE).\n");
+  printf ("Example: %s 'hello world' 'Hello, World!' menu.h",
+	  PROGRAM_NAME);
+  printf (" main.c\n\n");
+  printf ("Options:\n");
+  printf ("  -v, --version  print version information and exit\n");
+  printf ("  -h, --help     display this help and exit\n\n");
+  printf ("If FILE is a directory, then the complete directory tree");
+  printf (" of FILE will be\n");
+  printf ("processed. With no FILE, or when FILE is -, read standard");
+  printf (" input.\n");
+  printf ("Exit status is %d if any error occurs, %d otherwise.\n",
+	  EXIT_FAILURE, EXIT_SUCCESS);
 }
 
-/*
-    Prints a regerror error message.
-*/
-void print_regerror(int errcode, regex_t *compiled)
+/* Prints a regerror error message.  */
+void
+print_regerror (int errcode, regex_t *compiled)
 {
-    size_t length = regerror(errcode, compiled, NULL, 0);
-    char *message = malloc(length);
-    regerror(errcode, compiled, message, length);
-    fprintf(stderr, "%s: %s\n", PROGRAM_NAME, message);
-    free(message);
+  size_t len = regerror (errcode, compiled, NULL, 0);
+  char *message = malloc (len);
+  regerror (errcode, compiled, message, len);
+  fprintf (stderr, "%s: %s\n", PROGRAM_NAME, message);
+  free (message);
 }
 
-/*
-    Read in a buffered line from fp. The line starts at *line and has length
-    *line_len. Line delimiters are '\n' and '\0'. If a line could be placed at
-    the line pointer, SUCCESS is returned. Otherwise, if the end of file was
-    reached END_REACHED is returned or if an error occurred FAILURE is
-    returned.
-*/
-int read_line(FILE *fp, char **line, size_t *line_len, const char *file_name)
+/* Read in a buffered line from fp. The line starts at *line and has
+   length *line_len. Line delimiters are '\n' and '\0'. If a line could
+   be placed at the line pointer, SUCCESS is returned. Otherwise, if
+   the end of file was reached END_REACHED is returned or if an error
+   occurred FAILURE is returned.  */
+int
+read_line (FILE *fp, char **line, size_t *line_len,
+	   const char *file_name)
 {
-    static size_t start = 0; /* start of line */
-    static size_t search_pos = 1; /* search position for end of line */
-    static size_t buffer_fill = 0; /* number of read characters in buffer */
-    static char null_replace = '\0'; /* character buffer for string termination */
-    char *tmp;
-    size_t nr; /* number of characters read by fread */
-    int i, search_flag;
+  static size_t start = 0; /* Start of line.  */
+  static size_t search_pos = 1; /* Search position for end of line.  */
+  static size_t buffer_fill = 0; /* Number of read characters in
+				    buffer.  */
+  static char null_replace = '\0'; /* Character buffer for string
+				      termination.  */
+  char *tmp;
+  size_t nr; /* Number of characters read by fread.  */
+  int i, search_flag;
 
-    *line_len = 0;
-    if (*line == NULL)
+  *line_len = 0;
+  if (*line == NULL)
     {
-        /* new file */
-        start = 0;
-        search_pos = 1;
-        buffer_fill = 0;
-        /* fill complete buffer */
-        nr = fread(buffer, sizeof(char), buffer_size-1, fp);
-        if (nr != buffer_size-1 && ferror(fp))
+      /* New file.  */
+      start = 0;
+      search_pos = 1;
+      buffer_fill = 0;
+      /* Fill complete buffer.  */
+      nr = fread (buffer, sizeof (char), buffer_size-1, fp);
+      if (nr != buffer_size-1 && ferror (fp))
         {
-            fprintf(stderr, "%s: Could not read file %s.\n", PROGRAM_NAME, file_name);
-            fclose(fp);
-            return FAILURE;
+	  fprintf (stderr, "%s: Could not read file %s.\n",
+		   PROGRAM_NAME, file_name);
+	  fclose (fp);
+	  return FAILURE;
         }
-        buffer_fill = nr;
+      buffer_fill = nr;
     }
-    else if (feof(fp) && search_pos >= buffer_fill)
+  else if (feof (fp) && search_pos >= buffer_fill)
     {
-        /* reset static variables and signal eof */
-        *line = NULL;
-        start = 0;
-        search_pos = 1;
-        buffer_fill = 0;
-        null_replace = '\0';
-        return END_REACHED;
+      /* Reset static variables and signal eof.  */
+      *line = NULL;
+      start = 0;
+      search_pos = 1;
+      buffer_fill = 0;
+      null_replace = '\0';
+      return END_REACHED;
     }
-    else
+  else
     {
-        /* restore character after newline and set start to it */
-        *(buffer+search_pos) = null_replace;
-        start = search_pos;
-        search_pos++;
+      /* Restore character after newline and set start to it.  */
+      *(buffer+search_pos) = null_replace;
+      start = search_pos;
+      search_pos++;
     }
 
-    /* search for end of line */
-    search_flag = TRUE;
-    while (search_flag)
+  /* Search for end of line.  */
+  search_flag = TRUE;
+  while (search_flag)
     {
-        while (search_pos < buffer_fill && *(buffer+search_pos-1) != '\n' && *(buffer+search_pos-1) != '\0')
-            search_pos++;
+      while (search_pos < buffer_fill && *(buffer+search_pos-1) != '\n'
+	     && *(buffer+search_pos-1) != '\0')
+	search_pos++;
 
-        if (search_pos >= buffer_fill && !feof(fp))
+      if (search_pos >= buffer_fill && !feof (fp))
         {
-            /* end of buffer reached */
-            if (start > 0)
+	  /* End of buffer reached.  */
+	  if (start > 0)
             {
-                /* let line start at the beginning of buffer */
-                for (i = 0; i < buffer_fill-start; i++)
-                    *(buffer+i) = *(buffer+start+i);
-                search_pos -= start;
+	      /* Let line start at the beginning of buffer.  */
+	      for (i = 0; i < buffer_fill-start; i++)
+		*(buffer+i) = *(buffer+start+i);
+	      search_pos -= start;
 
-                /* fill rest of buffer */
-                nr = fread(buffer+search_pos, sizeof(char), buffer_size-search_pos-1, fp);
-                if (nr != buffer_size-search_pos-1 && ferror(fp))
+	      /* Fill rest of buffer.  */
+	      nr = fread (buffer+search_pos, sizeof (char),
+			  buffer_size-search_pos-1, fp);
+	      if (nr != buffer_size-search_pos-1 && ferror (fp))
                 {
-                    fprintf(stderr, "%s: Could not read file %s.\n", PROGRAM_NAME, file_name);
-                    fclose(fp);
-                    return FAILURE;
+		  fprintf (stderr, "%s: Could not read file %s.\n",
+			   PROGRAM_NAME, file_name);
+		  fclose (fp);
+		  return FAILURE;
                 }
-                buffer_fill += nr - start;
-                start = 0;
+	      buffer_fill += nr - start;
+	      start = 0;
             }
-            else
+	  else
             {
-                /* reallocate memory */
-                tmp = realloc(buffer, buffer_size+INIT_BUFFER_SIZE);
-                if (tmp == NULL)
+	      /* Reallocate memory.  */
+	      tmp = realloc (buffer, buffer_size+INIT_BUFFER_SIZE);
+	      if (tmp == NULL)
                 {
-                    fprintf(stderr, "%s: Could not reallocate memory for buffer while processing '%s'.\n", PROGRAM_NAME, file_name);
-                    fclose(fp);
-                    return FAILURE;
+		  fprintf (stderr, "%s: Could not reallocate memory",
+			   PROGRAM_NAME);
+		  fprintf (stderr, " for buffer while processing");
+		  fprintf (stderr, " '%s'.\n", file_name);
+		  fclose (fp);
+		  return FAILURE;
                 }
-                buffer = tmp;
-                buffer_size += INIT_BUFFER_SIZE;
+	      buffer = tmp;
+	      buffer_size += INIT_BUFFER_SIZE;
 
-                /* fill allocated memory */
-                nr = fread(buffer+search_pos, sizeof(char), INIT_BUFFER_SIZE, fp);
-                if (nr != INIT_BUFFER_SIZE && ferror(fp))
+	      /* fill allocated memory */
+	      nr = fread (buffer+search_pos, sizeof (char),
+			  INIT_BUFFER_SIZE, fp);
+	      if (nr != INIT_BUFFER_SIZE && ferror (fp))
                 {
-                    fprintf(stderr, "%s: Could not read file %s.\n", PROGRAM_NAME, file_name);
-                    fclose(fp);
-                    return FAILURE;
+		  fprintf (stderr, "%s: Could not read file %s.\n",
+			   PROGRAM_NAME, file_name);
+		  fclose (fp);
+		  return FAILURE;
                 }
-                buffer_fill += nr;
+	      buffer_fill += nr;
             }
         }
-        else
+      else
         {
-            /* end of line found or file complete */
-            search_flag = FALSE;
+	  /* End of line found or file complete.  */
+	  search_flag = FALSE;
         }
     }
 
-    /* set pointer to line */
-    *line = buffer+start;
-    /* temporarily replace character after line to generate a terminated string */
-    null_replace = *(buffer+search_pos);
-    *(buffer+search_pos) = '\0';
-    /* set line length */
-    *line_len = search_pos - start;
+  /* Set pointer to line.  */
+  *line = buffer+start;
+  /* Temporarily replace character after line to generate a terminated
+     string.  */
+  null_replace = *(buffer+search_pos);
+  *(buffer+search_pos) = '\0';
+  /* Set line length.  */
+  *line_len = search_pos - start;
 
-    return SUCCESS;
+  return SUCCESS;
 }
 
-/*
-    Writes string to file_buffer and reallocates memory of file_buffer if
-    necessary. *pos points to the end of the written string.
-*/
-inline int write_file_buffer(const char *string, const size_t string_len, const char *file_name, char **pos)
+/* Writes string to fp or file_buffer and reallocates memory of
+   file_buffer if necessary. *pos points to the end of the written
+   string.  */
+inline int
+write_string (FILE *fp, const char *string, const size_t string_len,
+	      const char *file_name, char **pos)
 {
-    char *tmp;
+  char *tmp;
 
-    /* check if remaining file_buffer space is sufficient */
-    while (file_buffer_size-(*pos-file_buffer) < string_len)
+  if (fp == NULL)
     {
-        /* reallocate memory */
-        tmp = realloc(file_buffer, file_buffer_size+INIT_BUFFER_SIZE);
-        if (tmp == NULL)
-        {
-            fprintf(stderr, "%s: Could not reallocate memory for file_buffer while processing '%s'.\n", PROGRAM_NAME, file_name);
-            return FAILURE;
-        }
-        *pos = tmp + (*pos - file_buffer);
-        file_buffer = tmp;
-        file_buffer_size += INIT_BUFFER_SIZE;
+      /* Check if remaining file_buffer space is sufficient.  */
+      while (file_buffer_size-(*pos-file_buffer) < string_len)
+	{
+	  /* Reallocate memory.  */
+	  tmp = realloc (file_buffer,
+			 file_buffer_size+INIT_BUFFER_SIZE);
+	  if (tmp == NULL)
+	    {
+	      fprintf (stderr, "%s: Could not reallocate memory for",
+		       PROGRAM_NAME);
+	      fprintf (stderr, " file_buffer while processing '%s'.\n",
+		       file_name);
+	      return FAILURE;
+	    }
+	  *pos = tmp + (*pos - file_buffer);
+	  file_buffer = tmp;
+	  file_buffer_size += INIT_BUFFER_SIZE;
+	}
+      /* Copy string to file_buffer and increase pos.  */
+      memcpy (*pos, string, string_len * sizeof (char));
+      *pos += string_len;
     }
-    /* copy string to file_buffer and increase pos */
-    memcpy(*pos, string, string_len*sizeof(char));
-    *pos += string_len;
+  else
+    {
+      fwrite (string, sizeof (char), string_len, fp);
+    }
 
-    return SUCCESS;
+  return SUCCESS;
 }
 
-/*
-    Copies in to out and replaces the string string1 by string2.
-*/
-int replace_string(FILE *in, FILE *out, regex_t *compiled, const char *string2, const char *file_name, size_t *file_len)
+/* Copies in to out and replaces compiled by string.  */
+int
+replace_string (FILE *in, FILE *out, regex_t *compiled,
+		const char *string, const size_t string_len,
+		const char *file_name, size_t *file_len)
 {
-    size_t line_len;
-    char *line, *start, *pos;
-    int rr; /* return value of read_line */
-    int regerror; /* return value of regexec */
-    regmatch_t match[1]; /* matched regular expression */
-    int empty_flag, break_flag;
+  size_t line_len;
+  char *line, *start, *pos;
+  int rr; /* Return value of read_line.  */
+  int regerror; /* Return value of regexec.  */
+  regmatch_t match[1]; /* Matched regular expression.  */
+  int last_empty_flag; /* Last regular expression had zero length.  */
+  int break_flag; /* Signals break of while loop.  */
 
-    if (out == NULL)
+  if (out == NULL)
     {
-        /* try to use file_buffer instead of tmpfile */
-        if (file_buffer == NULL)
+      /* Try to use file_buffer instead of tmpfile.  */
+      if (file_buffer == NULL)
         {
-            file_buffer = (char*)malloc(INIT_BUFFER_SIZE * sizeof(char));
-            if (file_buffer == NULL)
+	  file_buffer = (char *) malloc (INIT_BUFFER_SIZE
+					 * sizeof (char));
+	  if (file_buffer == NULL)
             {
-                fprintf(stderr, "%s: Could not allocate memory for file_buffer while processing '%s'.\n", PROGRAM_NAME, file_name);
-                return FAILURE;
+	      fprintf (stderr, "%s: Could not allocate memory for",
+		       PROGRAM_NAME);
+	      fprintf (stderr, " file_buffer while processing '%s'.\n",
+		       file_name);
+	      return FAILURE;
             }
-            file_buffer_size = INIT_BUFFER_SIZE;
+	  file_buffer_size = INIT_BUFFER_SIZE;
         }
-        /* current position in file_buffer */
-        pos = file_buffer;
+      /* Current position in file_buffer.  */
+      pos = file_buffer;
     }
 
-    line = NULL;
-    /* copy in to out with replaced string */
-    while ((rr = read_line(in, &line, &line_len, file_name)) == SUCCESS)
+  line = NULL;
+  /* Copy in to out with replaced string.  */
+  while ((rr = read_line (in, &line, &line_len, file_name)) == SUCCESS)
     {
-        start = line;
-        empty_flag = TRUE;
-        /* search for regular expression */
-        while ((regerror = regexec(compiled, start, 1, match, 0)) == 0)
+      start = line;
+      last_empty_flag = TRUE;
+      /* Search for regular expression.  */
+      while ((regerror = regexec (compiled, start, 1, match, 0)) == 0)
         {
-            break_flag = (*start == '\0');
-            if (break_flag && start > line && *(start-1) == '\n')
-                break;
+	  break_flag = (*start == '\0');
+	  if (break_flag && start > line && *(start-1) == '\n')
+	    break;
 
-            if (match[0].rm_eo > 0)
-                *(start+match[0].rm_so) = '\0';
+	  if (match[0].rm_eo > 0)
+	    *(start+match[0].rm_so) = '\0';
 
-            if (out == NULL)
+	  if (match[0].rm_eo > 0
+	      && write_string (out, start, match[0].rm_so, file_name,
+			       &pos) != SUCCESS)
+	    return FAILURE;
+	  if (last_empty_flag || match[0].rm_eo > 0)
+	    if (write_string (out, string, string_len, file_name, &pos)
+		!= SUCCESS)
+	      return FAILURE;
+
+	  if (break_flag)
+	    break;
+
+	  if (match[0].rm_eo == 0)
             {
-                if (match[0].rm_eo > 0 && write_file_buffer(start, match[0].rm_so, file_name, &pos) != SUCCESS)
-                    return FAILURE;
-                if (empty_flag || match[0].rm_eo > 0)
-                    if (write_file_buffer(string2, strlen(string2), file_name, &pos) != SUCCESS)
-                        return FAILURE;
+	      /* Found string has zero length.  */
+	      if (write_string (out, start, 1, file_name,
+				&pos) != SUCCESS)
+		return FAILURE;
+
+	      start++;
+	      last_empty_flag = TRUE;
             }
-            else
+	  else
             {
-                if (match[0].rm_eo > 0)
-                    fputs(start, out);
-                if (empty_flag || match[0].rm_eo > 0)
-                    fputs(string2, out);
-            }
-
-            if (break_flag)
-                break;
-            if (match[0].rm_eo == 0)
-            {
-                /* found string has zero length */
-                if (out == NULL)
-                {
-                    if (write_file_buffer(start, 1, file_name, &pos) != SUCCESS)
-                        return FAILURE;
-                }
-                else
-                    fputc(*start, out);
-
-                start++;
-                empty_flag = TRUE;
-            }
-            else
-            {
-                start = start + match[0].rm_eo;
-                empty_flag = FALSE;
+	      start = start + match[0].rm_eo;
+	      last_empty_flag = FALSE;
             }
         }
-        if (regerror == REG_ESPACE)
+      if (regerror == REG_ESPACE)
         {
-            fprintf(stderr, "%s: Not enough memory to process file '%s'.\n", PROGRAM_NAME, file_name);
-            return FAILURE;
+	  fprintf (stderr, "%s: Not enough memory to process file",
+		   PROGRAM_NAME);
+	  fprintf (stderr, " '%s'.\n", file_name);
+	  return FAILURE;
         }
-        /* flush rest of line into out or file_buffer */
-        if (out == NULL)
-        {
-            if (write_file_buffer(start, line_len-(start-line), file_name, &pos) != SUCCESS)
-                return FAILURE;
-        }
-        else
-            fwrite(start, sizeof(char), line_len-(start-line), out);
+      /* Flush rest of line into out or file_buffer.  */
+      if (write_string (out, start, line_len-(start-line), file_name,
+			&pos) != SUCCESS)
+	return FAILURE;
     }
-    /* set file_len if we are using file_buffer */
-    if (out == NULL && file_len != NULL)
-        *file_len = pos - file_buffer;
+  /* Set file_len if we are using file_buffer.  */
+  if (out == NULL && file_len != NULL)
+    *file_len = pos - file_buffer;
 
-    /* end of file reached? */
-    if (rr != END_REACHED)
-        return FAILURE;
+  /* End of file reached?  */
+  if (rr != END_REACHED)
+    return FAILURE;
 
-    return SUCCESS;
+  return SUCCESS;
 }
 
-/*
-    Replace the string string1 by string2 in the file file_name.
-*/
-int process_file(const char *file_name, regex_t *compiled, const char *string2)
+/* Replace compiled by string in the file file_name.  */
+int
+process_file (const char *file_name, regex_t *compiled,
+	      const char *string, const size_t string_len)
 {
-    FILE *fp, *tmp;
-    char *line;
-    size_t line_len, file_len;
-    int rr; /* return value of read_line */
-    int regerror; /* return value of regexec */
-    int found_flag;
+  FILE *fp, *tmp;
+  char *line;
+  size_t line_len, file_len;
+  int rr; /* Return value of read_line.  */
+  int regerror; /* Return value of regexec.  */
+  int found_flag;
 
-    fp = fopen(file_name, "r");
-    if (fp == NULL)
+  fp = fopen (file_name, "r");
+  if (fp == NULL)
     {
-        fprintf(stderr, "%s: Could not open file '%s' for reading.\n", PROGRAM_NAME, file_name);
-        return FAILURE;
+      fprintf (stderr, "%s: Could not open file '%s' for reading.\n",
+	       PROGRAM_NAME, file_name);
+      return FAILURE;
     }
 
-    /* first check whether file file_name contains string1 at all */
-    found_flag = FALSE;
-    line = NULL;
-    while (!found_flag && (rr = read_line(fp, &line, &line_len, file_name)) == SUCCESS)
+  /* First check whether file file_name contains compiled at all.  */
+  found_flag = FALSE;
+  line = NULL;
+  while (!found_flag && (rr = read_line (fp, &line, &line_len,
+					 file_name)) == SUCCESS)
     {
-        regerror = regexec(compiled, line, 0, NULL, 0);
-        if (regerror == 0)
-            found_flag = TRUE;
-        else if (regerror == REG_ESPACE)
+      regerror = regexec (compiled, line, 0, NULL, 0);
+      if (regerror == 0)
+	found_flag = TRUE;
+      else if (regerror == REG_ESPACE)
         {
-            fprintf(stderr, "%s: Not enough memory to process file '%s'.\n", PROGRAM_NAME, file_name);
-            fclose(fp);
-            return FAILURE;
+	  fprintf (stderr, "%s: Not enough memory to process file",
+		   PROGRAM_NAME);
+	  fprintf (stderr, " '%s'.\n", file_name);
+	  fclose (fp);
+	  return FAILURE;
         }
     }
-    if (rr == FAILURE)
+  if (rr == FAILURE)
     {
-        fclose(fp);
-        return FAILURE;
+      fclose (fp);
+      return FAILURE;
     }
 
-    if (found_flag)
+  if (found_flag)
     {
-        rewind(fp);
-        tmp = tmpfile();
-        /* copy f to tmp or file_buffer with replaced string */
-        if (replace_string(fp, tmp, compiled, string2, file_name, &file_len))
+      rewind (fp);
+      tmp = tmpfile ();
+      /* Copy f to tmp or file_buffer with replaced string.  */
+      if (replace_string (fp, tmp, compiled, string, string_len,
+			  file_name, &file_len))
         {
-            fclose(fp);
-            if (tmp != NULL)
-                fclose(tmp);
-            return FAILURE;
+	  fclose (fp);
+	  if (tmp != NULL)
+	    fclose (tmp);
+	  return FAILURE;
         }
 
-        /* copy from tmp or file_buffer back to f */
-        fp = freopen(file_name, "w", fp);
-        if (fp == NULL)
+      /* Copy from tmp or file_buffer back to f.  */
+      fp = freopen (file_name, "w", fp);
+      if (fp == NULL)
         {
-            fprintf(stderr, "%s: Could not open file '%s' for writing.\n", PROGRAM_NAME, file_name);
-            if (tmp != NULL)
-                fclose(tmp);
-            return FAILURE;
+	  fprintf (stderr, "%s: Could not open file '%s' for",
+		   PROGRAM_NAME, file_name);
+	  fprintf (stderr, " writing.\n");
+	  if (tmp != NULL)
+	    fclose (tmp);
+	  return FAILURE;
         }
-        if (tmp == NULL)
+      if (tmp == NULL)
         {
-            /* use file_buffer */
-            if (fwrite(file_buffer, sizeof(char), file_len, fp) != file_len)
+	  /* Use file_buffer.  */
+	  if (fwrite (file_buffer, sizeof (char), file_len, fp)
+	      != file_len)
             {
-                fprintf(stderr, "%s: Could not overwrite file '%s'.\n", PROGRAM_NAME, file_name);
-                fclose(fp);
-                return FAILURE;
+	      fprintf (stderr, "%s: Could not overwrite file '%s'.\n",
+		       PROGRAM_NAME, file_name);
+	      fclose (fp);
+	      return FAILURE;
             }
         }
-        else
+      else
         {
-            /* use tmp */
-            rewind(tmp);
-            while (!feof(tmp))
+	  /* Use tmp.  */
+	  rewind (tmp);
+	  while (!feof (tmp))
             {
-                line_len = fread(buffer, sizeof(char), buffer_size, tmp);
-                if (line_len != buffer_size && ferror(tmp))
+	      line_len = fread (buffer, sizeof (char), buffer_size,
+				tmp);
+	      if (line_len != buffer_size && ferror (tmp))
                 {
-                    fprintf(stderr, "%s: Could not read temporary file while processing '%s'.\n", PROGRAM_NAME, file_name);
-                    fclose(fp);
-                    fclose(tmp);
-                    return FAILURE;
+		  fprintf (stderr, "%s: Could not read temporary file",
+			   PROGRAM_NAME);
+		  fprintf (stderr, " while processing '%s'.\n",
+			   file_name);
+		  fclose (fp);
+		  fclose (tmp);
+		  return FAILURE;
                 }
-                if (fwrite(buffer, sizeof(char), line_len, fp) != line_len)
+	      if (fwrite (buffer, sizeof (char), line_len, fp)
+		  != line_len)
                 {
-                    fprintf(stderr, "%s: Could not overwrite file '%s'.\n", PROGRAM_NAME, file_name);
-                    fclose(fp);
-                    fclose(tmp);
-                    return FAILURE;
+		  fprintf (stderr, "%s: Could not overwrite file",
+			   PROGRAM_NAME);
+		  fprintf (stderr, " '%s'.\n", file_name);
+		  fclose (fp);
+		  fclose (tmp);
+		  return FAILURE;
                 }
             }
-            fclose(tmp);
+	  fclose (tmp);
         }
-        printf("Replaced in '%s'.\n", file_name);
+      printf ("Replaced in '%s'.\n", file_name);
     }
-    fclose(fp);
+  fclose (fp);
 
-    return SUCCESS;
+  return SUCCESS;
 }
 
-/*
-    Processes the current directory and all subdirectories recursively.
-*/
-int process_dir(regex_t *compiled, const char *string2)
+/* Processes the current directory and all subdirectories
+   recursively.  */
+int
+process_dir (regex_t *compiled, const char *string,
+	     const size_t string_len)
 {
-    DIR *d; /* current directory */
-    struct dirent *entry; /* directory entry */
-    int failure_flag;
+  DIR *d; /* Current directory.  */
+  struct dirent *entry; /* Directory entry.  */
+  int failure_flag;
 
-    failure_flag = FALSE;
-    d = opendir(".");
-    if (d == NULL)
+  failure_flag = FALSE;
+  d = opendir (".");
+  if (d == NULL)
     {
-        fprintf(stderr, "%s: Could not open directory.\n", PROGRAM_NAME);
-        return FAILURE;
+      fprintf (stderr, "%s: Could not open directory.\n",
+	       PROGRAM_NAME);
+      return FAILURE;
     }
 
-    while ((entry = readdir(d)))
+  while ((entry = readdir (d)))
     {
-        if (entry->d_type == DT_REG) /* regular file */
-            failure_flag |= process_file(entry->d_name, compiled, string2);
-        else if (entry->d_type == DT_DIR) /* directory */
+      if (entry->d_type == DT_REG) /* The entry is a regular file.  */
+	failure_flag |= process_file (entry->d_name, compiled,
+				      string, string_len);
+      else if (entry->d_type == DT_DIR) /* The entry is a
+					   directory.  */
         {
-            if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, ".."))
+	  if (strcmp (entry->d_name, ".")
+	      && strcmp (entry->d_name, ".."))
             {
-                if (!chdir(entry->d_name))
+	      if (!chdir (entry->d_name))
                 {
-                    failure_flag |= process_dir(compiled, string2);
-                    chdir("..");
+		  failure_flag |= process_dir (compiled, string,
+					       string_len);
+		  chdir ("..");
                 }
-                else
+	      else
                 {
-                    fprintf(stderr, "%s: Could not process directory '%s'.\n", PROGRAM_NAME, entry->d_name);
-                    failure_flag = TRUE;
+		  fprintf (stderr, "%s: Could not process directory",
+			   PROGRAM_NAME);
+		  fprintf (stderr, " '%s'.\n", entry->d_name);
+		  failure_flag = TRUE;
                 }
             }
         }
     }
 
-    return failure_flag;
+  return failure_flag;
 }
 
-/*
-    Parses command-line-arguments and processes file list.
-*/
-int main(int argc, char** argv)
+/* Parses command-line-arguments and processes file list.  */
+int
+main (int argc, char** argv)
 {
-    char *string1, *string2;
-    struct stat st; /* stat for obtaining file type */
-    regex_t compiled; /* data structure for regular expression */
-    int errcode; /* error code for regcomp */
-    int wd; /* file descriptor for current working directory */
-    int i;
-    int failure_flag, omit_dir_flag;
+  char *pattern, *string;
+  size_t string_len; /* Length of string.  */
+  struct stat st; /* The stat for obtaining file type.  */
+  regex_t compiled; /* Data structure for regular expression.  */
+  int errcode; /* Error code for regcomp.  */
+  int wd; /* File descriptor for current working directory.  */
+  int i;
+  int failure_flag, omit_dir_flag;
 
-    /* parse command line arguments */
-    if (argc == 2 && !(strcmp(argv[1], "-v") && strcmp(argv[1], "--version")))
+  /* Parse command line arguments.  */
+  if (argc == 2 && !(strcmp (argv[1], "-v")
+		     && strcmp (argv[1], "--version")))
     {
-        print_version();
-        return EXIT_SUCCESS;
+      print_version ();
+      return EXIT_SUCCESS;
     }
-    else if (argc == 2 && !(strcmp(argv[1], "-h") && strcmp(argv[1], "--help")))
+  else if (argc == 2 && !(strcmp (argv[1], "-h")
+			  && strcmp (argv[1], "--help")))
     {
-        print_help();
-        return EXIT_SUCCESS;
+      print_help ();
+      return EXIT_SUCCESS;
     }
-    else if (argc < 3)
+  else if (argc < 3)
     {
-        print_usage();
-        printf("Try `%s --help' for more information.\n", PROGRAM_NAME);
-        return EXIT_FAILURE;
+      print_usage ();
+      printf ("Try `%s --help' for more information.\n", PROGRAM_NAME);
+      return EXIT_FAILURE;
     }
-    string1 = argv[1];
-    string2 = argv[2];
+  pattern = argv[1];
+  string = argv[2];
+  string_len = strlen (string);
 
-    if (strlen(string1) < 1)
+  if (strlen (pattern) < 1)
     {
-        fprintf(stderr, "%s: STRING1 must have at least one character.\n", PROGRAM_NAME);
-        return EXIT_FAILURE;
+      fprintf (stderr, "%s: PATTERN must have at least one",
+	       PROGRAM_NAME);
+      fprintf (stderr, " character.\n");
+      return EXIT_FAILURE;
     }
-    /* compile regular expression */
-    errcode = regcomp(&compiled, string1, 0);
-    if (errcode != 0)
+  /* Compile regular expression.  */
+  errcode = regcomp (&compiled, pattern, 0);
+  if (errcode != 0)
     {
-        print_regerror(errcode, &compiled);
-        return EXIT_FAILURE;
+      print_regerror (errcode, &compiled);
+      return EXIT_FAILURE;
     }
 
-    /* allocate initial memory for buffer */
-    buffer = (char*)malloc(INIT_BUFFER_SIZE * sizeof(char));
-    if (buffer == NULL)
+  /* Allocate initial memory for buffer.  */
+  buffer = (char *) malloc (INIT_BUFFER_SIZE * sizeof (char));
+  if (buffer == NULL)
     {
-        fprintf(stderr, "%s: Could not allocate memory for buffer.\n", PROGRAM_NAME);
-        regfree(&compiled);
-        return EXIT_FAILURE;
+      fprintf (stderr, "%s: Could not allocate memory for buffer.\n",
+	       PROGRAM_NAME);
+      regfree (&compiled);
+      return EXIT_FAILURE;
     }
-    buffer_size = INIT_BUFFER_SIZE;
+  buffer_size = INIT_BUFFER_SIZE;
 
-    failure_flag = FALSE;
-    /* replace string in file */
-    if (argc < 4 || (argc == 4 && !strcmp(argv[3], "-")))
+  failure_flag = FALSE;
+  /* Replace pattern in file.  */
+  if (argc < 4 || (argc == 4 && !strcmp (argv[3], "-")))
     {
-        /* default input from stdin and output stdout */
-        if (replace_string(stdin, stdout, &compiled, string2, "stdin", NULL))
+      /* Default input from stdin and output stdout.  */
+      if (replace_string (stdin, stdout, &compiled, string, string_len,
+			  "stdin", NULL))
         {
-            failure_flag = TRUE;
+	  failure_flag = TRUE;
         }
     }
-    else
+  else
     {
-        /* save current working directory */
-        wd = open(".", O_RDONLY);
-        omit_dir_flag = (wd < 0);
-        if (omit_dir_flag)
+      /* Save current working directory.  */
+      wd = open (".", O_RDONLY);
+      omit_dir_flag = (wd < 0);
+      if (omit_dir_flag)
         {
-            fprintf(stderr, "%s: Could not save current working directory.\n", PROGRAM_NAME);
-            failure_flag = TRUE;
+	  fprintf (stderr, "%s: Could not save current working",
+		   PROGRAM_NAME);
+	  fprintf (stderr, " directory.\n");
+	  failure_flag = TRUE;
         }
 
-        /* process file list */
-        for (i = 3; i < argc; i++)
+      /* Process file list.  */
+      for (i = 3; i < argc; i++)
         {
-            if (lstat(argv[i], &st) == -1)
+	  if (lstat (argv[i], &st) == -1)
             {
-                fprintf(stderr, "%s: Could not process argument '%s'.\n", PROGRAM_NAME, argv[i]);
-                failure_flag = TRUE;
+	      fprintf (stderr, "%s: Could not process argument",
+		       PROGRAM_NAME);
+	      fprintf (stderr, " '%s'.\n", argv[i]);
+	      failure_flag = TRUE;
             }
 
-            if (S_ISDIR(st.st_mode)) /* directory */
+	  if (S_ISDIR (st.st_mode)) /* The st is a directory.  */
             {
-                if (omit_dir_flag)
+	      if (omit_dir_flag)
                 {
-                    printf("%s: Omitting directory '%s'.\n", PROGRAM_NAME, argv[i]);
-                    continue;
+		  printf ("%s: Omitting directory '%s'.\n",
+			  PROGRAM_NAME, argv[i]);
+		  continue;
                 }
-                if (!chdir(argv[i]))
+	      if (!chdir (argv[i]))
                 {
-                    failure_flag |= process_dir(&compiled, string2);
-                    /* return to working directory */
-                    fchdir(wd);
+		  failure_flag |= process_dir (&compiled, string,
+					       string_len);
+		  /* Return to working directory.  */
+		  fchdir (wd);
                 }
-                else
+	      else
                 {
-                    fprintf(stderr, "%s: Could not process directory '%s'.\n", PROGRAM_NAME, argv[i]);
-                    failure_flag = TRUE;
+		  fprintf (stderr, "%s: Could not process directory",
+			   PROGRAM_NAME);
+		  fprintf (stderr, " '%s'.\n", argv[i]);
+		  failure_flag = TRUE;
                 }
             }
-            else if (S_ISREG(st.st_mode)) /* regular file */
-                failure_flag |= process_file(argv[i], &compiled, string2);
+	  else if (S_ISREG (st.st_mode)) /* The st is a regular
+					    file.  */
+	    failure_flag |= process_file (argv[i], &compiled, string,
+					  string_len);
         }
-        close(wd);
+      close (wd);
     }
 
-    if (buffer != NULL)
+  if (buffer != NULL)
     {
-        free(buffer);
-        buffer = NULL;
+      free (buffer);
+      buffer = NULL;
     }
-    if (file_buffer != NULL)
+  if (file_buffer != NULL)
     {
-        free(file_buffer);
-        file_buffer = NULL;
+      free (file_buffer);
+      file_buffer = NULL;
     }
-    /* free compiled regular expression */
-    regfree(&compiled);
+  /* Free compiled regular expression.  */
+  regfree (&compiled);
 
-    if (failure_flag)
-        return EXIT_FAILURE;
+  if (failure_flag)
+    return EXIT_FAILURE;
 
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
