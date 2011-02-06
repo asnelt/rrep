@@ -1,6 +1,7 @@
-This is rrep, a recursive string replacement utility. It replaces its first
-command line argument by its second argument in the file and directory list
-that starts with its third argument. Directories are processed recursively.
+This is rrep, a recursive string replacement utility. It searches for a regular
+expression and replaces it by a string in the file and directory list that
+starts after the second argument that is not an option. Directories are
+processed recursively.
 
 Example: rrep 'hello world' 'Hello, World!' menu.h main.c
 

@@ -26,7 +26,7 @@
 #include <regex.h>
 
 #define PROGRAM_NAME "rrep"
-#define VERSION "1.1.1"
+#define VERSION "1.1.2"
 
 #define FALSE (0)
 #define TRUE (1)
@@ -73,13 +73,18 @@ print_help ()
   print_usage ();
   printf ("Replace PATTERN by STRING in each FILE or standard");
   printf (" input.\n");
-  printf ("PATTERN is a basic regular expression (BRE).\n");
+  printf ("PATTERN is, by default, a basic regular expression");
+  printf (" (BRE).\n");
   printf ("Example: %s 'hello world' 'Hello, World!' menu.h",
 	  PROGRAM_NAME);
   printf (" main.c\n\n");
   printf ("Options:\n");
-  printf ("  -v, --version  print version information and exit\n");
-  printf ("  -h, --help     display this help and exit\n\n");
+  printf ("  -V, --version             print version information and");
+  printf (" exit\n");
+  printf ("  -h, --help                display this help and exit\n");
+  printf ("  -E, --extended-regexp     PATTERN is an extended");
+  printf (" regular expression (ERE)\n");
+  printf ("  -i, --ignore-case         ignore case distinctions\n\n");
   printf ("If FILE is a directory, then the complete directory tree");
   printf (" of FILE will be\n");
   printf ("processed. With no FILE, or when FILE is -, read standard");
@@ -545,40 +550,146 @@ process_dir (regex_t *compiled, const char *string,
   return failure_flag;
 }
 
+/* Processes the file_counter files in file_list.  */
+int
+process_file_list (char **file_list, const size_t file_counter,
+		   regex_t *compiled, const char *string,
+		   const size_t string_len)
+{
+  struct stat st; /* The stat for obtaining file type.  */
+  int wd; /* File descriptor for current working directory.  */
+  int i;
+  int omit_dir_flag = FALSE;
+  int failure_flag = FALSE;
+
+  /* Save current working directory.  */
+  wd = open (".", O_RDONLY);
+  omit_dir_flag = (wd < 0);
+  if (omit_dir_flag)
+    {
+      fprintf (stderr, "%s: Could not save current working",
+	       PROGRAM_NAME);
+      fprintf (stderr, " directory.\n");
+      failure_flag = TRUE;
+    }
+  
+  /* Process file list.  */
+  for (i = 0; i < file_counter; i++)
+    {
+      if (lstat (file_list[i], &st) == -1)
+	{
+	  fprintf (stderr, "%s: Could not process argument",
+		   PROGRAM_NAME);
+	  fprintf (stderr, " '%s'.\n", file_list[i]);
+	  failure_flag = TRUE;
+	}
+
+      if (S_ISDIR (st.st_mode)) /* The st is a directory.  */
+	{
+	  if (omit_dir_flag)
+	    {
+	      printf ("%s: Omitting directory '%s'.\n",
+		      PROGRAM_NAME, file_list[i]);
+	      continue;
+	    }
+	  if (!chdir (file_list[i]))
+	    {
+	      failure_flag |= process_dir (compiled, string,
+					   string_len);
+	      /* Return to working directory.  */
+	      fchdir (wd);
+	    }
+	  else
+	    {
+	      fprintf (stderr, "%s: Could not process directory",
+		       PROGRAM_NAME);
+	      fprintf (stderr, " '%s'.\n", file_list[i]);
+	      failure_flag = TRUE;
+	    }
+	}
+      else if (S_ISREG (st.st_mode)) /* The st is a regular
+					file.  */
+	failure_flag |= process_file (file_list[i], compiled,
+				      string, string_len);
+    }
+  close (wd);
+
+  return failure_flag;
+}
+
 /* Parses command-line-arguments and processes file list.  */
 int
 main (int argc, char** argv)
 {
-  char *pattern, *string;
+  char *pattern = NULL; /* Regular expression to search for.  */
+  char *string = NULL; /* Replacement string.  */
+  char **file_list; /* List of files to process.  */
+  size_t file_counter = 0; /* Counter for number of files.  */
   size_t string_len; /* Length of string.  */
-  struct stat st; /* The stat for obtaining file type.  */
   regex_t compiled; /* Data structure for regular expression.  */
   int errcode; /* Error code for regcomp.  */
-  int wd; /* File descriptor for current working directory.  */
   int i;
-  int failure_flag, omit_dir_flag;
+  int cflags = 0; /* Flags for regcomp.  */
+  int failure_flag = FALSE;
 
+  /* Allocate memory for file list.  */
+  file_list = (char **) malloc (argc * sizeof (char *));
+  if (file_list == NULL)
+    {
+      fprintf (stderr, "%s: Could not allocate memory for",
+	       PROGRAM_NAME);
+      fprintf (stderr, " file_list.\n");
+      return EXIT_FAILURE;
+    }
   /* Parse command line arguments.  */
-  if (argc == 2 && !(strcmp (argv[1], "-v")
-		     && strcmp (argv[1], "--version")))
+  for (i = 1; i < argc; i++)
     {
-      print_version ();
-      return EXIT_SUCCESS;
+      if (!(strcmp (argv[i], "-V")
+	    && strcmp (argv[i], "--version")))
+	{
+	  print_version ();
+	  free (file_list);
+	  return EXIT_SUCCESS;
+	}
+      else if (!(strcmp (argv[i], "-h")
+		 && strcmp (argv[i], "--help")))
+	{
+	  print_help ();
+	  free (file_list);
+	  return EXIT_SUCCESS;
+	}
+      else if (!(strcmp (argv[i], "-E")
+		 && strcmp (argv[i], "--extended-regexp")))
+	{
+	  cflags |= REG_EXTENDED;
+	}
+      else if (!(strcmp (argv[i], "-i")
+		 && strcmp (argv[i], "--ignore-case")))
+	{
+	  cflags |= REG_ICASE;
+	}
+      else
+	{
+	  if (pattern == NULL)
+	    pattern = argv[i];
+	  else if (string == NULL)
+	    string = argv[i];
+	  else
+	    {
+	      /* Add argument to file_list.  */
+	      file_list[file_counter] = argv[i];
+	      file_counter++;
+	    }
+	}
     }
-  else if (argc == 2 && !(strcmp (argv[1], "-h")
-			  && strcmp (argv[1], "--help")))
-    {
-      print_help ();
-      return EXIT_SUCCESS;
-    }
-  else if (argc < 3)
+
+  if (pattern == NULL || string == NULL)
     {
       print_usage ();
       printf ("Try `%s --help' for more information.\n", PROGRAM_NAME);
+      free (file_list);
       return EXIT_FAILURE;
     }
-  pattern = argv[1];
-  string = argv[2];
   string_len = strlen (string);
 
   if (strlen (pattern) < 1)
@@ -586,13 +697,15 @@ main (int argc, char** argv)
       fprintf (stderr, "%s: PATTERN must have at least one",
 	       PROGRAM_NAME);
       fprintf (stderr, " character.\n");
+      free (file_list);
       return EXIT_FAILURE;
     }
   /* Compile regular expression.  */
-  errcode = regcomp (&compiled, pattern, 0);
+  errcode = regcomp (&compiled, pattern, cflags);
   if (errcode != 0)
     {
       print_regerror (errcode, &compiled);
+      free (file_list);
       return EXIT_FAILURE;
     }
 
@@ -602,87 +715,32 @@ main (int argc, char** argv)
     {
       fprintf (stderr, "%s: Could not allocate memory for buffer.\n",
 	       PROGRAM_NAME);
+      free (file_list);
       regfree (&compiled);
       return EXIT_FAILURE;
     }
   buffer_size = INIT_BUFFER_SIZE;
 
-  failure_flag = FALSE;
   /* Replace pattern in file.  */
-  if (argc < 4 || (argc == 4 && !strcmp (argv[3], "-")))
+  if (file_counter == 0
+      || (file_counter == 1 && !strcmp (file_list[0], "-")))
     {
       /* Default input from stdin and output stdout.  */
-      if (replace_string (stdin, stdout, &compiled, string, string_len,
-			  "stdin", NULL))
-        {
-	  failure_flag = TRUE;
-        }
+      failure_flag |= replace_string (stdin, stdout, &compiled, string,
+				      string_len, "stdin", NULL);
     }
   else
     {
-      /* Save current working directory.  */
-      wd = open (".", O_RDONLY);
-      omit_dir_flag = (wd < 0);
-      if (omit_dir_flag)
-        {
-	  fprintf (stderr, "%s: Could not save current working",
-		   PROGRAM_NAME);
-	  fprintf (stderr, " directory.\n");
-	  failure_flag = TRUE;
-        }
-
-      /* Process file list.  */
-      for (i = 3; i < argc; i++)
-        {
-	  if (lstat (argv[i], &st) == -1)
-            {
-	      fprintf (stderr, "%s: Could not process argument",
-		       PROGRAM_NAME);
-	      fprintf (stderr, " '%s'.\n", argv[i]);
-	      failure_flag = TRUE;
-            }
-
-	  if (S_ISDIR (st.st_mode)) /* The st is a directory.  */
-            {
-	      if (omit_dir_flag)
-                {
-		  printf ("%s: Omitting directory '%s'.\n",
-			  PROGRAM_NAME, argv[i]);
-		  continue;
-                }
-	      if (!chdir (argv[i]))
-                {
-		  failure_flag |= process_dir (&compiled, string,
-					       string_len);
-		  /* Return to working directory.  */
-		  fchdir (wd);
-                }
-	      else
-                {
-		  fprintf (stderr, "%s: Could not process directory",
-			   PROGRAM_NAME);
-		  fprintf (stderr, " '%s'.\n", argv[i]);
-		  failure_flag = TRUE;
-                }
-            }
-	  else if (S_ISREG (st.st_mode)) /* The st is a regular
-					    file.  */
-	    failure_flag |= process_file (argv[i], &compiled, string,
-					  string_len);
-        }
-      close (wd);
+      failure_flag |= process_file_list (file_list, file_counter,
+					 &compiled, string,
+					 string_len);
     }
 
-  if (buffer != NULL)
-    {
-      free (buffer);
-      buffer = NULL;
-    }
   if (file_buffer != NULL)
-    {
-      free (file_buffer);
-      file_buffer = NULL;
-    }
+    free (file_buffer);
+
+  free (buffer);
+  free (file_list);
   /* Free compiled regular expression.  */
   regfree (&compiled);
 
