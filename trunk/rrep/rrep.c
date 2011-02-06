@@ -23,9 +23,10 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <regex.h>
 
 #define PROGRAM_NAME "rrep"
-#define VERSION "1.0.4"
+#define VERSION "1.1.0"
 
 #define FALSE (0)
 #define TRUE (1)
@@ -59,13 +60,14 @@ void print_version()
 
 void print_usage()
 {
-    printf("Usage: %s STRING1 STRING2 [FILE]...\n", PROGRAM_NAME);
+    printf("Usage: %s PATTERN STRING [FILE]...\n", PROGRAM_NAME);
 }
 
 void print_help()
 {
     print_usage();
-    printf("Replace STRING1 by STRING2 in each FILE or standard input.\n");
+    printf("Replace PATTERN by STRING in each FILE or standard input.\n");
+    printf("PATTERN is a basic regular expression (BRE).\n");
     printf("Example: %s 'hello world' 'Hello, World!' menu.h main.c\n\n", PROGRAM_NAME);
     printf("Options:\n");
     printf("  -v, --version  print version information and exit\n");
@@ -73,6 +75,18 @@ void print_help()
     printf("If FILE is a directory, then the complete directory tree of FILE will be\n");
     printf("processed. With no FILE, or when FILE is -, read standard input.\n");
     printf("Exit status is %d if any error occurs, %d otherwise.\n", EXIT_FAILURE, EXIT_SUCCESS);
+}
+
+/*
+    Prints a regerror error message.
+*/
+void print_regerror(int errcode, regex_t *compiled)
+{
+    size_t length = regerror(errcode, compiled, NULL, 0);
+    char *message = malloc(length);
+    regerror(errcode, compiled, message, length);
+    fprintf(stderr, "%s: %s\n", PROGRAM_NAME, message);
+    free(message);
 }
 
 /*
@@ -229,13 +243,14 @@ inline int write_file_buffer(const char *string, const size_t string_len, const 
 /*
     Copies in to out and replaces the string string1 by string2.
 */
-int replace_string(FILE *in, FILE *out, const char *string1, const char *string2, const char *file_name, size_t *file_len)
+int replace_string(FILE *in, FILE *out, regex_t *compiled, const char *string2, const char *file_name, size_t *file_len)
 {
-    size_t string1_len, line_len;
-    char *line, *start, *next, *pos;
+    size_t line_len;
+    char *line, *start, *pos;
     int rr; /* return value of read_line */
-
-    string1_len = strlen(string1);
+    int regerror; /* return value of regexec */
+    regmatch_t match[1]; /* matched regular expression */
+    int empty_flag, break_flag;
 
     if (out == NULL)
     {
@@ -259,23 +274,59 @@ int replace_string(FILE *in, FILE *out, const char *string1, const char *string2
     while ((rr = read_line(in, &line, &line_len, file_name)) == SUCCESS)
     {
         start = line;
-        /* search for next string1 */
-        while ((next = strstr(start, string1)))
+        empty_flag = TRUE;
+        /* search for regular expression */
+        while ((regerror = regexec(compiled, start, 1, match, 0)) == 0)
         {
-            *next = '\0';
+            break_flag = (*start == '\0');
+            if (break_flag && start > line && *(start-1) == '\n')
+                break;
+
+            if (match[0].rm_eo > 0)
+                *(start+match[0].rm_so) = '\0';
+
             if (out == NULL)
             {
-                if (write_file_buffer(start, strlen(start), file_name, &pos) != SUCCESS)
+                if (match[0].rm_eo > 0 && write_file_buffer(start, match[0].rm_so, file_name, &pos) != SUCCESS)
                     return FAILURE;
-                if (write_file_buffer(string2, strlen(string2), file_name, &pos) != SUCCESS)
-                    return FAILURE;
+                if (empty_flag || match[0].rm_eo > 0)
+                    if (write_file_buffer(string2, strlen(string2), file_name, &pos) != SUCCESS)
+                        return FAILURE;
             }
             else
             {
-                fputs(start, out);
-                fputs(string2, out);
+                if (match[0].rm_eo > 0)
+                    fputs(start, out);
+                if (empty_flag || match[0].rm_eo > 0)
+                    fputs(string2, out);
             }
-            start = next + string1_len;
+
+            if (break_flag)
+                break;
+            if (match[0].rm_eo == 0)
+            {
+                /* found string has zero length */
+                if (out == NULL)
+                {
+                    if (write_file_buffer(start, 1, file_name, &pos) != SUCCESS)
+                        return FAILURE;
+                }
+                else
+                    fputc(*start, out);
+
+                start++;
+                empty_flag = TRUE;
+            }
+            else
+            {
+                start = start + match[0].rm_eo;
+                empty_flag = FALSE;
+            }
+        }
+        if (regerror == REG_ESPACE)
+        {
+            fprintf(stderr, "%s: Not enough memory to process file '%s'.\n", PROGRAM_NAME, file_name);
+            return FAILURE;
         }
         /* flush rest of line into out or file_buffer */
         if (out == NULL)
@@ -300,12 +351,13 @@ int replace_string(FILE *in, FILE *out, const char *string1, const char *string2
 /*
     Replace the string string1 by string2 in the file file_name.
 */
-int process_file(const char *file_name, const char *string1, const char *string2)
+int process_file(const char *file_name, regex_t *compiled, const char *string2)
 {
     FILE *fp, *tmp;
     char *line;
     size_t line_len, file_len;
     int rr; /* return value of read_line */
+    int regerror; /* return value of regexec */
     int found_flag;
 
     fp = fopen(file_name, "r");
@@ -320,8 +372,15 @@ int process_file(const char *file_name, const char *string1, const char *string2
     line = NULL;
     while (!found_flag && (rr = read_line(fp, &line, &line_len, file_name)) == SUCCESS)
     {
-        if (strstr(line, string1))
+        regerror = regexec(compiled, line, 0, NULL, 0);
+        if (regerror == 0)
             found_flag = TRUE;
+        else if (regerror == REG_ESPACE)
+        {
+            fprintf(stderr, "%s: Not enough memory to process file '%s'.\n", PROGRAM_NAME, file_name);
+            fclose(fp);
+            return FAILURE;
+        }
     }
     if (rr == FAILURE)
     {
@@ -334,7 +393,7 @@ int process_file(const char *file_name, const char *string1, const char *string2
         rewind(fp);
         tmp = tmpfile();
         /* copy f to tmp or file_buffer with replaced string */
-        if (replace_string(fp, tmp, string1, string2, file_name, &file_len))
+        if (replace_string(fp, tmp, compiled, string2, file_name, &file_len))
         {
             fclose(fp);
             if (tmp != NULL)
@@ -395,7 +454,7 @@ int process_file(const char *file_name, const char *string1, const char *string2
 /*
     Processes the current directory and all subdirectories recursively.
 */
-int process_dir(const char *string1, const char *string2)
+int process_dir(regex_t *compiled, const char *string2)
 {
     DIR *d; /* current directory */
     struct dirent *entry; /* directory entry */
@@ -412,14 +471,14 @@ int process_dir(const char *string1, const char *string2)
     while ((entry = readdir(d)))
     {
         if (entry->d_type == DT_REG) /* regular file */
-            failure_flag |= process_file(entry->d_name, string1, string2);
+            failure_flag |= process_file(entry->d_name, compiled, string2);
         else if (entry->d_type == DT_DIR) /* directory */
         {
             if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, ".."))
             {
                 if (!chdir(entry->d_name))
                 {
-                    failure_flag |= process_dir(string1, string2);
+                    failure_flag |= process_dir(compiled, string2);
                     chdir("..");
                 }
                 else
@@ -441,6 +500,8 @@ int main(int argc, char** argv)
 {
     char *string1, *string2;
     struct stat st; /* stat for obtaining file type */
+    regex_t compiled; /* data structure for regular expression */
+    int errcode; /* error code for regcomp */
     int wd; /* file descriptor for current working directory */
     int i;
     int failure_flag, omit_dir_flag;
@@ -470,12 +531,20 @@ int main(int argc, char** argv)
         fprintf(stderr, "%s: STRING1 must have at least one character.\n", PROGRAM_NAME);
         return EXIT_FAILURE;
     }
+    /* compile regular expression */
+    errcode = regcomp(&compiled, string1, 0);
+    if (errcode != 0)
+    {
+        print_regerror(errcode, &compiled);
+        return EXIT_FAILURE;
+    }
 
-    /* Allocate initial memory for buffer */
+    /* allocate initial memory for buffer */
     buffer = (char*)malloc(INIT_BUFFER_SIZE * sizeof(char));
     if (buffer == NULL)
     {
         fprintf(stderr, "%s: Could not allocate memory for buffer.\n", PROGRAM_NAME);
+        regfree(&compiled);
         return EXIT_FAILURE;
     }
     buffer_size = INIT_BUFFER_SIZE;
@@ -485,7 +554,7 @@ int main(int argc, char** argv)
     if (argc < 4 || (argc == 4 && !strcmp(argv[3], "-")))
     {
         /* default input from stdin and output stdout */
-        if (replace_string(stdin, stdout, string1, string2, "stdin", NULL))
+        if (replace_string(stdin, stdout, &compiled, string2, "stdin", NULL))
         {
             failure_flag = TRUE;
         }
@@ -519,7 +588,7 @@ int main(int argc, char** argv)
                 }
                 if (!chdir(argv[i]))
                 {
-                    failure_flag |= process_dir(string1, string2);
+                    failure_flag |= process_dir(&compiled, string2);
                     /* return to working directory */
                     fchdir(wd);
                 }
@@ -530,7 +599,7 @@ int main(int argc, char** argv)
                 }
             }
             else if (S_ISREG(st.st_mode)) /* regular file */
-                failure_flag |= process_file(argv[i], string1, string2);
+                failure_flag |= process_file(argv[i], &compiled, string2);
         }
         close(wd);
     }
@@ -545,6 +614,8 @@ int main(int argc, char** argv)
         free(file_buffer);
         file_buffer = NULL;
     }
+    /* free compiled regular expression */
+    regfree(&compiled);
 
     if (failure_flag)
         return EXIT_FAILURE;
