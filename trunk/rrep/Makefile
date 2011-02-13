@@ -1,14 +1,17 @@
 CC = gcc
 STRIP = strip
 FLAGS = -Wall
-SOURCE_FILES = rrep.c
+OBJECTS = messages.o rrep.o
 BIN_NAME = rrep
 
 default: $(BIN_NAME)
 
-$(BIN_NAME):
-	$(CC) $(FLAGS) -o $@ $(SOURCE_FILES)
+$(BIN_NAME): $(OBJECTS)
+	$(CC) $(FLAGS) -o $@ $(OBJECTS)
 	$(STRIP) $@
 
+%.o: %.cpp
+	$(CC) $(FLAGS) -c -o $@ $<
+
 clean:
-	rm -f $(BIN_NAME)
+	rm -f $(BIN_NAME) $(OBJECTS)
