@@ -24,148 +24,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <regex.h>
-#include "messages.h"
 #include "rrep.h"
+#include "messages.h"
+#include "bufferio.h"
 
-
-/* Pointer to buffer.  */
-char *buffer = NULL;
-/* Size of  buffer.  */
-size_t buffer_size = 0;
-
-/* Pointer to buffer for tmpfile replacement.  */
-char *file_buffer = NULL;
-/* Size of file_buffer.  */
-size_t file_buffer_size = 0;
-
-
-/* Read in a buffered line from fp. The line starts at *line and has
-   length *line_len. Line delimiters are '\n' and '\0'. If a line could
-   be placed at the line pointer, SUCCESS is returned. Otherwise, if
-   the end of file was reached END_REACHED is returned or if an error
-   occurred FAILURE is returned.  */
-int
-read_line (FILE *fp, char **line, size_t *line_len,
-	   const char *file_name, const int options)
-{
-  static size_t start = 0; /* Start of line.  */
-  static size_t search_pos = 1; /* Search position for end of line.  */
-  static size_t buffer_fill = 0; /* Number of read characters in
-				    buffer.  */
-  static char null_replace = '\0'; /* Character buffer for string
-				      termination.  */
-  char *tmp;
-  size_t nr; /* Number of characters read by fread.  */
-  int i, search_flag;
-
-  *line_len = 0;
-  if (*line == NULL)
-    {
-      /* New file.  */
-      start = 0;
-      search_pos = 1;
-      buffer_fill = 0;
-      /* Fill complete buffer.  */
-      nr = fread (buffer, sizeof (char), buffer_size-1, fp);
-      if (nr != buffer_size-1 && ferror (fp))
-        {
-	  rrep_error (ERR_READ_FILE, file_name, options);
-	  fclose (fp);
-	  return FAILURE;
-        }
-      buffer_fill = nr;
-    }
-  else if (feof (fp) && search_pos >= buffer_fill)
-    {
-      /* Reset static variables and signal eof.  */
-      *line = NULL;
-      start = 0;
-      search_pos = 1;
-      buffer_fill = 0;
-      null_replace = '\0';
-      return END_REACHED;
-    }
-  else
-    {
-      /* Restore character after newline and set start to it.  */
-      *(buffer+search_pos) = null_replace;
-      start = search_pos;
-      search_pos++;
-    }
-
-  /* Search for end of line.  */
-  search_flag = TRUE;
-  while (search_flag)
-    {
-      while (search_pos < buffer_fill && *(buffer+search_pos-1) != '\n'
-	     && *(buffer+search_pos-1) != '\0')
-	search_pos++;
-
-      if (search_pos >= buffer_fill && !feof (fp))
-        {
-	  /* End of buffer reached.  */
-	  if (start > 0)
-            {
-	      /* Let line start at the beginning of buffer.  */
-	      for (i = 0; i < buffer_fill-start; i++)
-		*(buffer+i) = *(buffer+start+i);
-	      search_pos -= start;
-
-	      /* Fill rest of buffer.  */
-	      nr = fread (buffer+search_pos, sizeof (char),
-			  buffer_size-search_pos-1, fp);
-	      if (nr != buffer_size-search_pos-1 && ferror (fp))
-                {
-		  rrep_error (ERR_READ_FILE, file_name, options);
-		  fclose (fp);
-		  return FAILURE;
-                }
-	      buffer_fill += nr - start;
-	      start = 0;
-            }
-	  else
-            {
-	      /* Reallocate memory.  */
-	      tmp = realloc (buffer, buffer_size+INIT_BUFFER_SIZE);
-	      if (tmp == NULL)
-                {
-		  rrep_error (ERR_REALLOC_BUFFER, file_name, options);
-		  fclose (fp);
-		  return FAILURE;
-                }
-	      buffer = tmp;
-	      buffer_size += INIT_BUFFER_SIZE;
-
-	      /* fill allocated memory */
-	      nr = fread (buffer+search_pos, sizeof (char),
-			  INIT_BUFFER_SIZE, fp);
-	      if (nr != INIT_BUFFER_SIZE && ferror (fp))
-                {
-		  rrep_error (ERR_READ_FILE, file_name, options);
-		  fclose (fp);
-		  return FAILURE;
-                }
-	      buffer_fill += nr;
-            }
-        }
-      else
-        {
-	  /* End of line found or file complete.  */
-	  search_flag = FALSE;
-        }
-    }
-
-  /* Set pointer to line.  */
-  *line = buffer+start;
-  /* Temporarily replace character after line to generate a terminated
-     string.  */
-  null_replace = *(buffer+search_pos);
-  *(buffer+search_pos) = '\0';
-  /* Set line length.  */
-  *line_len = search_pos - start;
-
-  return SUCCESS;
-}
+/* Program invocation name.  */
+char *invocation_name;
 
 /* Writes string to fp or file_buffer and reallocates memory of
    file_buffer if necessary. *pos points to the end of the written
@@ -306,15 +170,16 @@ replace_string (FILE *in, FILE *out, regex_t *compiled,
 
 /* Replace compiled by string in the file file_name.  */
 int
-process_file (const char *file_name, regex_t *compiled,
-	      const char *string, const size_t string_len,
-	      const int options)
+process_file (const char *relative_path, const char *file_name,
+	      regex_t *compiled, const char *string,
+	      const size_t string_len, const int options)
 {
   FILE *fp, *tmp;
   char *line;
   size_t line_len, file_len;
   int rr; /* Return value of read_line.  */
   int regerror; /* Return value of regexec.  */
+  size_t path_len;
   int found_flag;
 
   fp = fopen (file_name, "r");
@@ -408,7 +273,16 @@ process_file (const char *file_name, regex_t *compiled,
 	  fclose (tmp);
         }
       if (!(options & OPT_QUIET))
-	printf ("Replaced in '%s'.\n", file_name);
+	{
+	  if (relative_path != NULL)
+	    {
+	      printf ("%s", relative_path);
+	      path_len = strlen (relative_path);
+	      if (path_len == 0 || relative_path[path_len-1] != '/')
+		printf ("/");
+	    }
+	  printf ("%s: Pattern replaced\n", file_name);
+	}
     }
   fclose (fp);
 
@@ -418,12 +292,17 @@ process_file (const char *file_name, regex_t *compiled,
 /* Processes the current directory and all subdirectories
    recursively.  */
 int
-process_dir (regex_t *compiled, const char *string,
-	     const size_t string_len, const int options)
+process_dir (const char *relative_path, regex_t *compiled,
+	     const char *string, const size_t string_len,
+	     const int options)
 {
   DIR *d; /* Current directory.  */
   struct dirent *entry; /* Directory entry.  */
   int failure_flag;
+  size_t path_len = strlen (relative_path);
+  size_t next_path_len;
+  char *next_path = NULL; /* The relative_path with directory names
+			     attached.  */
 
   failure_flag = FALSE;
   d = opendir (".");
@@ -436,8 +315,9 @@ process_dir (regex_t *compiled, const char *string,
   while ((entry = readdir (d)))
     {
       if (entry->d_type == DT_REG) /* The entry is a regular file.  */
-	failure_flag |= process_file (entry->d_name, compiled,
-				      string, string_len, options);
+	failure_flag |= process_file (relative_path, entry->d_name,
+				      compiled, string, string_len,
+				      options);
       else if (entry->d_type == DT_DIR) /* The entry is a
 					   directory.  */
         {
@@ -447,9 +327,30 @@ process_dir (regex_t *compiled, const char *string,
 	      /* Recurse into directory.  */
 	      if (!chdir (entry->d_name))
                 {
-		  failure_flag |= process_dir (compiled, string,
-					       string_len, options);
-		  chdir ("..");
+		  next_path_len = path_len + strlen (entry->d_name);
+		  next_path = (char *) malloc ((next_path_len + 2)
+					       * sizeof (char));
+		  if (next_path == NULL)
+		    {
+		      rrep_error (ERR_ALLOC_PATHBUFFER, entry->d_name,
+				  options);
+		      return FAILURE;
+		    }
+		  strcpy (next_path, relative_path);
+		  if (path_len == 0
+		      || relative_path[path_len-1] != '/')
+		    strcat (next_path, "/");
+		  strcat (next_path, entry->d_name);
+		  failure_flag |= process_dir (next_path, compiled,
+					       string, string_len,
+					       options);
+		  free (next_path);
+		  next_path = NULL;
+		  if (chdir (".."))
+		    {
+		      rrep_error (ERR_PROCESS_DIR, entry->d_name, options);
+		      return FAILURE;
+		    }
                 }
 	      else
                 {
@@ -498,16 +399,22 @@ process_file_list (char **file_list, const size_t file_counter,
 	  if (omit_dir_flag)
 	    {
 	      if (!(options & OPT_QUIET))
-		printf ("%s: Omitting directory '%s'.\n",
-			PROGRAM_NAME, file_list[i]);
+		printf ("%s: %s: Omitting directory\n",
+			invocation_name, file_list[i]);
 	      continue;
 	    }
 	  if (!chdir (file_list[i]))
 	    {
-	      failure_flag |= process_dir (compiled, string,
-					   string_len, options);
+	      failure_flag |= process_dir (file_list[i], compiled,
+					   string, string_len,
+					   options);
 	      /* Return to working directory.  */
-	      fchdir (wd);
+	      if (fchdir (wd))
+		{
+		  rrep_error (ERR_PROCESS_DIR, file_list[i], options);
+		  close (wd);
+		  return FAILURE;
+		}
 	    }
 	  else
 	    {
@@ -517,7 +424,7 @@ process_file_list (char **file_list, const size_t file_counter,
 	}
       else if (S_ISREG (st.st_mode)) /* The st is a regular
 					file.  */
-	failure_flag |= process_file (file_list[i], compiled,
+	failure_flag |= process_file (NULL, file_list[i], compiled,
 				      string, string_len, options);
     }
   close (wd);
@@ -540,6 +447,9 @@ main (int argc, char** argv)
   int cflags = 0; /* Flags for regcomp.  */
   int options = 0; /* Option flags set by arguments.  */
   int failure_flag = FALSE;
+
+  /* Set program invocation name.  */
+  invocation_name = argv[0];
 
   /* Allocate memory for file list.  */
   file_list = (char **) malloc (argc * sizeof (char *));
@@ -607,7 +517,8 @@ main (int argc, char** argv)
   if (pattern == NULL || string == NULL)
     {
       print_usage ();
-      printf ("Try `%s --help' for more information.\n", PROGRAM_NAME);
+      printf ("Try `%s --help' for more information.\n",
+	      invocation_name);
       free (file_list);
       return EXIT_FAILURE;
     }

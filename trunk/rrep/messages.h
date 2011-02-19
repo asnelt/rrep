@@ -16,7 +16,6 @@
    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
    02110-1301, USA.  */
 
-
 /* Error codes for rrep_error.  */
 enum
   {
@@ -27,6 +26,7 @@ enum
     ERR_ALLOC_BUFFER, /* Error for allocating buffer.  */
     ERR_ALLOC_FILEBUFFER, /* Error for allocating file_buffer.  */
     ERR_ALLOC_FILELIST, /* Error for allocating file_list.  */
+    ERR_ALLOC_PATHBUFFER, /* Error for allocating next_path.  */
     ERR_REALLOC_BUFFER, /* Error for reallocating buffer.  */
     ERR_REALLOC_FILEBUFFER, /* Error for reallocating file_buffer.  */
     ERR_MEMORY, /* Error for insufficient memory.  */
@@ -39,17 +39,16 @@ enum
   };
 
 /* Prints version information.  */
-void print_version ();
+extern void print_version ();
 
 /* Prints usage information.  */
-void print_usage ();
+extern void print_usage ();
 
 /* Prints the help.  */
-void print_help ();
+extern void print_help ();
 
 /* Prints an error message.  */
-void rrep_error (const int errcode, const char *file_name,
-		 const int options);
+extern void rrep_error (const int, const char *, const int);
 
 /* Prints a regerror error message.  */
-void print_regerror (const int errcode, regex_t *compiled);
+extern void print_regerror (const int, regex_t *);

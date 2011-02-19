@@ -18,10 +18,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <regex.h>
 #include "rrep.h"
 #include "messages.h"
-
 
 /* Prints version information.  */
 void
@@ -40,7 +40,8 @@ print_version ()
 void
 print_usage ()
 {
-  printf ("Usage: %s PATTERN REPLACEMENT [FILE]...\n", PROGRAM_NAME);
+  printf ("Usage: %s [OPTION]... PATTERN REPLACEMENT [FILE]...\n",
+	  invocation_name);
 }
 
 /* Prints the help.  */
@@ -53,7 +54,7 @@ print_help ()
   printf ("PATTERN is, by default, a basic regular expression");
   printf (" (BRE).\n");
   printf ("Example: %s 'hello world' 'Hello, World!' menu.h",
-	  PROGRAM_NAME);
+	  invocation_name);
   printf (" main.c\n\n");
   printf ("Options:\n");
   printf ("  -E, --extended-regexp     PATTERN is an extended");
@@ -86,77 +87,81 @@ rrep_error (const int errcode, const char *file_name,
   switch (errcode)
     {
     case ERR_PROCESS_ARG:
-      fprintf (stderr, "%s: Could not process argument '%s'.\n",
-	       PROGRAM_NAME, file_name);
+      fprintf (stderr, "%s: %s: Could not process argument: %s\n",
+	       invocation_name, file_name, strerror (errno));
       break;
     case ERR_PROCESS_DIR:
-      fprintf (stderr, "%s: Could not process directory '%s'.\n",
-	       PROGRAM_NAME, file_name);
+      fprintf (stderr, "%s: %s: Could not process directory: %s\n",
+	       invocation_name, file_name, strerror (errno));
       break;
     case ERR_PATTERN:
       fprintf (stderr, "%s: PATTERN must have at least one",
-	       PROGRAM_NAME);
-      fprintf (stderr, " character.\n");
+	       invocation_name);
+      fprintf (stderr, " character\n");
       break;
     case ERR_SAVE_DIR:
       fprintf (stderr, "%s: Could not save current working",
-	       PROGRAM_NAME);
-      fprintf (stderr, " directory.\n");
+	       invocation_name);
+      fprintf (stderr, " directory: %s\n", strerror (errno));
       break;
     case ERR_ALLOC_BUFFER:
-      fprintf (stderr, "%s: Could not allocate memory for buffer.\n",
-	       PROGRAM_NAME);
+      fprintf (stderr, "%s: Could not allocate memory for buffer:",
+	       invocation_name);
+      fprintf (stderr, " %s\n", strerror (errno));
       break;
     case ERR_ALLOC_FILEBUFFER: 
-      fprintf (stderr, "%s: Could not allocate memory for file_buffer",
-	       PROGRAM_NAME);
-      fprintf (stderr, " while processing '%s'.\n", file_name);
+      fprintf (stderr, "%s: %s: Could not allocate memory for",
+	       invocation_name, file_name);
+      fprintf (stderr, " file_buffer: %s\n", strerror (errno));
       break;
     case ERR_ALLOC_FILELIST:
       fprintf (stderr, "%s: Could not allocate memory for",
-	       PROGRAM_NAME);
-      fprintf (stderr, " file_list.\n");
+	       invocation_name);
+      fprintf (stderr, " file_list: %s\n", strerror (errno));
+      break;
+    case ERR_ALLOC_PATHBUFFER:
+      fprintf (stderr, "%s: %s: Could not allocate memory for",
+	       invocation_name, file_name);
+      fprintf (stderr, " next_path: %s\n", strerror (errno));
       break;
     case ERR_REALLOC_BUFFER:
-      fprintf (stderr, "%s: Could not reallocate memory for buffer",
-	       PROGRAM_NAME);
-      fprintf (stderr, " while processing '%s'.\n", file_name);
+      fprintf (stderr, "%s: %s: Could not reallocate memory for",
+	       invocation_name, file_name);
+      fprintf (stderr, " buffer: %s\n", strerror (errno));
       break;
     case ERR_REALLOC_FILEBUFFER:
-      fprintf (stderr, "%s: Could not reallocate memory for",
-	       PROGRAM_NAME);
-      fprintf (stderr, " file_buffer while processing '%s'.\n",
-	       file_name);
+      fprintf (stderr, "%s: %s: Could not reallocate memory for",
+	       invocation_name, file_name);
+      fprintf (stderr, " file_buffer: %s\n", strerror (errno));
       break;
     case ERR_MEMORY:
-      fprintf (stderr, "%s: Not enough memory to process file",
-	       PROGRAM_NAME);
-      fprintf (stderr, " '%s'.\n", file_name);
+      fprintf (stderr, "%s: %s: Not enough memory to process file:",
+	       invocation_name, file_name);
+      fprintf (stderr, " %s\n", strerror (errno));
       break;
     case ERR_OPEN_READ:
-      fprintf (stderr, "%s: Could not open file '%s' for reading.\n",
-	       PROGRAM_NAME, file_name);
+      fprintf (stderr, "%s: %s: Could not open file for reading: %s\n",
+	       invocation_name, file_name, strerror (errno));
       break;
     case ERR_OPEN_WRITE:
-      fprintf (stderr, "%s: Could not open file '%s' for writing.\n",
-	       PROGRAM_NAME, file_name);
+      fprintf (stderr, "%s: %s: Could not open file for writing: %s\n",
+	       invocation_name, file_name, strerror (errno));
       break;
     case ERR_OPEN_DIR:
-      fprintf (stderr, "%s: Could not open directory.\n",
-	       PROGRAM_NAME);
+      fprintf (stderr, "%s: Could not open directory: %s\n",
+	       invocation_name, strerror (errno));
       break;
     case ERR_READ_FILE:
-      fprintf (stderr, "%s: Could not read file %s.\n", PROGRAM_NAME,
-	       file_name);
+      fprintf (stderr, "%s: %s: Could not read file: %s\n",
+	       invocation_name, file_name, strerror (errno));
       break;
     case ERR_READ_TEMP:
-      fprintf (stderr, "%s: Could not read temporary file while",
-	       PROGRAM_NAME);
-      fprintf (stderr, " processing '%s'.\n", file_name);
+      fprintf (stderr, "%s: %s: Could not read temporary file: %s\n",
+	       invocation_name, file_name, strerror (errno));
       break;
     case ERR_OVERWRITE:
-      fprintf (stderr, "%s: Could not overwrite file '%s'.\n",
-	       PROGRAM_NAME, file_name);
+      fprintf (stderr, "%s: %s: Could not overwrite file: %s\n",
+	       invocation_name, file_name, strerror (errno));
       break;
     }
 }
@@ -168,6 +173,6 @@ print_regerror (const int errcode, regex_t *compiled)
   size_t len = regerror (errcode, compiled, NULL, 0);
   char *message = malloc (len);
   regerror (errcode, compiled, message, len);
-  fprintf (stderr, "%s: %s\n", PROGRAM_NAME, message);
+  fprintf (stderr, "%s: %s\n", invocation_name, message);
   free (message);
 }

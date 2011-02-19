@@ -1,4 +1,4 @@
-/* rrep.h - header file of rrep, a search and replace utility.
+/* bufferio.h - header file of buffer functions for rrep.
    Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
@@ -16,32 +16,21 @@
    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
    02110-1301, USA.  */
 
-#define PROGRAM_NAME "rrep"
-#define VERSION "1.2.0"
+/* Pointer to buffer.  */
+extern char *buffer;
+/* Size of  buffer.  */
+extern size_t buffer_size;
 
-/* Initial size of the buffer for reading lines.  */
-#define INIT_BUFFER_SIZE (4096)
-
-/* Option flag definitions.  */
-#define OPT_QUIET       0x01 /* Do not print regular messages.  */
-#define OPT_RECURSIVE   0x02 /* Recurse into directories.  */
-#define OPT_NO_MESSAGES 0x04 /* Do not print error messages.  */
-
-/* Boolean values.  */
-enum
-  {
-    FALSE = 0,
-    TRUE = 1
-  };
+/* Pointer to buffer for tmpfile replacement.  */
+extern char *file_buffer;
+/* Size of file_buffer.  */
+extern size_t file_buffer_size;
 
 
-/* Processing constants.  */
-enum
-  {
-    SUCCESS = 0,
-    FAILURE = 1,
-    END_REACHED = 2
-  };
-
-/* Program invocation name is set in main.  */
-extern char *invocation_name;
+/* Read in a buffered line from fp. The line starts at *line and has
+   length *line_len. Line delimiters are '\n' and '\0'. If a line could
+   be placed at the line pointer, SUCCESS is returned. Otherwise, if
+   the end of file was reached END_REACHED is returned or if an error
+   occurred FAILURE is returned.  */
+extern int read_line (FILE *, char **, size_t *, const char *,
+		      const int);
