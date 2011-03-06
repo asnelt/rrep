@@ -27,16 +27,19 @@
 #include "rrep.h"
 #include "messages.h"
 #include "bufferio.h"
+#include "pattern.h"
 
 /* Program invocation name.  */
-char *invocation_name;
+char *invocation_name = NULL;
+/* Option flags set by arguments.  */
+int options = 0;
 
 /* Writes string to fp or file_buffer and reallocates memory of
    file_buffer if necessary. *pos points to the end of the written
    string.  */
 inline int
 write_string (FILE *fp, const char *string, const size_t string_len,
-	      const char *file_name, char **pos, const int options)
+	      const char *file_name, char **pos)
 {
   char *tmp;
 
@@ -50,7 +53,7 @@ write_string (FILE *fp, const char *string, const size_t string_len,
 			 file_buffer_size+INIT_BUFFER_SIZE);
 	  if (tmp == NULL)
 	    {
-	      rrep_error (ERR_REALLOC_FILEBUFFER, file_name, options);
+	      rrep_error (ERR_REALLOC_FILEBUFFER, file_name);
 	      return FAILURE;
 	    }
 	  *pos = tmp + (*pos - file_buffer);
@@ -69,20 +72,61 @@ write_string (FILE *fp, const char *string, const size_t string_len,
   return SUCCESS;
 }
 
-/* Copies in to out and replaces compiled by string.  */
+/* Writes the replacement to fp or file_buffer. *pos points to the end
+   of the written string.  */
+inline int
+write_replacement (FILE *fp, const char *start,
+		   const regmatch_t *match,
+		   const replace_t *replacement, const char *file_name,
+		   char **pos)
+{
+  int failure_flag = FALSE;
+  size_t i;
+  
+  if (options & OPT_FIXED)
+    {
+      /* REPLACEMENT is a fixed string.  */
+      failure_flag |= write_string (fp, replacement->string,
+			   replacement->string_len, file_name, pos);
+    }
+  else
+    {
+      failure_flag |= write_string (fp, replacement->part[0],
+				    replacement->part_len[0],
+				    file_name, pos);
+      for (i = 0; i < replacement->nsub; i++)
+	{
+	  /* Match for next index available?  */
+	  if (match[replacement->sub[i]].rm_so > -1)
+	    failure_flag |=
+	      write_string (fp, start
+			    + match[replacement->sub[i]].rm_so,
+			    match[replacement->sub[i]].rm_eo
+			    - match[replacement->sub[i]].rm_so,
+			    file_name, pos);
+	  failure_flag |= write_string (fp, replacement->part[i+1],
+					replacement->part_len[i+1],
+					file_name, pos);
+	}
+    }
+
+  return failure_flag;
+}
+
+/* Copies in to out and replaces pattern by replacement.  */
 int
-replace_string (FILE *in, FILE *out, regex_t *compiled,
-		const char *string, const size_t string_len,
-		const char *file_name, size_t *file_len,
-		const int options)
+replace_string (FILE *in, FILE *out, pattern_t *pattern,
+		const replace_t *replacement, const char *file_name,
+		size_t *file_len)
 {
   size_t line_len;
   char *line, *start, *pos;
   int rr; /* Return value of read_line.  */
-  int regerror; /* Return value of regexec.  */
-  regmatch_t match[1]; /* Matched regular expression.  */
+  int errcode; /* Return value of regexec.  */
+  regmatch_t match[10]; /* Matched regular expression.  */
   int last_empty_flag; /* Last regular expression had zero length.  */
   int break_flag; /* Signals break of while loop.  */
+  char tmp_c; /* Buffer for a single character.  */
 
   if (out == NULL)
     {
@@ -93,7 +137,7 @@ replace_string (FILE *in, FILE *out, regex_t *compiled,
 					 * sizeof (char));
 	  if (file_buffer == NULL)
             {
-	      rrep_error (ERR_ALLOC_FILEBUFFER, file_name, options);
+	      rrep_error (ERR_ALLOC_FILEBUFFER, file_name);
 	      return FAILURE;
             }
 	  file_buffer_size = INIT_BUFFER_SIZE;
@@ -104,28 +148,33 @@ replace_string (FILE *in, FILE *out, regex_t *compiled,
 
   line = NULL;
   /* Copy in to out with replaced string.  */
-  while ((rr = read_line (in, &line, &line_len, file_name, options))
+  while ((rr = read_line (in, &line, &line_len, file_name))
 	 == SUCCESS)
     {
       start = line;
       last_empty_flag = TRUE;
-      /* Search for regular expression.  */
-      while ((regerror = regexec (compiled, start, 1, match, 0)) == 0)
+      /* Search for regular expression or pattern string.  */
+      while ((errcode = match_pattern (pattern, start, match)) == 0)
         {
 	  break_flag = (*start == '\0');
 	  if (break_flag && start > line && *(start-1) == '\n')
 	    break;
 
 	  if (match[0].rm_eo > 0)
-	    *(start+match[0].rm_so) = '\0';
-
-	  if (match[0].rm_eo > 0
-	      && write_string (out, start, match[0].rm_so, file_name,
-			       &pos, options) != SUCCESS)
-	    return FAILURE;
+	    {
+	      /* Save character in tmp_c.  */
+	      tmp_c = *(start+match[0].rm_so);
+	      /* Write beginning of line before matched pattern.  */
+	      *(start+match[0].rm_so) = '\0';
+	      if (write_string (out, start, match[0].rm_so, file_name,
+				&pos) != SUCCESS)
+		return FAILURE;
+	      /* Restore character from tmp_c.  */
+	      *(start+match[0].rm_so) = tmp_c;
+	    }
 	  if (last_empty_flag || match[0].rm_eo > 0)
-	    if (write_string (out, string, string_len, file_name, &pos,
-			      options) != SUCCESS)
+	    if (write_replacement (out, start, match, replacement,
+				   file_name, &pos) != SUCCESS)
 	      return FAILURE;
 
 	  if (break_flag)
@@ -134,8 +183,8 @@ replace_string (FILE *in, FILE *out, regex_t *compiled,
 	  if (match[0].rm_eo == 0)
             {
 	      /* Found string has zero length.  */
-	      if (write_string (out, start, 1, file_name,
-				&pos, options) != SUCCESS)
+	      if (write_string (out, start, 1, file_name, &pos)
+		  != SUCCESS)
 		return FAILURE;
 
 	      start++;
@@ -147,14 +196,14 @@ replace_string (FILE *in, FILE *out, regex_t *compiled,
 	      last_empty_flag = FALSE;
             }
         }
-      if (regerror == REG_ESPACE)
+      if (errcode != 0 && errcode != REG_NOMATCH)
         {
-	  rrep_error (ERR_MEMORY, file_name, options);
+	  print_regerror (errcode, pattern->compiled);
 	  return FAILURE;
         }
       /* Flush rest of line into out or file_buffer.  */
       if (write_string (out, start, line_len-(start-line), file_name,
-			&pos, options) != SUCCESS)
+			&pos) != SUCCESS)
 	return FAILURE;
     }
   /* Set file_len if we are using file_buffer.  */
@@ -168,40 +217,38 @@ replace_string (FILE *in, FILE *out, regex_t *compiled,
   return SUCCESS;
 }
 
-/* Replace compiled by string in the file file_name.  */
+/* Replace pattern by replacement in the file file_name.  */
 int
 process_file (const char *relative_path, const char *file_name,
-	      regex_t *compiled, const char *string,
-	      const size_t string_len, const int options)
+	      pattern_t *pattern, const replace_t *replacement)
 {
   FILE *fp, *tmp;
   char *line;
   size_t line_len, file_len;
   int rr; /* Return value of read_line.  */
-  int regerror; /* Return value of regexec.  */
+  int errcode; /* Return value of regexec.  */
   size_t path_len;
   int found_flag;
 
   fp = fopen (file_name, "r");
   if (fp == NULL)
     {
-      rrep_error (ERR_OPEN_READ, file_name, options);
+      rrep_error (ERR_OPEN_READ, file_name);
       return FAILURE;
     }
 
-  /* First check whether file file_name contains compiled at all.  */
+  /* First check whether file file_name contains pattern at all.  */
   found_flag = FALSE;
   line = NULL;
   while (!found_flag && (rr = read_line (fp, &line, &line_len,
-					 file_name, options))
-	 == SUCCESS)
+					 file_name)) == SUCCESS)
     {
-      regerror = regexec (compiled, line, 0, NULL, 0);
-      if (regerror == 0)
+      errcode = match_pattern (pattern, line, NULL);
+      if (errcode == 0)
 	found_flag = TRUE;
-      else if (regerror == REG_ESPACE)
+      else if (errcode != REG_NOMATCH)
         {
-	  rrep_error (ERR_MEMORY, file_name, options);
+	  print_regerror (errcode, pattern->compiled);
 	  fclose (fp);
 	  return FAILURE;
         }
@@ -217,8 +264,8 @@ process_file (const char *relative_path, const char *file_name,
       rewind (fp);
       tmp = tmpfile ();
       /* Copy f to tmp or file_buffer with replaced string.  */
-      if (replace_string (fp, tmp, compiled, string, string_len,
-			  file_name, &file_len, options))
+      if (replace_string (fp, tmp, pattern, replacement, file_name,
+			  &file_len))
         {
 	  fclose (fp);
 	  if (tmp != NULL)
@@ -230,7 +277,7 @@ process_file (const char *relative_path, const char *file_name,
       fp = freopen (file_name, "w", fp);
       if (fp == NULL)
         {
-	  rrep_error (ERR_OPEN_WRITE, file_name, options);
+	  rrep_error (ERR_OPEN_WRITE, file_name);
 	  if (tmp != NULL)
 	    fclose (tmp);
 	  return FAILURE;
@@ -241,7 +288,7 @@ process_file (const char *relative_path, const char *file_name,
 	  if (fwrite (file_buffer, sizeof (char), file_len, fp)
 	      != file_len)
             {
-	      rrep_error (ERR_OVERWRITE, file_name, options);
+	      rrep_error (ERR_OVERWRITE, file_name);
 	      fclose (fp);
 	      return FAILURE;
             }
@@ -256,7 +303,7 @@ process_file (const char *relative_path, const char *file_name,
 				tmp);
 	      if (line_len != buffer_size && ferror (tmp))
                 {
-		  rrep_error (ERR_READ_TEMP, file_name, options);
+		  rrep_error (ERR_READ_TEMP, file_name);
 		  fclose (fp);
 		  fclose (tmp);
 		  return FAILURE;
@@ -264,7 +311,7 @@ process_file (const char *relative_path, const char *file_name,
 	      if (fwrite (buffer, sizeof (char), line_len, fp)
 		  != line_len)
                 {
-		  rrep_error (ERR_OVERWRITE, file_name, options);
+		  rrep_error (ERR_OVERWRITE, file_name);
 		  fclose (fp);
 		  fclose (tmp);
 		  return FAILURE;
@@ -292,9 +339,8 @@ process_file (const char *relative_path, const char *file_name,
 /* Processes the current directory and all subdirectories
    recursively.  */
 int
-process_dir (const char *relative_path, regex_t *compiled,
-	     const char *string, const size_t string_len,
-	     const int options)
+process_dir (const char *relative_path, pattern_t *pattern,
+	     const replace_t *replacement)
 {
   DIR *d; /* Current directory.  */
   struct dirent *entry; /* Directory entry.  */
@@ -308,7 +354,7 @@ process_dir (const char *relative_path, regex_t *compiled,
   d = opendir (".");
   if (d == NULL)
     {
-      rrep_error (ERR_OPEN_DIR, NULL, options);
+      rrep_error (ERR_OPEN_DIR, NULL);
       return FAILURE;
     }
 
@@ -316,8 +362,7 @@ process_dir (const char *relative_path, regex_t *compiled,
     {
       if (entry->d_type == DT_REG) /* The entry is a regular file.  */
 	failure_flag |= process_file (relative_path, entry->d_name,
-				      compiled, string, string_len,
-				      options);
+				      pattern, replacement);
       else if (entry->d_type == DT_DIR) /* The entry is a
 					   directory.  */
         {
@@ -332,8 +377,7 @@ process_dir (const char *relative_path, regex_t *compiled,
 					       * sizeof (char));
 		  if (next_path == NULL)
 		    {
-		      rrep_error (ERR_ALLOC_PATHBUFFER, entry->d_name,
-				  options);
+		      rrep_error (ERR_ALLOC_PATHBUFFER, entry->d_name);
 		      return FAILURE;
 		    }
 		  strcpy (next_path, relative_path);
@@ -341,20 +385,19 @@ process_dir (const char *relative_path, regex_t *compiled,
 		      || relative_path[path_len-1] != '/')
 		    strcat (next_path, "/");
 		  strcat (next_path, entry->d_name);
-		  failure_flag |= process_dir (next_path, compiled,
-					       string, string_len,
-					       options);
+		  failure_flag |= process_dir (next_path, pattern,
+					       replacement);
 		  free (next_path);
 		  next_path = NULL;
 		  if (chdir (".."))
 		    {
-		      rrep_error (ERR_PROCESS_DIR, entry->d_name, options);
+		      rrep_error (ERR_PROCESS_DIR, entry->d_name);
 		      return FAILURE;
 		    }
                 }
 	      else
                 {
-		  rrep_error (ERR_PROCESS_DIR, entry->d_name, options);
+		  rrep_error (ERR_PROCESS_DIR, entry->d_name);
 		  failure_flag = TRUE;
                 }
             }
@@ -367,8 +410,7 @@ process_dir (const char *relative_path, regex_t *compiled,
 /* Processes the file_counter files in file_list.  */
 int
 process_file_list (char **file_list, const size_t file_counter,
-		   regex_t *compiled, const char *string,
-		   const size_t string_len, const int options)
+		   pattern_t *pattern, const replace_t *replacement)
 {
   struct stat st; /* The stat for obtaining file type.  */
   int wd; /* File descriptor for current working directory.  */
@@ -381,7 +423,7 @@ process_file_list (char **file_list, const size_t file_counter,
   omit_dir_flag = (wd < 0);
   if (omit_dir_flag)
     {
-      rrep_error (ERR_SAVE_DIR, NULL, options);
+      rrep_error (ERR_SAVE_DIR, NULL);
       failure_flag = TRUE;
     }
   
@@ -390,7 +432,7 @@ process_file_list (char **file_list, const size_t file_counter,
     {
       if (lstat (file_list[i], &st) == -1)
 	{
-	  rrep_error (ERR_PROCESS_ARG, file_list[i], options);
+	  rrep_error (ERR_PROCESS_ARG, file_list[i]);
 	  failure_flag = TRUE;
 	}
 
@@ -405,49 +447,54 @@ process_file_list (char **file_list, const size_t file_counter,
 	    }
 	  if (!chdir (file_list[i]))
 	    {
-	      failure_flag |= process_dir (file_list[i], compiled,
-					   string, string_len,
-					   options);
+	      failure_flag |= process_dir (file_list[i], pattern,
+					   replacement);
 	      /* Return to working directory.  */
 	      if (fchdir (wd))
 		{
-		  rrep_error (ERR_PROCESS_DIR, file_list[i], options);
+		  rrep_error (ERR_PROCESS_DIR, file_list[i]);
 		  close (wd);
 		  return FAILURE;
 		}
 	    }
 	  else
 	    {
-	      rrep_error (ERR_PROCESS_DIR, file_list[i], options);
+	      rrep_error (ERR_PROCESS_DIR, file_list[i]);
 	      failure_flag = TRUE;
 	    }
 	}
       else if (S_ISREG (st.st_mode)) /* The st is a regular
 					file.  */
-	failure_flag |= process_file (NULL, file_list[i], compiled,
-				      string, string_len, options);
+	failure_flag |= process_file (NULL, file_list[i], pattern,
+				      replacement);
     }
   close (wd);
 
   return failure_flag;
 }
 
-/* Parses command-line-arguments and processes file list.  */
+/* Parses command line arguments and processes file list.  */
 int
 main (int argc, char** argv)
 {
-  char *pattern = NULL; /* Regular expression to search for.  */
-  char *string = NULL; /* Replacement string.  */
+  char *pattern_string = NULL; /* Regular expression to search for.  */
+  char *replacement_string = NULL; /* Replacement string.  */
+  pattern_t pattern; /* Pattern struct.  */
+  replace_t replacement; /* Replacement struct.  */
   char **file_list; /* List of files to process.  */
   size_t file_counter = 0; /* Counter for number of files.  */
-  size_t string_len; /* Length of string.  */
-  regex_t compiled; /* Data structure for regular expression.  */
-  int errcode; /* Error code for regcomp.  */
   int i;
   int cflags = 0; /* Flags for regcomp.  */
-  int options = 0; /* Option flags set by arguments.  */
   int failure_flag = FALSE;
 
+  /* Initialize pattern.  */
+  pattern.string = NULL;
+  pattern.compiled = NULL;
+  /* Initialize replacement.  */
+  replacement.string = NULL;
+  replacement.sub = NULL;
+  replacement.part = NULL;
+  replacement.part_len = NULL;
   /* Set program invocation name.  */
   invocation_name = argv[0];
 
@@ -455,7 +502,7 @@ main (int argc, char** argv)
   file_list = (char **) malloc (argc * sizeof (char *));
   if (file_list == NULL)
     {
-      rrep_error (ERR_ALLOC_FILELIST, NULL, options);
+      rrep_error (ERR_ALLOC_FILELIST, NULL);
       return EXIT_FAILURE;
     }
   /* Parse command line arguments.  */
@@ -465,6 +512,11 @@ main (int argc, char** argv)
 		 && strcmp (argv[i], "--extended-regexp")))
 	{
 	  cflags |= REG_EXTENDED;
+	}
+      else if (!(strcmp (argv[i], "-F")
+		 && strcmp (argv[i], "--fixed-strings")))
+	{
+	  options |= OPT_FIXED;
 	}
       else if (!(strcmp (argv[i], "-h") && strcmp (argv[i], "--help")))
 	{
@@ -501,10 +553,10 @@ main (int argc, char** argv)
 	}
       else
 	{
-	  if (pattern == NULL)
-	    pattern = argv[i];
-	  else if (string == NULL)
-	    string = argv[i];
+	  if (pattern_string == NULL)
+	    pattern_string = argv[i];
+	  else if (replacement_string == NULL)
+	    replacement_string = argv[i];
 	  else
 	    {
 	      /* Add argument to file_list.  */
@@ -514,27 +566,11 @@ main (int argc, char** argv)
 	}
     }
 
-  if (pattern == NULL || string == NULL)
+  if (pattern_string == NULL || replacement_string == NULL)
     {
       print_usage ();
       printf ("Try `%s --help' for more information.\n",
 	      invocation_name);
-      free (file_list);
-      return EXIT_FAILURE;
-    }
-  string_len = strlen (string);
-
-  if (strlen (pattern) < 1)
-    {
-      rrep_error (ERR_PATTERN, NULL, options);
-      free (file_list);
-      return EXIT_FAILURE;
-    }
-  /* Compile regular expression.  */
-  errcode = regcomp (&compiled, pattern, cflags);
-  if (errcode != 0)
-    {
-      print_regerror (errcode, &compiled);
       free (file_list);
       return EXIT_FAILURE;
     }
@@ -543,36 +579,48 @@ main (int argc, char** argv)
   buffer = (char *) malloc (INIT_BUFFER_SIZE * sizeof (char));
   if (buffer == NULL)
     {
-      rrep_error (ERR_ALLOC_BUFFER, NULL, options);
+      rrep_error (ERR_ALLOC_BUFFER, NULL);
       free (file_list);
-      regfree (&compiled);
       return EXIT_FAILURE;
     }
   buffer_size = INIT_BUFFER_SIZE;
+
+  /* Parse pattern string.  */
+  if (pattern_parse (pattern_string, &pattern, cflags) == FAILURE)
+    {
+      free (file_list);
+      free (buffer);
+      return EXIT_FAILURE;
+    }
+
+  /* Parse replacement string.  */
+  if (replace_parse (replacement_string, &replacement) == FAILURE)
+    {
+      free (file_list);
+      free (buffer);
+      pattern_free (&pattern);
+      return FAILURE;
+    }
 
   /* Replace pattern in file.  */
   if (file_counter == 0
       || (file_counter == 1 && !strcmp (file_list[0], "-")))
     {
       /* Default input from stdin and output stdout.  */
-      failure_flag |= replace_string (stdin, stdout, &compiled, string,
-				      string_len, "stdin", NULL,
-				      options);
+      failure_flag |= replace_string (stdin, stdout, &pattern,
+				      &replacement, "stdin", NULL);
     }
   else
     {
       failure_flag |= process_file_list (file_list, file_counter,
-					 &compiled, string,
-					 string_len, options);
+					 &pattern, &replacement);
     }
 
-  if (file_buffer != NULL)
-    free (file_buffer);
-
+  replace_free (&replacement);
+  pattern_free (&pattern);
+  free (file_buffer);
   free (buffer);
   free (file_list);
-  /* Free compiled regular expression.  */
-  regfree (&compiled);
 
   if (failure_flag)
     return EXIT_FAILURE;

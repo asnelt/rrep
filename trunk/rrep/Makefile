@@ -1,7 +1,7 @@
 CC = gcc
 STRIP = strip
 FLAGS = -Wall
-OBJECTS = messages.o bufferio.o rrep.o
+OBJECTS = messages.o bufferio.o pattern.o rrep.o
 BIN_NAME = rrep
 
 default: $(BIN_NAME)

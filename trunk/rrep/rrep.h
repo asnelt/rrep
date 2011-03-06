@@ -1,4 +1,4 @@
-/* rrep.h - header file of rrep, a search and replace utility.
+/* rrep.h - declarations for rrep, a search and replace utility.
    Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
@@ -17,7 +17,7 @@
    02110-1301, USA.  */
 
 #define PROGRAM_NAME "rrep"
-#define VERSION "1.2.0"
+#define VERSION "1.2.1"
 
 /* Initial size of the buffer for reading lines.  */
 #define INIT_BUFFER_SIZE (4096)
@@ -26,6 +26,8 @@
 #define OPT_QUIET       0x01 /* Do not print regular messages.  */
 #define OPT_RECURSIVE   0x02 /* Recurse into directories.  */
 #define OPT_NO_MESSAGES 0x04 /* Do not print error messages.  */
+#define OPT_FIXED       0x08 /* PATTERN and REPLACEMENT are fixed
+				strings.  */
 
 /* Boolean values.  */
 enum
@@ -45,3 +47,6 @@ enum
 
 /* Program invocation name is set in main.  */
 extern char *invocation_name;
+
+/* Option flags are set in main.  */
+extern int options;

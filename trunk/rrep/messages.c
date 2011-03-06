@@ -1,4 +1,4 @@
-/* messages.c - source file of message functions for rrep.
+/* messages.c - message routines for rrep.
    Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
@@ -51,14 +51,21 @@ print_help ()
   print_usage ();
   printf ("Replace PATTERN by REPLACEMENT in each FILE or standard");
   printf (" input.\n");
-  printf ("PATTERN is, by default, a basic regular expression");
-  printf (" (BRE).\n");
+  printf ("PATTERN is, by default, a basic regular expression (BRE).");
+  printf (" REPLACEMENT may\n");
+  printf ("contain the special character & to refer to that portion of");
+  printf (" the pattern space\n");
+  printf ("which matched, and the special escapes \\1 through \\9 to");
+  printf (" refer to the\n");
+  printf ("corresponding matching sub-expressions in PATTERN.\n");
   printf ("Example: %s 'hello world' 'Hello, World!' menu.h",
 	  invocation_name);
   printf (" main.c\n\n");
   printf ("Options:\n");
   printf ("  -E, --extended-regexp     PATTERN is an extended");
   printf (" regular expression (ERE)\n");
+  printf ("  -F, --fixed-strings       PATTERN and REPLACEMENT are");
+  printf (" fixed strings\n");
   printf ("  -h, --help                display this help and exit\n");
   printf ("  -i, --ignore-case         ignore case distinctions\n");
   printf ("  -q, --quiet, --silent     suppress all normal messages\n");
@@ -68,18 +75,14 @@ print_help ()
   printf ("  -V, --version             print version information and");
   printf (" exit\n");
   printf ("\n");
-  printf ("If FILE is a directory, then the complete directory tree");
-  printf (" of FILE will be\n");
-  printf ("processed. With no FILE, or when FILE is -, read standard");
-  printf (" input.\n");
-  printf ("Exit status is %d if any error occurs, %d otherwise.\n",
-	  EXIT_FAILURE, EXIT_SUCCESS);
+  printf ("With no FILE, or when FILE is -, read standard input.");
+  printf (" Exit status is %d if any\n", EXIT_FAILURE);
+  printf ("error occurs, %d otherwise.\n", EXIT_SUCCESS);
 }
 
 /* Prints an error message.  */
 void
-rrep_error (const int errcode, const char *file_name,
-	    const int options)
+rrep_error (const int errcode, const char *file_name)
 {
   if (options & OPT_NO_MESSAGES)
     return;
@@ -98,6 +101,11 @@ rrep_error (const int errcode, const char *file_name,
       fprintf (stderr, "%s: PATTERN must have at least one",
 	       invocation_name);
       fprintf (stderr, " character\n");
+      break;
+    case ERR_UNKNOWN_ESCAPE:
+      fprintf (stderr, "%s: %s: Unknown escape sequence in",
+	       invocation_name, file_name);
+      fprintf (stderr, " REPLACEMENT\n");
       break;
     case ERR_SAVE_DIR:
       fprintf (stderr, "%s: Could not save current working",
@@ -123,6 +131,16 @@ rrep_error (const int errcode, const char *file_name,
       fprintf (stderr, "%s: %s: Could not allocate memory for",
 	       invocation_name, file_name);
       fprintf (stderr, " next_path: %s\n", strerror (errno));
+      break;
+    case ERR_ALLOC_PATTERN:
+      fprintf (stderr, "%s: %s: Could not allocate memory for",
+	       invocation_name, file_name);
+      fprintf (stderr, " pattern: %s\n", strerror (errno));
+      break;
+    case ERR_ALLOC_REPLACEMENT:
+      fprintf (stderr, "%s: %s: Could not allocate memory for",
+	       invocation_name, file_name);
+      fprintf (stderr, " replacement: %s\n", strerror (errno));
       break;
     case ERR_REALLOC_BUFFER:
       fprintf (stderr, "%s: %s: Could not reallocate memory for",

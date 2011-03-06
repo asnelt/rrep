@@ -1,4 +1,4 @@
-/* bufferio.h - header file of buffer functions for rrep.
+/* bufferio.h - declarations for buffer functions for rrep.
    Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
@@ -32,5 +32,4 @@ extern size_t file_buffer_size;
    be placed at the line pointer, SUCCESS is returned. Otherwise, if
    the end of file was reached END_REACHED is returned or if an error
    occurred FAILURE is returned.  */
-extern int read_line (FILE *, char **, size_t *, const char *,
-		      const int);
+extern int read_line (FILE *, char **, size_t *, const char *);

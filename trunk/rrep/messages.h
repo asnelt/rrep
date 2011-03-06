@@ -1,4 +1,4 @@
-/* messages.h - header file of message functions for rrep.
+/* messages.h - declarations for message functions for rrep.
    Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
@@ -22,11 +22,14 @@ enum
     ERR_PROCESS_ARG, /* Could not process an argument.  */
     ERR_PROCESS_DIR, /* Could not process a directory.  */
     ERR_PATTERN, /* Error in PATTERN.  */
+    ERR_UNKNOWN_ESCAPE, /* Unknown escape sequence encountered. */
     ERR_SAVE_DIR, /* Could not save a directory.  */
     ERR_ALLOC_BUFFER, /* Error for allocating buffer.  */
     ERR_ALLOC_FILEBUFFER, /* Error for allocating file_buffer.  */
     ERR_ALLOC_FILELIST, /* Error for allocating file_list.  */
     ERR_ALLOC_PATHBUFFER, /* Error for allocating next_path.  */
+    ERR_ALLOC_PATTERN, /* Error for allocating pattern.  */
+    ERR_ALLOC_REPLACEMENT, /* Error for allocating replacement.  */
     ERR_REALLOC_BUFFER, /* Error for reallocating buffer.  */
     ERR_REALLOC_FILEBUFFER, /* Error for reallocating file_buffer.  */
     ERR_MEMORY, /* Error for insufficient memory.  */
@@ -48,7 +51,7 @@ extern void print_usage ();
 extern void print_help ();
 
 /* Prints an error message.  */
-extern void rrep_error (const int, const char *, const int);
+extern void rrep_error (const int, const char *);
 
 /* Prints a regerror error message.  */
 extern void print_regerror (const int, regex_t *);

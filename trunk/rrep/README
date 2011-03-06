@@ -3,8 +3,19 @@ directory processing. It searches for a regular expression and
 replaces it by a string in the file and directory list that starts
 after the second argument that is not an option.
 
+Usage: rrep [OPTION]... PATTERN REPLACEMENT [FILE]...
+Replace PATTERN by REPLACEMENT in each FILE or standard input.
+PATTERN is, by default, a basic regular expression (BRE).
+REPLACEMENT may contain the special character & to refer to that
+portion of the pattern space which matched, and the special
+escapes \1 through \9 to refer to the corresponding matching
+sub-expressions in PATTERN.
 Example: rrep 'hello world' 'Hello, World!' menu.h main.c
+
+With no FILE, or when FILE is -, read standard input. Exit status
+is 1 if any error occurs, 0 otherwise.
 
 rrep is yet another rpl-type string replacement utility. Its goals
 are ease of use, robustness and wide deployability. The only
 dependency is the standard C library.
+

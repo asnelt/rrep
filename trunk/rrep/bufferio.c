@@ -1,4 +1,4 @@
-/* messages.h - source file of buffer functions for rrep.
+/* bufferio.c - buffer routines for rrep.
    Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@ size_t file_buffer_size = 0;
    occurred FAILURE is returned.  */
 int
 read_line (FILE *fp, char **line, size_t *line_len,
-	   const char *file_name, const int options)
+	   const char *file_name)
 {
   static size_t start = 0; /* Start of line.  */
   static size_t search_pos = 1; /* Search position for end of line.  */
@@ -63,7 +63,7 @@ read_line (FILE *fp, char **line, size_t *line_len,
       nr = fread (buffer, sizeof (char), buffer_size-1, fp);
       if (nr != buffer_size-1 && ferror (fp))
         {
-	  rrep_error (ERR_READ_FILE, file_name, options);
+	  rrep_error (ERR_READ_FILE, file_name);
 	  fclose (fp);
 	  return FAILURE;
         }
@@ -110,7 +110,7 @@ read_line (FILE *fp, char **line, size_t *line_len,
 			  buffer_size-search_pos-1, fp);
 	      if (nr != buffer_size-search_pos-1 && ferror (fp))
                 {
-		  rrep_error (ERR_READ_FILE, file_name, options);
+		  rrep_error (ERR_READ_FILE, file_name);
 		  fclose (fp);
 		  return FAILURE;
                 }
@@ -123,7 +123,7 @@ read_line (FILE *fp, char **line, size_t *line_len,
 	      tmp = realloc (buffer, buffer_size+INIT_BUFFER_SIZE);
 	      if (tmp == NULL)
                 {
-		  rrep_error (ERR_REALLOC_BUFFER, file_name, options);
+		  rrep_error (ERR_REALLOC_BUFFER, file_name);
 		  fclose (fp);
 		  return FAILURE;
                 }
@@ -135,7 +135,7 @@ read_line (FILE *fp, char **line, size_t *line_len,
 			  INIT_BUFFER_SIZE, fp);
 	      if (nr != INIT_BUFFER_SIZE && ferror (fp))
                 {
-		  rrep_error (ERR_READ_FILE, file_name, options);
+		  rrep_error (ERR_READ_FILE, file_name);
 		  fclose (fp);
 		  return FAILURE;
                 }
