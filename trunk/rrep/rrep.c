@@ -430,10 +430,11 @@ process_file_list (char **file_list, const size_t file_counter,
   /* Process file list.  */
   for (i = 0; i < file_counter; i++)
     {
-      if (lstat (file_list[i], &st) == -1)
+      if (lstat (file_list[i], &st) < 0)
 	{
 	  rrep_error (ERR_PROCESS_ARG, file_list[i]);
 	  failure_flag = TRUE;
+	  continue;
 	}
 
       if (S_ISDIR (st.st_mode)) /* The st is a directory.  */
@@ -513,6 +514,18 @@ main (int argc, char** argv)
 	{
 	  cflags |= REG_EXTENDED;
 	}
+      else if (!strcmp (argv[i], "-e"))
+	{
+	  i++;
+	  if (i < argc)
+	    pattern_string = argv[i];
+	  else
+	    pattern_string = NULL;
+	}
+      else if (!strncmp (argv[i], "--regexp=", 9))
+	{
+	  pattern_string = argv[i]+9;
+	}
       else if (!(strcmp (argv[i], "-F")
 		 && strcmp (argv[i], "--fixed-strings")))
 	{
@@ -528,6 +541,18 @@ main (int argc, char** argv)
 		 && strcmp (argv[i], "--ignore-case")))
 	{
 	  cflags |= REG_ICASE;
+	}
+      else if (!strcmp (argv[i], "-p"))
+	{
+	  i++;
+	  if (i < argc)
+	    replacement_string = argv[i];
+	  else
+	    replacement_string = NULL;
+	}
+      else if (!strncmp (argv[i], "--replace-with=", 15))
+	{
+	  replacement_string = argv[i]+15;
 	}
       else if (!(strcmp (argv[i], "-q") && strcmp (argv[i], "--quiet")
 		 && strcmp (argv[i], "--silent")))
