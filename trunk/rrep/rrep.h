@@ -17,17 +17,18 @@
    02110-1301, USA.  */
 
 #define PROGRAM_NAME "rrep"
-#define VERSION "1.2.2"
+#define VERSION "1.2.3"
 
 /* Initial size of the buffer for reading lines.  */
 #define INIT_BUFFER_SIZE (4096)
 
 /* Option flag definitions.  */
-#define OPT_QUIET       0x01 /* Do not print regular messages.  */
-#define OPT_RECURSIVE   0x02 /* Recurse into directories.  */
-#define OPT_NO_MESSAGES 0x04 /* Do not print error messages.  */
-#define OPT_FIXED       0x08 /* PATTERN and REPLACEMENT are fixed
+#define OPT_ALL         0x01 /* Process all files.  */
+#define OPT_FIXED       0x02 /* PATTERN and REPLACEMENT are fixed
 				strings.  */
+#define OPT_QUIET       0x04 /* Do not print regular messages.  */
+#define OPT_RECURSIVE   0x08 /* Recurse into directories.  */
+#define OPT_NO_MESSAGES 0x10 /* Do not print error messages.  */
 
 /* Boolean values.  */
 enum

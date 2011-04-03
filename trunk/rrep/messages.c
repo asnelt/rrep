@@ -62,6 +62,9 @@ print_help ()
 	  invocation_name);
   printf (" main.c\n\n");
   printf ("Options:\n");
+  printf ("  -a, --all                      do not ignore files and");
+  printf (" directories starting\n");
+  printf ("                                 with .\n");
   printf ("  -E, --extended-regexp          PATTERN is an extended");
   printf (" regular expression (ERE)\n");
   printf ("  -e, --regex=PATTERN            use PATTERN for");

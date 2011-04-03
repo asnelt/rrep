@@ -217,6 +217,19 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   return SUCCESS;
 }
 
+/* Returns TRUE if file_name qualifies for processing.  */
+int
+check_name (const char *file_name)
+{
+  if (file_name == NULL || file_name[0] == '\0')
+    return FALSE;
+  if (file_name[0] == '.' && file_name[1] != '\0'
+      && !(options & OPT_ALL))
+    return FALSE;
+
+  return TRUE;
+}
+
 /* Replace pattern by replacement in the file file_name.  */
 int
 process_file (const char *relative_path, const char *file_name,
@@ -230,6 +243,10 @@ process_file (const char *relative_path, const char *file_name,
   size_t path_len;
   int found_flag;
 
+  /* First check whether the file should be processed at all.  */
+  if (!check_name (file_name))
+    return SUCCESS;
+
   fp = fopen (file_name, "r");
   if (fp == NULL)
     {
@@ -237,7 +254,7 @@ process_file (const char *relative_path, const char *file_name,
       return FAILURE;
     }
 
-  /* First check whether file file_name contains pattern at all.  */
+  /* Check whether file file_name contains pattern at all.  */
   found_flag = FALSE;
   line = NULL;
   while (!found_flag && (rr = read_line (fp, &line, &line_len,
@@ -367,7 +384,8 @@ process_dir (const char *relative_path, pattern_t *pattern,
 					   directory.  */
         {
 	  if (options & OPT_RECURSIVE && strcmp (entry->d_name, ".")
-	      && strcmp (entry->d_name, ".."))
+	      && strcmp (entry->d_name, "..")
+	      && check_name (entry->d_name))
             {
 	      /* Recurse into directory.  */
 	      if (!chdir (entry->d_name))
@@ -439,6 +457,8 @@ process_file_list (char **file_list, const size_t file_counter,
 
       if (S_ISDIR (st.st_mode)) /* The st is a directory.  */
 	{
+	  if (!check_name (file_list[i]))
+	    continue;
 	  if (omit_dir_flag)
 	    {
 	      if (!(options & OPT_QUIET))
@@ -509,7 +529,11 @@ main (int argc, char** argv)
   /* Parse command line arguments.  */
   for (i = 1; i < argc; i++)
     {
-      if (!(strcmp (argv[i], "-E")
+      if (!(strcmp (argv[i], "-a") && strcmp (argv[i], "--all")))
+	{
+	  options |= OPT_ALL;
+	}
+      else if (!(strcmp (argv[i], "-E")
 		 && strcmp (argv[i], "--extended-regexp")))
 	{
 	  cflags |= REG_EXTENDED;
