@@ -154,7 +154,8 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
       start = line;
       last_empty_flag = TRUE;
       /* Search for regular expression or pattern string.  */
-      while ((errcode = match_pattern (pattern, start, match)) == 0)
+      while ((errcode = match_pattern (pattern, line, start, match))
+	     == 0)
         {
 	  break_flag = (*start == '\0');
 	  if (break_flag && start > line && *(start-1) == '\n')
@@ -238,14 +239,11 @@ process_file (const char *relative_path, const char *file_name,
   FILE *fp, *tmp;
   char *line;
   size_t line_len, file_len;
+  regmatch_t match[10]; /* Matched regular expression.  */
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
   size_t path_len;
   int found_flag;
-
-  /* First check whether the file should be processed at all.  */
-  if (!check_name (file_name))
-    return SUCCESS;
 
   fp = fopen (file_name, "r");
   if (fp == NULL)
@@ -260,7 +258,7 @@ process_file (const char *relative_path, const char *file_name,
   while (!found_flag && (rr = read_line (fp, &line, &line_len,
 					 file_name)) == SUCCESS)
     {
-      errcode = match_pattern (pattern, line, NULL);
+      errcode = match_pattern (pattern, line, line, match);
       if (errcode == 0)
 	found_flag = TRUE;
       else if (errcode != REG_NOMATCH)
@@ -377,7 +375,8 @@ process_dir (const char *relative_path, pattern_t *pattern,
 
   while ((entry = readdir (d)))
     {
-      if (entry->d_type == DT_REG) /* The entry is a regular file.  */
+      if (entry->d_type == DT_REG && check_name (entry->d_name))
+	/* The entry is a regular file.  */
 	failure_flag |= process_file (relative_path, entry->d_name,
 				      pattern, replacement);
       else if (entry->d_type == DT_DIR) /* The entry is a
@@ -457,8 +456,6 @@ process_file_list (char **file_list, const size_t file_counter,
 
       if (S_ISDIR (st.st_mode)) /* The st is a directory.  */
 	{
-	  if (!check_name (file_list[i]))
-	    continue;
 	  if (omit_dir_flag)
 	    {
 	      if (!(options & OPT_QUIET))
@@ -599,6 +596,16 @@ main (int argc, char** argv)
 	  print_version ();
 	  free (file_list);
 	  return EXIT_SUCCESS;
+	}
+      else if (!(strcmp (argv[i], "-w")
+		 && strcmp (argv[i], "--word-regexp")))
+	{
+	  options |= OPT_WHOLE_WORD;
+	}
+      else if (!(strcmp (argv[i], "-x")
+		 && strcmp (argv[i], "--line-regexp")))
+	{
+	  options |= OPT_WHOLE_LINE;
 	}
       else
 	{

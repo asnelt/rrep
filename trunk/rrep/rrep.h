@@ -17,7 +17,7 @@
    02110-1301, USA.  */
 
 #define PROGRAM_NAME "rrep"
-#define VERSION "1.2.3"
+#define VERSION "1.2.4"
 
 /* Initial size of the buffer for reading lines.  */
 #define INIT_BUFFER_SIZE (4096)
@@ -29,6 +29,10 @@
 #define OPT_QUIET       0x04 /* Do not print regular messages.  */
 #define OPT_RECURSIVE   0x08 /* Recurse into directories.  */
 #define OPT_NO_MESSAGES 0x10 /* Do not print error messages.  */
+#define OPT_WHOLE_LINE  0x20 /* Force PATTERN to match only whole
+				lines.  */
+#define OPT_WHOLE_WORD  0x40 /* Force PATTERN to match only whole
+				words.  */
 
 /* Boolean values.  */
 enum

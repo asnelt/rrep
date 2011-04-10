@@ -83,8 +83,12 @@ print_help ()
   printf (" recursively\n");
   printf ("  -s, --no-messages              suppress error");
   printf (" messages\n");
-  printf ("  -V, --version                  print version information and");
-  printf (" exit\n");
+  printf ("  -V, --version                  print version");
+  printf (" information and exit\n");
+  printf ("  -w, --word-regexp              force PATTERN to match");
+  printf (" only whole words\n");
+  printf ("  -x, --line-regexp              force PATTERN to match");
+  printf (" only whole lines\n");
   printf ("\n");
   printf ("With no FILE, or when FILE is -, read standard input.");
   printf (" Exit status is %d if any\n", EXIT_FAILURE);

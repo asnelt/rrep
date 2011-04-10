@@ -24,59 +24,128 @@
 #include "messages.h"
 #include "pattern.h"
 
+/* Checks the whole word and whole line options.  */
+int
+check_whole (const char *line, const char *start, size_t len)
+{
+  char c;
+
+  /* Check whether any of these options was selected.  */
+  if (!(options & OPT_WHOLE_WORD) && !(options & OPT_WHOLE_LINE))
+    return TRUE;
+
+  /* Check beginning.  */
+  if (start > line)
+    {
+      if (options & OPT_WHOLE_LINE)
+	return FALSE;
+
+      c = *(start-1);
+      if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z'
+	  || c >= '0' && c <= '9' || c == '_')
+	return FALSE;
+    }
+
+  /* Check end.  */
+  c = *(start + len);
+  if (c != '\n')
+    {
+      if (options & OPT_WHOLE_LINE)
+	return FALSE;
+
+      if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z'
+	  || c >= '0' && c <= '9' || c == '_')
+	return FALSE;
+    }
+
+  return TRUE;
+}
+
 /* Matches regular expression or string in start. Returns 0 if a match
    was found, REG_NOMATCH if no match was found or regerror error value
    if a regerror occured. Match offsets are stored in match.  */
 int
-match_pattern (pattern_t *pattern, const char *start,
+match_pattern (pattern_t *pattern, const char *line, const char *start,
 	       regmatch_t *match)
 {
   int i;
-  int nmatch; /* Number of substrings for regexec.  */
-  char *first; /* Start of first occurence of pattern->string.  */
+  const char *first; /* Start of first occurence of
+			pattern->string.  */
+  int errcode; /* Return value of regexec.  */
+  int eflags; /* Flags for regexec.  */
 
   if (options & OPT_FIXED)
     {
-      if (match != NULL)
+      /* Prepare match.  */
+      for (i = 1; i < 10; i++)
 	{
-	  /* Prepare match.  */
-	  for (i = 1; i < 10; i++)
-	    {
-	      match[i].rm_so = -1;
-	      match[i].rm_eo = -1;
-	    }
+	  match[i].rm_so = -1;
+	  match[i].rm_eo = -1;
 	}
       /* Match string.  */
-      first = strstr (start, pattern->string);
+      first = start - pattern->string_len;
+      do
+	{
+	  first += pattern->string_len;
+	  first = strstr (first, pattern->string);
+	}
+      while (first != NULL && !check_whole (line, first,
+					    pattern->string_len));
+
       if (first == NULL)
 	{
 	  /* String not found.  */
-	  if (match != NULL)
-	    {
-	      match[0].rm_so = -1;
-	      match[0].rm_eo = -1;
-	    }
+	  match[0].rm_so = -1;
+	  match[0].rm_eo = -1;
 	  return REG_NOMATCH;
 	}
       else
 	{
-	  if (match != NULL)
-	    {
-	      /* Set offsets in match[0].  */
-	      match[0].rm_so = first - start;
-	      match[0].rm_eo = match[0].rm_so + pattern->string_len;
-	    }
+	  /* Set offsets in match[0].  */
+	  match[0].rm_so = first - start;
+	  match[0].rm_eo = match[0].rm_so + pattern->string_len;
 	  return 0;
 	}
     }
   else
     {
       /* Match regular expression.  */
-      if (match == NULL)
-	nmatch = 0;
-      else
-	nmatch = 10;
-      return regexec (pattern->compiled, start, nmatch, match, 0);
+      match[0].rm_eo = 0;
+      first = start - 1; /* Decrement due to increment in loop.  */
+      do
+	{
+	  if (match[0].rm_eo == 0)
+	    {
+	      /* Initial iteration or found PATTERN has zero
+		 length.  */
+	      if (first >= start && (*first == '\n' || *first == '\0'))
+		  return REG_NOMATCH;
+	      first++;
+	    }
+	  else
+	    first += match[0].rm_eo;
+	  /* Set flags for regexec.  */
+	  if (first == line)
+	    eflags = 0;
+	  else
+	    eflags = REG_NOTBOL;
+	  errcode = regexec (pattern->compiled, first, 10, match,
+			     eflags);
+	}
+      while (errcode == 0
+	     && !check_whole (line, first+match[0].rm_so,
+			      match[0].rm_eo-match[0].rm_so));
+      /* Correct offsets.  */
+      for (i = 0; i < 10; i++)
+	{
+	  if (match[i].rm_eo > -1)
+	    {
+	      match[i].rm_so += first - start;
+	      match[i].rm_eo += first - start;
+	    }
+	}
+
+      return errcode;
     }
 }
 

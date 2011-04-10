@@ -39,7 +39,8 @@ typedef struct
 /* Matches regular expression or string in start. Returns 0 if a match
    was found, REG_NOMATCH if no match was found or regerror error value
    if a regerror occured. Match offsets are stored in match.  */
-extern int match_pattern (pattern_t *, const char *, regmatch_t *);
+extern int match_pattern (pattern_t *, const char *, const char *,
+			  regmatch_t *);
 
 /* Frees the memory that was allocated for the fields of pattern.  */
 extern void pattern_free (pattern_t *);
