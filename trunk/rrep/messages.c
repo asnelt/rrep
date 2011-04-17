@@ -62,29 +62,39 @@ print_help ()
 	  invocation_name);
   printf (" main.c\n\n");
   printf ("Options:\n");
-  printf ("  -a, --all                      do not ignore files and");
-  printf (" directories starting\n");
-  printf ("                                 with .\n");
   printf ("  -E, --extended-regexp          PATTERN is an extended");
   printf (" regular expression (ERE)\n");
-  printf ("  -e, --regex=PATTERN            use PATTERN for");
-  printf (" matching\n");
   printf ("  -F, --fixed-strings            PATTERN and REPLACEMENT");
   printf (" are fixed strings\n");
+  printf ("  -R, -r, --recursive            process directories");
+  printf (" recursively\n");
+  printf ("      --include=FILE_PATTERN     search only files that");
+  printf (" match FILE_PATTERN\n");
+  printf ("      --exclude=FILE_PATTERN     files that match");
+  printf (" FILE_PATTERN will be skipped\n");
+  printf ("      --exclude-dir=PATTERN      directories that match");
+  printf (" PATTERN will be skipped\n");
+  printf ("  -V, --version                  print version");
+  printf (" information and exit\n");
+  printf ("  -a, --all                      do not ignore files");
+  printf (" starting with .\n");
+  printf ("      --backup                   backup before overwriting");
+  printf (" files\n");
+  printf ("      --dry-run                  simulation mode\n");
+  printf ("  -e, --regex=PATTERN            use PATTERN for");
+  printf (" matching\n");
   printf ("  -h, --help                     display this help and");
   printf (" exit\n");
   printf ("  -i, --ignore-case              ignore case");
   printf (" distinctions\n");
   printf ("  -p, --replace-with=REPLACEMENT use REPLACEMENT for");
   printf (" substitution\n");
+  printf ("      --prompt                   prompt before modifying a");
+  printf (" file\n");
   printf ("  -q, --quiet, --silent          suppress all normal");
   printf (" messages\n");
-  printf ("  -R, -r, --recursive            process directories");
-  printf (" recursively\n");
   printf ("  -s, --no-messages              suppress error");
   printf (" messages\n");
-  printf ("  -V, --version                  print version");
-  printf (" information and exit\n");
   printf ("  -w, --word-regexp              force PATTERN to match");
   printf (" only whole words\n");
   printf ("  -x, --line-regexp              force PATTERN to match");
@@ -93,6 +103,14 @@ print_help ()
   printf ("With no FILE, or when FILE is -, read standard input.");
   printf (" Exit status is %d if any\n", EXIT_FAILURE);
   printf ("error occurs, %d otherwise.\n", EXIT_SUCCESS);
+}
+
+/* Prints the program invocation.  */
+void
+print_invocation ()
+{
+  print_usage ();
+  printf ("Try `%s --help' for more information.\n", invocation_name);
 }
 
 /* Prints an error message.  */
@@ -153,15 +171,21 @@ rrep_error (const int errcode, const char *file_name)
       perror (NULL);
       break;
     case ERR_ALLOC_PATTERN:
-      fprintf (stderr, "%s: %s: Could not allocate memory for",
-	       invocation_name, file_name);
+      fprintf (stderr, "%s: Could not allocate memory for",
+	       invocation_name);
       fprintf (stderr, " pattern: ");
       perror (NULL);
       break;
     case ERR_ALLOC_REPLACEMENT:
+      fprintf (stderr, "%s: Could not allocate memory for",
+	       invocation_name);
+      fprintf (stderr, " replacement: ");
+      perror (NULL);
+      break;
+    case ERR_ALLOC_BACKUP:
       fprintf (stderr, "%s: %s: Could not allocate memory for",
 	       invocation_name, file_name);
-      fprintf (stderr, " replacement: ");
+      fprintf (stderr, " backup string: ");
       perror (NULL);
       break;
     case ERR_REALLOC_BUFFER:
@@ -206,6 +230,11 @@ rrep_error (const int errcode, const char *file_name)
 	       invocation_name, file_name);
       perror (NULL);
       break;
+    case ERR_WRITE_BACKUP:
+      fprintf (stderr, "%s: %s: Could not write backup file: ",
+	       invocation_name, file_name);
+      perror (NULL);
+      break;
     case ERR_OVERWRITE:
       fprintf (stderr, "%s: %s: Could not overwrite file: ",
 	       invocation_name, file_name);
@@ -223,4 +252,45 @@ print_regerror (const int errcode, regex_t *compiled)
   regerror (errcode, compiled, message, len);
   fprintf (stderr, "%s: %s\n", invocation_name, message);
   free (message);
+}
+
+/* Prints replacement confirmation.  */
+void
+print_confirmation (const char *file_name)
+{
+  printf ("%s: Pattern replaced\n", file_name);
+}
+
+/* Prints directory omission.  */
+void
+print_dir_skip (const char *file_name)
+{
+  if (!(options & OPT_QUIET))
+    printf ("%s: %s: Omitting directory\n", invocation_name,
+	    file_name);
+}
+
+/* Prints the simulation message.  */
+void
+print_dry ()
+{
+  if (options & OPT_DRY && !(options & OPT_QUIET))
+    {
+      printf ("Simulation mode: No files are modified.\n");
+      printf ("PATTERN found in the following files:\n");
+    }
+}
+
+/* Prompt user before modification.  */
+int
+prompt_user (const char *file_name)
+{
+  char c;
+
+  printf ("Pattern found in %s. Replace pattern [y/n]? ", file_name);
+  c = getchar ();
+  if (c != 'y')
+    return FAILURE;
+  else
+    return SUCCESS;
 }

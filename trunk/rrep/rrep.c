@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <regex.h>
+#include <fnmatch.h>
 #include "rrep.h"
 #include "messages.h"
 #include "bufferio.h"
@@ -218,17 +219,55 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   return SUCCESS;
 }
 
-/* Returns TRUE if file_name qualifies for processing.  */
+/* Make a backup of the opened file in to file_name~.  */
 int
-check_name (const char *file_name)
+backup_file (FILE *in, const char *file_name)
 {
-  if (file_name == NULL || file_name[0] == '\0')
-    return FALSE;
-  if (file_name[0] == '.' && file_name[1] != '\0'
-      && !(options & OPT_ALL))
-    return FALSE;
+  size_t len, line_len;
+  char *backup_name;
+  FILE *out;
 
-  return TRUE;
+  /* Generate string for back file name.  */
+  len = strlen (file_name);
+  backup_name = (char *) malloc ((len + 2) * sizeof (char));
+  if (backup_name == NULL)
+    {
+      rrep_error (ERR_ALLOC_BACKUP, file_name);
+      return FAILURE;
+    }
+  strcpy (backup_name, file_name);
+  strcat (backup_name, "~");
+  /* Create backup file.  */
+  out = fopen (backup_name, "w");
+  if (out == NULL)
+    {
+      rrep_error (ERR_OPEN_WRITE, file_name);
+      free (backup_name);
+      return FAILURE;
+    }
+  free (backup_name);
+  backup_name = NULL;
+  /* Copy file.  */
+  while (!feof (in))
+    {
+      line_len = fread (buffer, sizeof (char), buffer_size, in);
+      if (line_len != buffer_size && ferror (in))
+	{
+	  rrep_error (ERR_READ_FILE, file_name);
+	  fclose (out);
+	  return FAILURE;
+	}
+      if (fwrite (buffer, sizeof (char), line_len, out)
+	  != line_len)
+	{
+	  rrep_error (ERR_WRITE_BACKUP, file_name);
+	  fclose (out);
+	  return FAILURE;
+	}
+    }
+  fclose (out);
+
+  return SUCCESS;
 }
 
 /* Replace pattern by replacement in the file file_name.  */
@@ -276,6 +315,32 @@ process_file (const char *relative_path, const char *file_name,
 
   if (found_flag)
     {
+      if (options & OPT_DRY && !(options & OPT_QUIET))
+	{
+	  printf ("%s\n", file_name);
+	  fclose (fp);
+	  return SUCCESS;
+	}
+
+      if (options & OPT_PROMPT)
+	{
+	  if (prompt_user (file_name) != SUCCESS)
+	    {
+	      fclose (fp);
+	      return SUCCESS;
+	    }
+	}
+
+      if (options & OPT_BACKUP)
+	{
+	  rewind (fp);
+	  if (backup_file (fp, file_name) != SUCCESS)
+	    {
+	      fclose (fp);
+	      return FAILURE;
+	    }
+	}
+
       rewind (fp);
       tmp = tmpfile ();
       /* Copy f to tmp or file_buffer with replaced string.  */
@@ -343,7 +408,7 @@ process_file (const char *relative_path, const char *file_name,
 	      if (path_len == 0 || relative_path[path_len-1] != '/')
 		printf ("/");
 	    }
-	  printf ("%s: Pattern replaced\n", file_name);
+	  print_confirmation (file_name);
 	}
     }
   fclose (fp);
@@ -351,11 +416,46 @@ process_file (const char *relative_path, const char *file_name,
   return SUCCESS;
 }
 
+/* Checks the include and exclude options and returns TRUE if file_name
+   qualifies.  */
+int
+check_include_name (const char *file_name, const char *included_name,
+		    const char *excluded_name)
+{
+  /* Check include_string.  */
+  if (included_name != NULL
+      && fnmatch (included_name, file_name, 0) != 0)
+    return FALSE;
+  /* Check exclude_string.  */
+  if (excluded_name != NULL
+      && fnmatch (excluded_name, file_name, 0) != FNM_NOMATCH)
+    return FALSE;
+
+  return TRUE;
+}
+
+/* Returns TRUE if file_name qualifies for processing.  */
+int
+check_name (const char *file_name, const char *included_name,
+	    const char *excluded_name)
+{
+  if (file_name == NULL || file_name[0] == '\0')
+    return FALSE;
+  /* Check --all option.  */
+  if (file_name[0] == '.' && file_name[1] != '\0'
+      && !(options & OPT_ALL))
+    return FALSE;
+
+  return check_include_name (file_name, included_name, excluded_name);
+}
+
 /* Processes the current directory and all subdirectories
    recursively.  */
 int
 process_dir (const char *relative_path, pattern_t *pattern,
-	     const replace_t *replacement)
+	     const replace_t *replacement, const char *include_string,
+	     const char *exclude_string,
+	     const char *exclude_dir_string)
 {
   DIR *d; /* Current directory.  */
   struct dirent *entry; /* Directory entry.  */
@@ -375,7 +475,9 @@ process_dir (const char *relative_path, pattern_t *pattern,
 
   while ((entry = readdir (d)))
     {
-      if (entry->d_type == DT_REG && check_name (entry->d_name))
+      if (entry->d_type == DT_REG
+	  && check_name (entry->d_name, include_string,
+			 exclude_string))
 	/* The entry is a regular file.  */
 	failure_flag |= process_file (relative_path, entry->d_name,
 				      pattern, replacement);
@@ -384,7 +486,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
         {
 	  if (options & OPT_RECURSIVE && strcmp (entry->d_name, ".")
 	      && strcmp (entry->d_name, "..")
-	      && check_name (entry->d_name))
+	      && check_name (entry->d_name, NULL, exclude_dir_string))
             {
 	      /* Recurse into directory.  */
 	      if (!chdir (entry->d_name))
@@ -403,7 +505,10 @@ process_dir (const char *relative_path, pattern_t *pattern,
 		    strcat (next_path, "/");
 		  strcat (next_path, entry->d_name);
 		  failure_flag |= process_dir (next_path, pattern,
-					       replacement);
+					       replacement,
+					       include_string,
+					       exclude_string,
+					       exclude_dir_string);
 		  free (next_path);
 		  next_path = NULL;
 		  if (chdir (".."))
@@ -427,7 +532,10 @@ process_dir (const char *relative_path, pattern_t *pattern,
 /* Processes the file_counter files in file_list.  */
 int
 process_file_list (char **file_list, const size_t file_counter,
-		   pattern_t *pattern, const replace_t *replacement)
+		   pattern_t *pattern, const replace_t *replacement,
+		   const char *include_string,
+		   const char *exclude_string,
+		   const char *exclude_dir_string)
 {
   struct stat st; /* The stat for obtaining file type.  */
   int wd; /* File descriptor for current working directory.  */
@@ -458,15 +566,18 @@ process_file_list (char **file_list, const size_t file_counter,
 	{
 	  if (omit_dir_flag)
 	    {
-	      if (!(options & OPT_QUIET))
-		printf ("%s: %s: Omitting directory\n",
-			invocation_name, file_list[i]);
+	      print_dir_skip (file_list[i]);
 	      continue;
 	    }
+	  if (!check_include_name (file_list[i], NULL,
+				   exclude_dir_string))
+	    continue;
 	  if (!chdir (file_list[i]))
 	    {
 	      failure_flag |= process_dir (file_list[i], pattern,
-					   replacement);
+					   replacement, include_string,
+					   exclude_string,
+					   exclude_dir_string);
 	      /* Return to working directory.  */
 	      if (fchdir (wd))
 		{
@@ -481,8 +592,10 @@ process_file_list (char **file_list, const size_t file_counter,
 	      failure_flag = TRUE;
 	    }
 	}
-      else if (S_ISREG (st.st_mode)) /* The st is a regular
-					file.  */
+      else if (S_ISREG (st.st_mode)
+	       && check_include_name (file_list[i], include_string,
+				      exclude_string))
+	/* The st is a regular file.  */
 	failure_flag |= process_file (NULL, file_list[i], pattern,
 				      replacement);
     }
@@ -495,8 +608,13 @@ process_file_list (char **file_list, const size_t file_counter,
 int
 main (int argc, char** argv)
 {
-  char *pattern_string = NULL; /* Regular expression to search for.  */
-  char *replacement_string = NULL; /* Replacement string.  */
+  const char *pattern_string = NULL; /* Regular expression to search
+					for.  */
+  const char *replacement_string = NULL; /* Replacement string.  */
+  const char *include_string = NULL; /* File names to be included.  */
+  const char *exclude_string = NULL; /* File names to be excluded.  */
+  const char *exclude_dir_string = NULL; /* Directory names to be
+				      excluded.  */
   pattern_t pattern; /* Pattern struct.  */
   replace_t replacement; /* Replacement struct.  */
   char **file_list; /* List of files to process.  */
@@ -530,6 +648,14 @@ main (int argc, char** argv)
 	{
 	  options |= OPT_ALL;
 	}
+      else if (!strcmp (argv[i], "--backup"))
+	{
+	  options |= OPT_BACKUP;
+	}
+      else if (!strcmp (argv[i], "--dry-run"))
+	{
+	  options |= OPT_DRY;
+	}
       else if (!(strcmp (argv[i], "-E")
 		 && strcmp (argv[i], "--extended-regexp")))
 	{
@@ -547,6 +673,14 @@ main (int argc, char** argv)
 	{
 	  pattern_string = argv[i]+9;
 	}
+      else if (!strncmp (argv[i], "--exclude=", 10))
+	{
+	  exclude_string = argv[i]+10;
+	}
+      else if (!strncmp (argv[i], "--exclude-dir=", 14))
+	{
+	  exclude_dir_string = argv[i]+14;
+	}
       else if (!(strcmp (argv[i], "-F")
 		 && strcmp (argv[i], "--fixed-strings")))
 	{
@@ -562,6 +696,10 @@ main (int argc, char** argv)
 		 && strcmp (argv[i], "--ignore-case")))
 	{
 	  cflags |= REG_ICASE;
+	}
+      else if (!strncmp (argv[i], "--include=", 10))
+	{
+	  include_string = argv[i]+10;
 	}
       else if (!strcmp (argv[i], "-p"))
 	{
@@ -579,6 +717,10 @@ main (int argc, char** argv)
 		 && strcmp (argv[i], "--silent")))
 	{
 	  options |= OPT_QUIET;
+	}
+      else if (!(strcmp (argv[i], "--prompt")))
+	{
+	  options |= OPT_PROMPT;
 	}
       else if (!(strcmp (argv[i], "-R") && strcmp (argv[i], "-r")
 		 && strcmp (argv[i], "--recursive")))
@@ -624,9 +766,7 @@ main (int argc, char** argv)
 
   if (pattern_string == NULL || replacement_string == NULL)
     {
-      print_usage ();
-      printf ("Try `%s --help' for more information.\n",
-	      invocation_name);
+      print_invocation ();
       free (file_list);
       return EXIT_FAILURE;
     }
@@ -668,8 +808,12 @@ main (int argc, char** argv)
     }
   else
     {
+      print_dry ();
       failure_flag |= process_file_list (file_list, file_counter,
-					 &pattern, &replacement);
+					 &pattern, &replacement,
+					 include_string,
+					 exclude_string,
+					 exclude_dir_string);
     }
 
   replace_free (&replacement);

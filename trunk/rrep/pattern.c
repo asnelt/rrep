@@ -177,7 +177,7 @@ pattern_parse (const char *string, pattern_t *pattern, int cflags)
     }
 
   /* Copy original string into replacement.  */
-  pattern->string = (char *) malloc (pattern->string_len
+  pattern->string = (char *) malloc ((pattern->string_len + 1)
 				     * sizeof (char));
   if (pattern->string == NULL)
     {
@@ -250,7 +250,7 @@ replace_parse (const char *string, replace_t *replacement)
 
   /* Copy original string into replacement.  */
   replacement->string_len = strlen (string);
-  replacement->string = (char *) malloc (replacement->string_len
+  replacement->string = (char *) malloc ((replacement->string_len + 1)
 					 * sizeof (char));
   if (replacement->string == NULL)
     {
