@@ -17,7 +17,7 @@
    02110-1301, USA.  */
 
 #define PROGRAM_NAME "rrep"
-#define VERSION "1.2.5"
+#define VERSION "1.2.6"
 
 /* Initial size of the buffer for reading lines.  */
 #define INIT_BUFFER_SIZE (4096)
@@ -28,13 +28,15 @@
 #define OPT_DRY         0x004 /* Do not modify any files.  */
 #define OPT_FIXED       0x008 /* PATTERN and REPLACEMENT are fixed
 				 strings.  */
-#define OPT_NO_MESSAGES 0x010 /* Do not print error messages.  */
-#define OPT_PROMPT      0x020 /* Prompt before modifying a file.  */
-#define OPT_QUIET       0x040 /* Do not print regular messages.  */
-#define OPT_RECURSIVE   0x080 /* Recurse into directories.  */
-#define OPT_WHOLE_LINE  0x100 /* Force PATTERN to match only whole
+#define OPT_KEEP_TIMES  0x010 /* Keep file access and modification
+				 times.  */
+#define OPT_NO_MESSAGES 0x020 /* Do not print error messages.  */
+#define OPT_PROMPT      0x040 /* Prompt before modifying a file.  */
+#define OPT_QUIET       0x080 /* Do not print regular messages.  */
+#define OPT_RECURSIVE   0x100 /* Recurse into directories.  */
+#define OPT_WHOLE_LINE  0x200 /* Force PATTERN to match only whole
 				 lines.  */
-#define OPT_WHOLE_WORD  0x200 /* Force PATTERN to match only whole
+#define OPT_WHOLE_WORD  0x400 /* Force PATTERN to match only whole
 				 words.  */
 
 /* Boolean values.  */

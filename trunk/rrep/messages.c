@@ -68,7 +68,7 @@ print_help ()
   printf (" are fixed strings\n");
   printf ("  -R, -r, --recursive            process directories");
   printf (" recursively\n");
-  printf ("      --include=FILE_PATTERN     search only files that");
+  printf ("      --include=FILE_PATTERN     process only files that");
   printf (" match FILE_PATTERN\n");
   printf ("      --exclude=FILE_PATTERN     files that match");
   printf (" FILE_PATTERN will be skipped\n");
@@ -78,8 +78,8 @@ print_help ()
   printf (" information and exit\n");
   printf ("  -a, --all                      do not ignore files");
   printf (" starting with .\n");
-  printf ("      --backup                   backup before overwriting");
-  printf (" files\n");
+  printf ("      --backup                   backup before");
+  printf (" overwriting files\n");
   printf ("      --dry-run                  simulation mode\n");
   printf ("  -e, --regex=PATTERN            use PATTERN for");
   printf (" matching\n");
@@ -87,10 +87,12 @@ print_help ()
   printf (" exit\n");
   printf ("  -i, --ignore-case              ignore case");
   printf (" distinctions\n");
+  printf ("      --keep-times               keep access and");
+  printf (" modification times\n");
   printf ("  -p, --replace-with=REPLACEMENT use REPLACEMENT for");
   printf (" substitution\n");
-  printf ("      --prompt                   prompt before modifying a");
-  printf (" file\n");
+  printf ("      --prompt                   prompt before modifying");
+  printf (" a file\n");
   printf ("  -q, --quiet, --silent          suppress all normal");
   printf (" messages\n");
   printf ("  -s, --no-messages              suppress error");
@@ -237,6 +239,11 @@ rrep_error (const int errcode, const char *file_name)
       break;
     case ERR_OVERWRITE:
       fprintf (stderr, "%s: %s: Could not overwrite file: ",
+	       invocation_name, file_name);
+      perror (NULL);
+      break;
+    case ERR_KEEP_TIMES:
+      fprintf (stderr, "%s: %s: Could keep file times: ",
 	       invocation_name, file_name);
       perror (NULL);
       break;

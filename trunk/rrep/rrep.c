@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <regex.h>
 #include <fnmatch.h>
+#include <utime.h>
 #include "rrep.h"
 #include "messages.h"
 #include "bufferio.h"
@@ -459,6 +460,9 @@ process_dir (const char *relative_path, pattern_t *pattern,
 {
   DIR *d; /* Current directory.  */
   struct dirent *entry; /* Directory entry.  */
+  struct stat st; /* The stat for obtaining file times.  */
+  struct utimbuf times; /* File times.  */
+  int times_saved; /* Flag for time keeping.  */
   int failure_flag;
   size_t path_len = strlen (relative_path);
   size_t next_path_len;
@@ -478,9 +482,36 @@ process_dir (const char *relative_path, pattern_t *pattern,
       if (entry->d_type == DT_REG
 	  && check_name (entry->d_name, include_string,
 			 exclude_string))
-	/* The entry is a regular file.  */
-	failure_flag |= process_file (relative_path, entry->d_name,
-				      pattern, replacement);
+	{
+	  /* The entry is a regular file.  */
+	  if (options & OPT_KEEP_TIMES)
+	    {
+	      /* Obtain file times.  */
+	      if (lstat (entry->d_name, &st) < 0)
+		{
+		  rrep_error (ERR_KEEP_TIMES, entry->d_name);
+		  failure_flag = TRUE;
+		  times_saved = FALSE;
+		}
+	      else
+		{
+		  times.actime = st.st_atime;
+		  times.modtime = st.st_mtime;
+		  times_saved = TRUE;
+		}
+	    }
+	  failure_flag |= process_file (relative_path, entry->d_name,
+					pattern, replacement);
+	  if (options & OPT_KEEP_TIMES && times_saved)
+	    {
+	      /* Restore file times.  */
+	      if (utime (entry->d_name, &times) != 0)
+		{
+		  rrep_error (ERR_KEEP_TIMES, entry->d_name);
+		  failure_flag = TRUE;
+		}
+	    }
+	}
       else if (entry->d_type == DT_DIR) /* The entry is a
 					   directory.  */
         {
@@ -538,6 +569,7 @@ process_file_list (char **file_list, const size_t file_counter,
 		   const char *exclude_dir_string)
 {
   struct stat st; /* The stat for obtaining file type.  */
+  struct utimbuf times; /* File times.  */
   int wd; /* File descriptor for current working directory.  */
   int i;
   int omit_dir_flag = FALSE;
@@ -595,9 +627,26 @@ process_file_list (char **file_list, const size_t file_counter,
       else if (S_ISREG (st.st_mode)
 	       && check_include_name (file_list[i], include_string,
 				      exclude_string))
-	/* The st is a regular file.  */
-	failure_flag |= process_file (NULL, file_list[i], pattern,
-				      replacement);
+	{
+	  if (options & OPT_KEEP_TIMES)
+	    {
+	      /* Save file times.  */
+	      times.actime = st.st_atime;
+	      times.modtime = st.st_mtime;
+	    }
+	  /* The st is a regular file.  */
+	  failure_flag |= process_file (NULL, file_list[i], pattern,
+					replacement);
+	  if (options & OPT_KEEP_TIMES)
+	    {
+	      /* Restore file times.  */
+	      if (utime (file_list[i], &times) != 0)
+		{
+		  rrep_error (ERR_KEEP_TIMES, file_list[i]);
+		  failure_flag = TRUE;
+		}
+	    }
+	}
     }
   close (wd);
 
@@ -700,6 +749,10 @@ main (int argc, char** argv)
       else if (!strncmp (argv[i], "--include=", 10))
 	{
 	  include_string = argv[i]+10;
+	}
+      else if (!(strcmp (argv[i], "--keep-times")))
+	{
+	  options |= OPT_KEEP_TIMES;
 	}
       else if (!strcmp (argv[i], "-p"))
 	{
