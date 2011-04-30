@@ -16,9 +16,6 @@
    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
    02110-1301, USA.  */
 
-#define PROGRAM_NAME "rrep"
-#define VERSION "1.2.6"
-
 /* Initial size of the buffer for reading lines.  */
 #define INIT_BUFFER_SIZE (4096)
 

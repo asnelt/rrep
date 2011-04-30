@@ -153,13 +153,18 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
 void
 pattern_free (pattern_t *pattern)
 {
-  free (pattern->string);
-  pattern->string = NULL;
+  if (pattern->string != NULL)
+    {
+      free (pattern->string);
+      pattern->string = NULL;
+    }
   /* Free compiled regular expression.  */
   if (pattern->compiled != NULL)
-    regfree (pattern->compiled);
-  free (pattern->compiled);
-  pattern->compiled = NULL;
+    {
+      regfree (pattern->compiled);
+      free (pattern->compiled);
+      pattern->compiled = NULL;
+    }
 }
 
 /* Allocates memory for the fields of pattern and compiles the regular
@@ -215,10 +220,16 @@ replace_free (replace_t *replacement)
 {
   int i;
 
-  free (replacement->string);
-  replacement->string = NULL;
-  free (replacement->sub);
-  replacement->sub = NULL;
+  if (replacement->string != NULL)
+    {
+      free (replacement->string);
+      replacement->string = NULL;
+    }
+  if (replacement->sub != NULL)
+    {
+      free (replacement->sub);
+      replacement->sub = NULL;
+    }
   if (replacement->part != NULL)
     {
       for (i=0; i < replacement->nsub+1; i++)
@@ -231,8 +242,11 @@ replace_free (replace_t *replacement)
       free (replacement->part);
       replacement->part = NULL;
     }
-  free (replacement->part_len);
-  replacement->part_len = NULL;
+  if (replacement->part_len != NULL)
+    {
+      free (replacement->part_len);
+      replacement->part_len = NULL;
+    }
 }
 
 /* Prepares replacement string for quick processing. The string can

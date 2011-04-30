@@ -243,11 +243,15 @@ backup_file (FILE *in, const char *file_name)
   if (out == NULL)
     {
       rrep_error (ERR_OPEN_WRITE, file_name);
-      free (backup_name);
+      if (backup_name != NULL)
+	free (backup_name);
       return FAILURE;
     }
-  free (backup_name);
-  backup_name = NULL;
+  if (backup_name != NULL)
+    {
+      free (backup_name);
+      backup_name = NULL;
+    }
   /* Copy file.  */
   while (!feof (in))
     {
@@ -540,8 +544,11 @@ process_dir (const char *relative_path, pattern_t *pattern,
 					       include_string,
 					       exclude_string,
 					       exclude_dir_string);
-		  free (next_path);
-		  next_path = NULL;
+		  if (next_path != NULL)
+		    {
+		      free (next_path);
+		      next_path = NULL;
+		    }
 		  if (chdir (".."))
 		    {
 		      rrep_error (ERR_PROCESS_DIR, entry->d_name);
@@ -738,7 +745,8 @@ main (int argc, char** argv)
       else if (!(strcmp (argv[i], "-h") && strcmp (argv[i], "--help")))
 	{
 	  print_help ();
-	  free (file_list);
+	  if (file_list != NULL)
+	    free (file_list);
 	  return EXIT_SUCCESS;
 	}
       else if (!(strcmp (argv[i], "-i")
@@ -771,7 +779,7 @@ main (int argc, char** argv)
 	{
 	  options |= OPT_QUIET;
 	}
-      else if (!(strcmp (argv[i], "--prompt")))
+      else if (!(strcmp (argv[i], "--interactive")))
 	{
 	  options |= OPT_PROMPT;
 	}
@@ -789,7 +797,8 @@ main (int argc, char** argv)
 	    && strcmp (argv[i], "--version")))
 	{
 	  print_version ();
-	  free (file_list);
+	  if (file_list != NULL)
+	    free (file_list);
 	  return EXIT_SUCCESS;
 	}
       else if (!(strcmp (argv[i], "-w")
@@ -820,7 +829,8 @@ main (int argc, char** argv)
   if (pattern_string == NULL || replacement_string == NULL)
     {
       print_invocation ();
-      free (file_list);
+      if (file_list != NULL)
+	free (file_list);
       return EXIT_FAILURE;
     }
 
@@ -829,7 +839,8 @@ main (int argc, char** argv)
   if (buffer == NULL)
     {
       rrep_error (ERR_ALLOC_BUFFER, NULL);
-      free (file_list);
+      if (file_list != NULL)
+	free (file_list);
       return EXIT_FAILURE;
     }
   buffer_size = INIT_BUFFER_SIZE;
@@ -837,16 +848,20 @@ main (int argc, char** argv)
   /* Parse pattern string.  */
   if (pattern_parse (pattern_string, &pattern, cflags) == FAILURE)
     {
-      free (file_list);
-      free (buffer);
+      if (file_list != NULL)
+	free (file_list);
+      if (buffer != NULL)
+	free (buffer);
       return EXIT_FAILURE;
     }
 
   /* Parse replacement string.  */
   if (replace_parse (replacement_string, &replacement) == FAILURE)
     {
-      free (file_list);
-      free (buffer);
+      if (file_list != NULL)
+	free (file_list);
+      if (buffer != NULL)
+	free (buffer);
       pattern_free (&pattern);
       return FAILURE;
     }
@@ -871,9 +886,12 @@ main (int argc, char** argv)
 
   replace_free (&replacement);
   pattern_free (&pattern);
-  free (file_buffer);
-  free (buffer);
-  free (file_list);
+  if (file_buffer != NULL)
+    free (file_buffer);
+  if (buffer != NULL)
+    free (buffer);
+  if (file_list != NULL)
+    free (file_list);
 
   if (failure_flag)
     return EXIT_FAILURE;

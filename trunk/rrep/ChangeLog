@@ -1,0 +1,93 @@
+2011-04-24 19:22  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c, rrep.h: Add option for
+	  --keep-times.
+
+2011-04-17 18:20  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, pattern.c, rrep.c, rrep.h: Add options
+	  for --include, --exclude, --exclude-dir, --backup, --dry-run and
+	  --prompt.
+
+2011-04-10 15:11  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, pattern.c, pattern.h, rrep.c, rrep.h: Add options for
+	  --word-regexp and --line-regexp.
+
+2011-04-03 10:24  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, rrep.c, rrep.h: Add option for --all. Change default
+	  behaviour to exclude files starting with '.'.
+
+2011-03-17 15:04  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, rrep.c, rrep.h: Add options for --regexp= and
+	  --replace-with=.
+	  Fix error reporting bug.
+
+2011-03-06 17:42  Arno Onken  <asnelt@asnelt.org>
+
+	* Makefile, README, bufferio.c, bufferio.h, messages.c, messages.h,
+	  pattern.c, pattern.h, rrep.c, rrep.h: Add sed-like special
+	  character and escape sequences to REPLACEMENT.
+	  Add option for fixed strings.
+
+2011-02-19 23:03  Arno Onken  <asnelt@asnelt.org>
+
+	* Makefile, bufferio.c, bufferio.h, messages.c, messages.h, rrep.c,
+	  rrep.h: Split read_line function and buffer variables into
+	  bufferio module.
+	  Extended error messages.
+	  Added relative path to replacement confirmation.
+
+2011-02-13 23:35  Arno Onken  <asnelt@asnelt.org>
+
+	* Makefile, messages.c, messages.h, rrep.c, rrep.h: Added option
+	  for suppression of normal messages. Tranferred message functions
+	  into message.h and message.c.
+
+2011-02-13 19:32  Arno Onken  <asnelt@asnelt.org>
+
+	* README, rrep.c, rrep.h: Added options for recursive processing of
+	  directories and for suppression of error messages. Split rrep.c
+	  into rrep.c and rrep.h.
+
+2011-02-06 23:01  Arno Onken  <asnelt@asnelt.org>
+
+	* README, rrep.c: Added options for ignoring case and for extended
+	  regular expressions.
+	  New function process_file_list.
+
+2011-02-06 17:37  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Adopted GNU coding standards.
+	  Unified file writing and file_buffer writing to write_string.
+
+2011-02-06 14:41  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Added support for basic regular expressions (BRE).
+
+2011-01-30 00:42  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Fixed file_buffer initialization bug.
+	  Improved readability.
+	  Improved error messages.
+
+2011-01-29 15:15  Arno Onken  <asnelt@asnelt.org>
+
+	* COPYING, Makefile, README, rrep.c: Added missing header.
+	  Shortened replacement confirmation.
+	  Added licence, makefile and readme.
+
+2011-01-29 15:11  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Added file_buffer fall-back for tmpfile failures.
+
+2011-01-29 15:03  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Removed GNU getline dependency.
+
+2011-01-29 14:52  Arno Onken  <asnelt@asnelt.org>
+
+	* ., rrep.c: Initial version.
+

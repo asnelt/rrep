@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <regex.h>
+#include "config.h"
 #include "rrep.h"
 #include "messages.h"
 
@@ -27,7 +28,7 @@
 void
 print_version ()
 {
-  printf ("%s %s\n\n", PROGRAM_NAME, VERSION);
+  printf ("%s\n\n", PACKAGE_STRING);
   printf ("Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>\n");
   printf ("License GPLv3+: GNU GPL version 3 or later");
   printf (" <http://gnu.org/licenses/gpl.html>\n");
@@ -91,7 +92,7 @@ print_help ()
   printf (" modification times\n");
   printf ("  -p, --replace-with=REPLACEMENT use REPLACEMENT for");
   printf (" substitution\n");
-  printf ("      --prompt                   prompt before modifying");
+  printf ("      --interactive              prompt before modifying");
   printf (" a file\n");
   printf ("  -q, --quiet, --silent          suppress all normal");
   printf (" messages\n");
@@ -256,9 +257,12 @@ print_regerror (const int errcode, regex_t *compiled)
 {
   size_t len = regerror (errcode, compiled, NULL, 0);
   char *message = malloc (len);
-  regerror (errcode, compiled, message, len);
-  fprintf (stderr, "%s: %s\n", invocation_name, message);
-  free (message);
+  if (message != NULL)
+    {
+      regerror (errcode, compiled, message, len);
+      fprintf (stderr, "%s: %s\n", invocation_name, message);
+      free (message);
+    }
 }
 
 /* Prints replacement confirmation.  */
