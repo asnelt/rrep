@@ -1,0 +1,36 @@
+Version 1.2.8
+  - Fixed --keep-times option to include directories.
+  - Add info and man documentation.
+
+Version 1.2.7
+  - Added support for internationalization with GNU gettext.
+  - Use automake/autconf.
+  - Added option --binary.
+  - Renamed option --prompt to --interactive.
+
+Version 1.2.6
+  - Added option for --keep-times: restore modification times after changes.
+
+Version 1.2.5
+  - Added options --include, --exclude, --exclude-dir, --backup, --dry-run and
+    --prompt.
+
+Version 1.2.4
+  - Added options for --word-regexp and --line-regexp.
+
+Version 1.2.3
+  - Added option for --all. Changed default behaviour to exclude files starting
+    with '.'.
+
+Version 1.2.2
+  - Added options for --regexp= and --replace-with=.
+  - Fixed error reporting bug: error reporting causes rrep to crash.
+
+Version 1.2.1
+  - Added sed-like special character and escape sequences to REPLACEMENT.
+  - Added option --fixed-strings.
+
+Version 1.2.0
+  - Split read_line function and buffer variables into bufferio module.
+  - Extended error messages.
+  - Added relative path to replacement confirmation.

@@ -15,9 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-SUBDIRS = po doc src
-dist_doc_DATA = README COPYING
+info_TEXINFOS = rrep.texi
+rrep_TEXINFOS = fdl.texi
 
-ACLOCAL_AMFLAGS = -I m4
+man_MANS = rrep.1
 
-EXTRA_DIST = build-aux/config.rpath m4/ChangeLog
+EXTRA_DIST = rrep.in.1
+CLEANFILES = rrep.1
+
+rrep.1: rrep.in.1
+	$(AM_V_GEN)rm -f $@ $@-t
+	$(AM_V_at)sed 's/@''VERSION@/$(VERSION)/' \
+	  < $(srcdir)/rrep.in.1 > $@-t && chmod 444 $@-t && mv $@-t $@

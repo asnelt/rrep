@@ -61,16 +61,15 @@ check_whole (const char *line, const char *start, size_t len)
   return TRUE;
 }
 
-/* Matches regular expression or string in start. Returns 0 if a match
-   was found, REG_NOMATCH if no match was found or regerror error value
-   if a regerror occured. Match offsets are stored in match.  */
+/* Matches regular expression or string in start. Returns 0 if a match was
+   found, REG_NOMATCH if no match was found or regerror error value if a
+   regerror occured. Match offsets are stored in match.  */
 int
 match_pattern (pattern_t *pattern, const char *line, const char *start,
 	       regmatch_t *match)
 {
   int i;
-  const char *first; /* Start of first occurence of
-			pattern->string.  */
+  const char *first; /* Start of first occurence of pattern->string.  */
   int errcode; /* Return value of regexec.  */
   int eflags; /* Flags for regexec.  */
 
@@ -89,8 +88,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
 	  first += pattern->string_len;
 	  first = strstr (first, pattern->string);
 	}
-      while (first != NULL && !check_whole (line, first,
-					    pattern->string_len));
+      while (first != NULL && !check_whole (line, first, pattern->string_len));
 
       if (first == NULL)
 	{
@@ -116,8 +114,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
 	{
 	  if (match[0].rm_eo == 0)
 	    {
-	      /* Initial iteration or found PATTERN has zero
-		 length.  */
+	      /* Initial iteration or found PATTERN has zero length.  */
 	      if (first >= start && (*first == '\n' || *first == '\0'))
 		  return REG_NOMATCH;
 	      first++;
@@ -129,8 +126,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
 	    eflags = 0;
 	  else
 	    eflags = REG_NOTBOL;
-	  errcode = regexec (pattern->compiled, first, 10, match,
-			     eflags);
+	  errcode = regexec (pattern->compiled, first, 10, match, eflags);
 	}
       while (errcode == 0
 	     && !check_whole (line, first+match[0].rm_so,
@@ -182,8 +178,7 @@ pattern_parse (const char *string, pattern_t *pattern, int cflags)
     }
 
   /* Copy original string into replacement.  */
-  pattern->string = (char *) malloc ((pattern->string_len + 1)
-				     * sizeof (char));
+  pattern->string = (char *) malloc ((pattern->string_len + 1) * sizeof (char));
   if (pattern->string == NULL)
     {
       rrep_error (ERR_ALLOC_PATTERN, NULL);
@@ -213,8 +208,7 @@ pattern_parse (const char *string, pattern_t *pattern, int cflags)
   return SUCCESS;
 }
 
-/* Frees the memory that was allocated for the fields of
-   replacement.  */
+/* Frees the memory that was allocated for the fields of replacement.  */
 void
 replace_free (replace_t *replacement)
 {
@@ -249,10 +243,9 @@ replace_free (replace_t *replacement)
     }
 }
 
-/* Prepares replacement string for quick processing. The string can
-   contain escape sequences which are replaced in this function.
-   Moreover, the string is split into substrings. The result is stored
-   in replacement.  */
+/* Prepares replacement string for quick processing. The string can contain
+   escape sequences which are replaced in this function. Moreover, the string
+   is split into substrings. The result is stored in replacement.  */
 int
 replace_parse (const char *string, replace_t *replacement)
 {
@@ -287,8 +280,7 @@ replace_parse (const char *string, replace_t *replacement)
 	{
 	  if (*(next+1) >= '1' && *(next+1) <= '9')
 	    nsub++;
-	  else if (*(next+1) != '&' && *(next+1) != 'n'
-		   && *(next+1) != '\\')
+	  else if (*(next+1) != '&' && *(next+1) != 'n' && *(next+1) != '\\')
 	    {
 	      escape_substring[0] = '\\';
 	      escape_substring[1] = *(next+1);

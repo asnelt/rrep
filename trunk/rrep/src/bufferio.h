@@ -28,8 +28,8 @@ extern size_t file_buffer_size;
 
 
 /* Read in a buffered line from fp. The line starts at *line and has
-   length *line_len. Line delimiters are '\n' and '\0'. If a line could
-   be placed at the line pointer, SUCCESS is returned. Otherwise, if
-   the end of file was reached END_REACHED is returned or if an error
-   occurred FAILURE is returned.  */
+   length *line_len. Line delimiters are '\n' and, if binary files are not
+   ignored, '\0'. If a line could be placed at the line pointer, SUCCESS is
+   returned. Otherwise, if the end of file was reached END_REACHED is returned
+   or if an error occurred FAILURE is returned.  */
 extern int read_line (FILE *, char **, size_t *, const char *);

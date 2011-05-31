@@ -1,0 +1,250 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Arno Onken
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: rrep 1.2.8\n"
+"Report-Msgid-Bugs-To: asnelt@asnelt.org\n"
+"POT-Creation-Date: 2011-05-22 22:44+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/messages.c:35
+#, c-format
+msgid ""
+"Copyright (C) 2011 %s\n"
+"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl."
+"html>\n"
+"This is free software: you are free to change and redistribute it.\n"
+"There is NO WARRANTY, to the extent permitted by law.\n"
+msgstr ""
+
+#: src/messages.c:48
+#, c-format
+msgid "Usage: %s [OPTION]... PATTERN REPLACEMENT [FILE]...\n"
+msgstr ""
+
+#: src/messages.c:57
+#, c-format
+msgid "Replace PATTERN by REPLACEMENT in each FILE or standard input.\n"
+msgstr ""
+
+#: src/messages.c:59
+#, c-format
+msgid ""
+"PATTERN is, by default, a basic regular expression (BRE). REPLACEMENT may\n"
+"contain the special character & to refer to that portion of the pattern "
+"space\n"
+"which matched, and the special escapes \\1 through \\9 to refer to the\n"
+"corresponding matching sub-expressions in PATTERN.\n"
+msgstr ""
+
+#: src/messages.c:64
+#, c-format
+msgid "Example: %s 'hello world' 'Hello, World!' menu.h main.c\n"
+msgstr ""
+
+#: src/messages.c:67
+#, c-format
+msgid ""
+"Options:\n"
+"  -E, --extended-regexp          PATTERN is an extended regular expression "
+"(ERE)\n"
+"  -F, --fixed-strings            PATTERN and REPLACEMENT are fixed strings\n"
+"  -R, -r, --recursive            process directories recursively\n"
+"      --include=FILE_PATTERN     process only files that match FILE_PATTERN\n"
+"      --exclude=FILE_PATTERN     files that match FILE_PATTERN will be "
+"skipped\n"
+"      --exclude-dir=PATTERN      directories that match PATTERN will be "
+"skipped\n"
+"  -V, --version                  print version information and exit\n"
+"  -a, --all                      do not ignore files starting with .\n"
+"      --backup                   backup before overwriting files\n"
+"      --binary                   do not ignore binary files\n"
+"      --dry-run                  simulation mode\n"
+"  -e, --regex=PATTERN            use PATTERN for matching\n"
+"  -h, --help                     display this help and exit\n"
+"  -i, --ignore-case              ignore case distinctions\n"
+"      --keep-times               keep access and modification times\n"
+"  -p, --replace-with=REPLACEMENT use REPLACEMENT for substitution\n"
+"      --interactive              prompt before modifying a file\n"
+"  -q, --quiet, --silent          suppress all normal messages\n"
+"  -s, --no-messages              suppress error messages\n"
+"  -w, --word-regexp              force PATTERN to match only whole words\n"
+"  -x, --line-regexp              force PATTERN to match only whole lines\n"
+msgstr ""
+
+#: src/messages.c:94
+#, c-format
+msgid ""
+"With no FILE, or when FILE is -, read standard input and write to standard\n"
+"output. Exit status is %d if any error occurs, %d otherwise.\n"
+msgstr ""
+
+#: src/messages.c:99
+#, c-format
+msgid "Report bugs to: %s\n"
+msgstr ""
+
+#: src/messages.c:107
+#, c-format
+msgid "Try `%s --help' for more information.\n"
+msgstr ""
+
+#: src/messages.c:120
+#, c-format
+msgid "%s: %s: Could not process argument: "
+msgstr ""
+
+#: src/messages.c:125
+#, c-format
+msgid "%s: %s: Could not process directory: "
+msgstr ""
+
+#: src/messages.c:130
+#, c-format
+msgid "%s: PATTERN must have at least one character\n"
+msgstr ""
+
+#: src/messages.c:134
+#, c-format
+msgid "%s: %s: Unknown escape sequence in REPLACEMENT\n"
+msgstr ""
+
+#: src/messages.c:138
+#, c-format
+msgid "%s: Could not save current working directory: "
+msgstr ""
+
+#: src/messages.c:143
+#, c-format
+msgid "%s: Could not allocate memory for buffer: "
+msgstr ""
+
+#: src/messages.c:148
+#, c-format
+msgid "%s: %s: Could not allocate memory for file_buffer: "
+msgstr ""
+
+#: src/messages.c:153
+#, c-format
+msgid "%s: Could not allocate memory for file_list: "
+msgstr ""
+
+#: src/messages.c:158
+#, c-format
+msgid "%s: %s: Could not allocate memory for next_path: "
+msgstr ""
+
+#: src/messages.c:163
+#, c-format
+msgid "%s: Could not allocate memory for pattern: "
+msgstr ""
+
+#: src/messages.c:168
+#, c-format
+msgid "%s: Could not allocate memory for replacement: "
+msgstr ""
+
+#: src/messages.c:173
+#, c-format
+msgid "%s: %s: Could not allocate memory for backup string: "
+msgstr ""
+
+#: src/messages.c:179
+#, c-format
+msgid "%s: %s: Could not reallocate memory for buffer: "
+msgstr ""
+
+#: src/messages.c:184
+#, c-format
+msgid "%s: %s: Could not reallocate memory for file_buffer: "
+msgstr ""
+
+#: src/messages.c:190
+#, c-format
+msgid "%s: %s: Not enough memory to process file: "
+msgstr ""
+
+#: src/messages.c:195
+#, c-format
+msgid "%s: %s: Could not open file for reading: "
+msgstr ""
+
+#: src/messages.c:200
+#, c-format
+msgid "%s: %s: Could not open file for writing: "
+msgstr ""
+
+#: src/messages.c:205
+#, c-format
+msgid "%s: Could not open directory: "
+msgstr ""
+
+#: src/messages.c:210
+#, c-format
+msgid "%s: %s: Could not read file: "
+msgstr ""
+
+#: src/messages.c:215
+#, c-format
+msgid "%s: %s: Could not read temporary file: "
+msgstr ""
+
+#: src/messages.c:220
+#, c-format
+msgid "%s: %s: Could not write backup file: "
+msgstr ""
+
+#: src/messages.c:225
+#, c-format
+msgid "%s: %s: Could not overwrite file: "
+msgstr ""
+
+#: src/messages.c:230
+#, c-format
+msgid "%s: %s: Could keep file times: "
+msgstr ""
+
+#: src/messages.c:255
+#, c-format
+msgid "%s: Pattern replaced\n"
+msgstr ""
+
+#: src/messages.c:263
+#, c-format
+msgid "%s: %s: Omitting directory\n"
+msgstr ""
+
+#: src/messages.c:273
+#, c-format
+msgid "Simulation mode: No files are modified.\n"
+msgstr ""
+
+#: src/messages.c:274
+#, c-format
+msgid "PATTERN found in the following files:\n"
+msgstr ""
+
+#. TRANSLATORS: This is a user prompt. In English the user can answer with y
+#. for 'yes' or n for 'no'. [y/n] should be translated as well and the "yY"
+#. string adapted accordingly.
+#: src/messages.c:290
+#, c-format
+msgid "Pattern found in %s. Replace pattern [y/n]? "
+msgstr ""
+
+#. TRANSLATORS: This string contains a list of single characters that
+#. represent an affirmative answer. In English these are the first letters of
+#. 'yes' and 'Yes'.
+#: src/messages.c:294
+msgid "yY"
+msgstr ""

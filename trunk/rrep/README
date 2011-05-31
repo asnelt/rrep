@@ -1,21 +1,24 @@
-This is rrep, a replacement utility with support for recursive
-directory processing. It searches for a regular expression and
-replaces it by a string in the file and directory list that starts
-after the second argument that is not an option.
+  Copyright (C) 2011 Arno Onken
 
-Usage: rrep [OPTION]... PATTERN REPLACEMENT [FILE]...
-Replace PATTERN by REPLACEMENT in each FILE or standard input.
-PATTERN is, by default, a basic regular expression (BRE).
-REPLACEMENT may contain the special character & to refer to that
-portion of the pattern space which matched, and the special
-escapes \1 through \9 to refer to the corresponding matching
-sub-expressions in PATTERN.
-Example: rrep 'hello world' 'Hello, World!' menu.h main.c
+  Copying and distribution of this file, with or without modification,
+  are permitted in any medium without royalty provided the copyright
+  notice and this notice are preserved.
 
-With no FILE, or when FILE is -, read standard input. Exit status
-is 1 if any error occurs, 0 otherwise.
+This is rrep, a pattern replacement utility that searches input files for
+matches to a given pattern and replaces those matches by a given replacement
+string. The replacement string may contain special characters to refer to
+portions of the matched pattern. rrep comes with support for regular
+expressions, recursive directory processing, simulation, prompting and much
+more.
 
-rrep is yet another rpl-type string replacement utility. Its goals
-are ease of use, robustness and wide deployability. The only
-dependency is the standard C library.
+This program is provided "as is" with no warranty.  The exact terms under which
+you may use and (re)distribute this program are detailed in the GNU General
+Public License, in the file COPYING.
 
+See the files AUTHORS and THANKS for a list of authors and other contributors.
+
+See the file INSTALL for compilation and installation instructions.
+
+See the file NEWS for a description of major changes in this release.
+
+Send bug reports to asnelt@asnelt.org.

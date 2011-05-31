@@ -34,18 +34,16 @@ size_t file_buffer_size = 0;
 
 
 /* Read in a buffered line from fp. The line starts at *line and has
-   length *line_len. Line delimiters are '\n' and '\0'. If a line could
-   be placed at the line pointer, SUCCESS is returned. Otherwise, if
-   the end of file was reached END_REACHED is returned or if an error
-   occurred FAILURE is returned.  */
+   length *line_len. Line delimiters are '\n' and, if binary files are not
+   ignored, '\0'. If a line could be placed at the line pointer, SUCCESS is
+   returned. Otherwise, if the end of file was reached END_REACHED is returned
+   or if an error occurred FAILURE is returned.  */
 int
-read_line (FILE *fp, char **line, size_t *line_len,
-	   const char *file_name)
+read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
 {
   static size_t start = 0; /* Start of line.  */
   static size_t search_pos = 1; /* Search position for end of line.  */
-  static size_t buffer_fill = 0; /* Number of read characters in
-				    buffer.  */
+  static size_t buffer_fill = 0; /* Number of read characters in buffer.  */
   static char null_replace = '\0'; /* Character buffer for string
 				      termination.  */
   char *tmp;
@@ -92,7 +90,7 @@ read_line (FILE *fp, char **line, size_t *line_len,
   while (search_flag)
     {
       while (search_pos < buffer_fill && *(buffer+search_pos-1) != '\n'
-	     && *(buffer+search_pos-1) != '\0')
+	     && (!(options & OPT_BINARY) || *(buffer+search_pos-1) != '\0'))
 	search_pos++;
 
       if (search_pos >= buffer_fill && !feof (fp))

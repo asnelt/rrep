@@ -1,0 +1,160 @@
+.IX Title "RREP 1"
+.TH RREP 1 "rrep @VERSION@" "User Commands"
+.nh
+.SH "NAME"
+rrep \- replace patterns in files.
+.SH "SYNOPSIS"
+.B rrep
+.RI [ OPTIONS ]
+.I PATTERN
+.I REPLACEMENT
+.RI [ FILE .\|.\|.]
+.SH "DESCRIPTION"
+The \fBrrep\fR utility searches input
+.IR FILE s
+for matches to a given
+.I PATTERN
+and replaces those matches by a given
+.IR REPLACEMENT .
+The pattern is, by
+default, a basic regular expression. The replacement string may
+contain special characters to refer to portions of the matched pattern.
+.PP
+Binary files are, by default, ignored. A file is regarded as binary
+if it contains the null character.
+.SH "OPTIONS"
+.TP
+.BR \-E ", " \-\^\-extended\-regexp
+.I PATTERN
+is interpreted as an extended regular expression (ERE).
+.TP
+.BR \-F ", " \-\^\-fixed\-strings
+.I PATTERN
+and
+.I REPLACEMENT
+are interpreted as fixed strings, not as
+regular expressions or escape sequences.
+.TP
+.BR \-R ", " \-r ", " \-\^\-recursive
+Each directory that is given on the command line is processed
+recursively.  Files and sub-directories starting with the
+.B .
+character are, by default, ignored.
+.TP
+.BI \-\^\-include= FILE_PATTERN
+Only files are processed that match the pattern
+.IR FILE_PATTERN ,
+except for files that are specifically given on the command line.
+\fB*\fR, \fB?\fR, and \fB[\fR...\fB]\fR can be used as wildcards in
+.IR FILE_PATTERN .
+Wildcards and backslash characters can be quoted with \fB\e\fR.
+.TP
+.BI \-\^\-exclude= FILE_PATTERN
+Files that match the pattern
+.I FILE_PATTERN
+will be skipped, except
+for files that are specifically given on the command line (using
+wildcard matching as described under \fB\-\^\-include\fR).
+.TP
+.BI \-\^\-exclude\-dir= PATTERN
+Directories that match
+.I PATTERN
+will be skipped, except for files
+that are specifically given on the command line (using wildcard
+matching as described under \fB\-\^\-include\fR).
+.TP
+.BR \-V ", " \-\^\-version
+Print the version number of \fBrrep\fR.
+.TP
+.BR \-a ", " \-\^\-all
+Files and sub-directories starting with the \fB.\fR character in
+recursively processed directories (see \fB\-\^\-recursive\fR) are
+processed as well.
+.TP
+.BR \-\^\-backup
+Backup before overwriting files. The backup files are written into
+the directory of the original file. The file name of the backup
+file is appended by a \fB~\fR character.
+.TP
+.BR \-\^\-binary
+Do not ignore binary files. A file is regarded as binary if it
+contains the null character \fB\e0\fR.
+.TP
+.BR \-\^\-dry\-run
+The replacement is just simulated. No file is actually modified.
+.TP
+.BI \-e " PATTERN" "\fR,\fP \-\^\-regexp=" PATTERN
+Use
+.I PATTERN
+for matching. This option can be used to specify a
+pattern beginning with \fB\-\fR.
+.TP
+.BR \-h ", " \-\^\-help
+Display a help message that descibes the command line options and
+exit afterwards.
+.TP
+.BR \-i ", " \-\^\-ignore\-case
+Case distinctions in
+.I PATTERN
+are ignored.
+.TP
+.BR \-\^\-keep\-times
+The original access and modification times of files and
+directories are restored after processing.
+.TP
+.BI \-p " REPLACEMENT" "\fR,\fP \-\^\-replace\-with=" REPLACEMENT
+Use
+.I REPLACEMENT
+for substitution.
+.TP
+.BR \-\^\-interactive
+Each time before a file is modified the user is prompted and can
+cancel the modification.
+.TP
+.BR \-q ", " \-\^\-quiet ", " \-\^\-silent
+All normal output messages are suppressed.
+.TP
+.BR \-s ", " \-\^\-no\-messages
+All error messages are suppressed.
+.TP
+.BR \-w ", " \-\^\-word\-regexp
+Only those matches of
+.I PATTERN
+are replaced that match whole words.
+.TP
+.BR \-x ", " \-\^\-line\-regexp
+Only those matches of
+.I PATTERN
+are replaced that match whole lines.
+.SH "EXIT STATUS"
+Exit status is 1 if any error occurs, 0 otherwise.
+.SH "AUTHOR"
+Written by Arno Onken.
+.SH "REPORTING BUGS"
+If you find a bug in \fBrrep\fR, please send electronic mail to
+.RB < asnelt@asnelt.org >.
+Include the version number, which you can find by
+running \fBrrep \-\-version\fR. Also include in your message the output that
+the program produced and the output you expected.
+.PP
+If you have other questions, comments or suggestions about \fBrrep\fR,
+contact the author via electronic mail to
+.RB < asnelt@asnelt.org >.
+The
+author will try to help you out, although he may not have time to fix
+your problems.
+.SH "COPYRIGHT"
+Copyright 2011 Arno Onken
+.PP
+This is free software; see the source for copying conditions. There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+.SS "Regular Manual Pages"
+find(1), grep(1), sed(1), xargs(1), regex(7).
+.SS "TeXinfo Documentation"
+The full documentation for rrep is maintained as a TeXinfo manual. If the info
+and rrep programs are properly installed at your site, the command
+.IP
+.B info rrep
+.PP
+should give you access to the complete manual.

@@ -1,4 +1,4 @@
-# Process this file with automake to create Makefile.in
+# List of source files which contain translatable strings.
 #
 # Copyright 2011 Arno Onken <asnelt@asnelt.org>
 #
@@ -14,10 +14,5 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-SUBDIRS = po doc src
-dist_doc_DATA = README COPYING
 
-ACLOCAL_AMFLAGS = -I m4
-
-EXTRA_DIST = build-aux/config.rpath m4/ChangeLog
+src/messages.c

@@ -17,4 +17,7 @@
 #
 bin_PROGRAMS = rrep
 rrep_SOURCES = rrep.c messages.c bufferio.c pattern.c
-noinst_HEADERS = bufferio.h messages.h pattern.h rrep.h
+noinst_HEADERS = bufferio.h messages.h pattern.h rrep.h gettext.h
+
+AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\"
+LDADD = @LIBINTL@
