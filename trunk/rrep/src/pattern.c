@@ -16,8 +16,10 @@
    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
    02110-1301, USA.  */
 
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <regex.h>
 #include "rrep.h"
@@ -25,25 +27,25 @@
 #include "pattern.h"
 
 /* Checks the whole word and whole line options.  */
-int
+bool
 check_whole (const char *line, const char *start, size_t len)
 {
   char c;
 
   /* Check whether any of these options was selected.  */
   if (!(options & OPT_WHOLE_WORD) && !(options & OPT_WHOLE_LINE))
-    return TRUE;
+    return true;
 
   /* Check beginning.  */
   if (start > line)
     {
       if (options & OPT_WHOLE_LINE)
-	return FALSE;
+	return false;
 
       c = *(start-1);
       if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z'
 	  || c >= '0' && c <= '9' || c == '_')
-	return FALSE;
+	return false;
     }
 
   /* Check end.  */
@@ -51,14 +53,14 @@ check_whole (const char *line, const char *start, size_t len)
   if (c != '\n')
     {
       if (options & OPT_WHOLE_LINE)
-	return FALSE;
+	return false;
 
       if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z'
 	  || c >= '0' && c <= '9' || c == '_')
-	return FALSE;
+	return false;
     }
 
-  return TRUE;
+  return true;
 }
 
 /* Matches regular expression or string in start. Returns 0 if a match was
@@ -324,7 +326,7 @@ replace_parse (const char *string, replace_t *replacement)
   next = string;
   len = 0;
   i = 0;
-  while (TRUE)
+  while (true)
     {
       len++;
       if (*next == '\0' || *next == '&'
@@ -352,7 +354,7 @@ replace_parse (const char *string, replace_t *replacement)
   next = string;
   i = 0;
   j = 0;
-  while (TRUE)
+  while (true)
     {
       if (*next == '\0')
 	{

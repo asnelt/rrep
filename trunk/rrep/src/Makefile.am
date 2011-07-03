@@ -17,7 +17,8 @@
 #
 bin_PROGRAMS = rrep
 rrep_SOURCES = rrep.c messages.c bufferio.c pattern.c
-noinst_HEADERS = bufferio.h messages.h pattern.h rrep.h gettext.h
+noinst_HEADERS = bufferio.h messages.h pattern.h rrep.h
 
-AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\"
-LDADD = @LIBINTL@
+AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\" -I$(top_builddir)/lib -I$(top_srcdir)/lib
+LDADD = $(LIB_ACL) $(LIB_CLOCK_GETTIME) $(LIBICONV) $(LIBINTL) ../lib/libgnu.a
+

@@ -16,8 +16,11 @@
    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
    02110-1301, USA.  */
 
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -27,15 +30,60 @@
 #include <fnmatch.h>
 #include <utime.h>
 #include <locale.h>
-#include "config.h"
+#include <getopt.h>
+#include "gettext.h"
+#include "progname.h"
+#include "backupfile.h"
+#include "copy-file.h"
 #include "rrep.h"
 #include "messages.h"
 #include "bufferio.h"
 #include "pattern.h"
-#include "gettext.h"
 
-/* Program invocation name.  */
-char *invocation_name = NULL;
+static char const short_options[] = "EFRrVae:hip:qswx";
+
+/* Long options that have no equivalent short option.  */
+enum
+{
+  INCLUDE_OPTION = CHAR_MAX + 1,
+  EXCLUDE_OPTION,
+  EXCLUDE_DIR_OPTION,
+  BACKUP_OPTION,
+  BINARY_OPTION,
+  DRY_RUN_OPTION,
+  KEEP_TIMES_OPTION,
+  INTERACTIVE_OPTION
+};
+
+/* Long options equivalences.  */
+static struct option const long_options[] =
+{
+  {"extended-regexp", no_argument, NULL, 'E'},
+  {"fixed-strings", no_argument, NULL, 'F'},
+  {"recursive", no_argument, NULL, 'R'},
+  {"recursive", no_argument, NULL, 'r'},
+  {"include", required_argument, NULL, INCLUDE_OPTION},
+  {"exclude", required_argument, NULL, EXCLUDE_OPTION},
+  {"exclude-dir", required_argument, NULL, EXCLUDE_DIR_OPTION},
+  {"version", no_argument, NULL, 'V'},
+  {"all", no_argument, NULL, 'a'},
+  {"backup", no_argument, NULL, BACKUP_OPTION},
+  {"binary", no_argument, NULL, BINARY_OPTION},
+  {"dry-run", no_argument, NULL, DRY_RUN_OPTION},
+  {"regex", required_argument, NULL, 'e'},
+  {"help", no_argument, NULL, 'h'},
+  {"ignore-case", no_argument, NULL, 'i'},
+  {"keep-times", no_argument, NULL, KEEP_TIMES_OPTION},
+  {"replace-with", no_argument, NULL, 'p'},
+  {"interactive", no_argument, NULL, INTERACTIVE_OPTION},
+  {"quiet", no_argument, NULL, 'q'},
+  {"silent", no_argument, NULL, 'q'},
+  {"no-messages", no_argument, NULL, 's'},
+  {"word-regexp", no_argument, NULL, 'w'},
+  {"line-regexp", no_argument, NULL, 'x'},
+  {NULL, 0, NULL, 0}
+};
+
 /* Option flags set by arguments.  */
 int options = 0;
 
@@ -82,7 +130,7 @@ write_replacement (FILE *fp, const char *start, const regmatch_t *match,
 		   const replace_t *replacement, const char *file_name,
 		   char **pos)
 {
-  int failure_flag = FALSE;
+  bool failure_flag = false;
   size_t i;
   
   if (options & OPT_FIXED)
@@ -109,7 +157,10 @@ write_replacement (FILE *fp, const char *start, const regmatch_t *match,
 	}
     }
 
-  return failure_flag;
+  if (failure_flag)
+    return FAILURE;
+
+  return SUCCESS;
 }
 
 /* Copies in to out and replaces pattern by replacement.  */
@@ -123,8 +174,8 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
   regmatch_t match[10]; /* Matched regular expression.  */
-  int last_empty_flag; /* Last regular expression had zero length.  */
-  int break_flag; /* Signals break of while loop.  */
+  bool last_empty_flag; /* Last regular expression had zero length.  */
+  bool break_flag; /* Signals break of while loop.  */
   char tmp_c; /* Buffer for a single character.  */
 
   if (out == NULL)
@@ -149,7 +200,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   while ((rr = read_line (in, &line, &line_len, file_name)) == SUCCESS)
     {
       start = line;
-      last_empty_flag = TRUE;
+      last_empty_flag = true;
       /* Search for regular expression or pattern string.  */
       while ((errcode = match_pattern (pattern, line, start, match)) == 0)
         {
@@ -184,12 +235,12 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
 		return FAILURE;
 
 	      start++;
-	      last_empty_flag = TRUE;
+	      last_empty_flag = true;
             }
 	  else
             {
 	      start = start + match[0].rm_eo;
-	      last_empty_flag = FALSE;
+	      last_empty_flag = false;
             }
         }
       if (errcode != 0 && errcode != REG_NOMATCH)
@@ -213,56 +264,22 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   return SUCCESS;
 }
 
-/* Make a backup of the opened file in to file_name~.  */
+/* Make a backup of the file.  */
 int
-backup_file (FILE *in, const char *file_name)
+backup_file (const char *file_name)
 {
-  size_t len, line_len;
   char *backup_name;
-  FILE *out;
 
-  /* Generate string for back file name.  */
-  len = strlen (file_name);
-  backup_name = (char *) malloc ((len + 2) * sizeof (char));
+  /* Generate string for backup file name.  */
+  backup_name = find_backup_file_name (file_name, simple_backups);
   if (backup_name == NULL)
     {
       rrep_error (ERR_ALLOC_BACKUP, file_name);
       return FAILURE;
     }
-  strcpy (backup_name, file_name);
-  strcat (backup_name, "~");
   /* Create backup file.  */
-  out = fopen (backup_name, "w");
-  if (out == NULL)
-    {
-      rrep_error (ERR_OPEN_WRITE, file_name);
-      if (backup_name != NULL)
-	free (backup_name);
-      return FAILURE;
-    }
-  if (backup_name != NULL)
-    {
-      free (backup_name);
-      backup_name = NULL;
-    }
-  /* Copy file.  */
-  while (!feof (in))
-    {
-      line_len = fread (buffer, sizeof (char), buffer_size, in);
-      if (line_len != buffer_size && ferror (in))
-	{
-	  rrep_error (ERR_READ_FILE, file_name);
-	  fclose (out);
-	  return FAILURE;
-	}
-      if (fwrite (buffer, sizeof (char), line_len, out) != line_len)
-	{
-	  rrep_error (ERR_WRITE_BACKUP, file_name);
-	  fclose (out);
-	  return FAILURE;
-	}
-    }
-  fclose (out);
+  copy_file_preserving (file_name, backup_name);
+  free (backup_name);
 
   return SUCCESS;
 }
@@ -279,7 +296,7 @@ process_file (const char *relative_path, const char *file_name,
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
   size_t path_len;
-  int found_flag; /* Flag for pattern found.  */
+  bool found_flag; /* Flag for pattern found.  */
 
   fp = fopen (file_name, "r");
   if (fp == NULL)
@@ -289,7 +306,7 @@ process_file (const char *relative_path, const char *file_name,
     }
 
   /* Check whether file file_name contains pattern at all.  */
-  found_flag = FALSE;
+  found_flag = false;
   line = NULL;
   while ((!found_flag || !(options & OPT_BINARY))
 	 && (rr = read_line (fp, &line, &line_len, file_name))
@@ -307,7 +324,7 @@ process_file (const char *relative_path, const char *file_name,
 	}
       errcode = match_pattern (pattern, line, line, match);
       if (errcode == 0)
-	found_flag = TRUE;
+	found_flag = true;
       else if (errcode != REG_NOMATCH)
         {
 	  print_regerror (errcode, pattern->compiled);
@@ -332,7 +349,7 @@ process_file (const char *relative_path, const char *file_name,
 
       if (options & OPT_PROMPT)
 	{
-	  if (prompt_user (file_name) != SUCCESS)
+	  if (prompt_user (file_name) == false)
 	    {
 	      fclose (fp);
 	      return SUCCESS;
@@ -341,8 +358,7 @@ process_file (const char *relative_path, const char *file_name,
 
       if (options & OPT_BACKUP)
 	{
-	  rewind (fp);
-	  if (backup_file (fp, file_name) != SUCCESS)
+	  if (backup_file (file_name) != SUCCESS)
 	    {
 	      fclose (fp);
 	      return FAILURE;
@@ -420,34 +436,34 @@ process_file (const char *relative_path, const char *file_name,
   return SUCCESS;
 }
 
-/* Checks the include and exclude options and returns TRUE if file_name
+/* Checks the include and exclude options and returns true if file_name
    qualifies.  */
-int
+bool
 check_include_name (const char *file_name, const char *included_name,
 		    const char *excluded_name)
 {
   /* Check include_string.  */
   if (included_name != NULL && fnmatch (included_name, file_name, 0) != 0)
-    return FALSE;
+    return false;
   /* Check exclude_string.  */
   if (excluded_name != NULL && fnmatch (excluded_name, file_name, 0)
       != FNM_NOMATCH)
-    return FALSE;
+    return false;
 
-  return TRUE;
+  return true;
 }
 
-/* Returns TRUE if file_name qualifies for processing.  */
-int
+/* Returns true if file_name qualifies for processing.  */
+bool
 check_name (const char *file_name, const char *included_name,
 	    const char *excluded_name)
 {
   if (file_name == NULL || file_name[0] == '\0')
-    return FALSE;
+    return false;
   /* Check --all option.  */
   if (file_name[0] == '.' && file_name[1] != '\0'
       && !(options & OPT_ALL))
-    return FALSE;
+    return false;
 
   return check_include_name (file_name, included_name, excluded_name);
 }
@@ -462,14 +478,14 @@ process_dir (const char *relative_path, pattern_t *pattern,
   struct dirent *entry; /* Directory entry.  */
   struct stat st; /* The stat for obtaining file times.  */
   struct utimbuf times; /* File times.  */
-  int times_saved; /* Flag for time keeping.  */
-  int failure_flag;
+  bool times_saved; /* Flag for time keeping.  */
+  bool failure_flag;
   size_t path_len = strlen (relative_path);
   size_t next_path_len;
   char *next_path = NULL; /* The relative_path with directory names
 			     attached.  */
 
-  failure_flag = FALSE;
+  failure_flag = false;
   d = opendir (".");
   if (d == NULL)
     {
@@ -489,14 +505,14 @@ process_dir (const char *relative_path, pattern_t *pattern,
 	      if (lstat (entry->d_name, &st) < 0)
 		{
 		  rrep_error (ERR_KEEP_TIMES, entry->d_name);
-		  failure_flag = TRUE;
-		  times_saved = FALSE;
+		  failure_flag = true;
+		  times_saved = false;
 		}
 	      else
 		{
 		  times.actime = st.st_atime;
 		  times.modtime = st.st_mtime;
-		  times_saved = TRUE;
+		  times_saved = true;
 		}
 	    }
 	  failure_flag |= process_file (relative_path, entry->d_name, pattern,
@@ -507,7 +523,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
 	      if (utime (entry->d_name, &times) != 0)
 		{
 		  rrep_error (ERR_KEEP_TIMES, entry->d_name);
-		  failure_flag = TRUE;
+		  failure_flag = true;
 		}
 	    }
 	}
@@ -523,14 +539,14 @@ process_dir (const char *relative_path, pattern_t *pattern,
 		  if (lstat (entry->d_name, &st) < 0)
 		    {
 		      rrep_error (ERR_KEEP_TIMES, entry->d_name);
-		      failure_flag = TRUE;
-		      times_saved = FALSE;
+		      failure_flag = true;
+		      times_saved = false;
 		    }
 		  else
 		    {
 		      times.actime = st.st_atime;
 		      times.modtime = st.st_mtime;
-		      times_saved = TRUE;
+		      times_saved = true;
 		    }
 		}
 	      /* Recurse into directory.  */
@@ -567,20 +583,23 @@ process_dir (const char *relative_path, pattern_t *pattern,
 		      if (utime (entry->d_name, &times) != 0)
 			{
 			  rrep_error (ERR_KEEP_TIMES, entry->d_name);
-			  failure_flag = TRUE;
+			  failure_flag = true;
 			}
 		    }
                 }
 	      else
                 {
 		  rrep_error (ERR_PROCESS_DIR, entry->d_name);
-		  failure_flag = TRUE;
+		  failure_flag = true;
                 }
             }
         }
     }
 
-  return failure_flag;
+  if (failure_flag)
+    return FAILURE;
+
+  return SUCCESS;
 }
 
 /* Processes the file_counter files in file_list.  */
@@ -594,8 +613,8 @@ process_file_list (char **file_list, const size_t file_counter,
   struct utimbuf times; /* File times.  */
   int wd; /* File descriptor for current working directory.  */
   int i;
-  int omit_dir_flag = FALSE;
-  int failure_flag = FALSE;
+  bool omit_dir_flag = false;
+  bool failure_flag = false;
 
   /* Save current working directory.  */
   wd = open (".", O_RDONLY);
@@ -603,7 +622,7 @@ process_file_list (char **file_list, const size_t file_counter,
   if (omit_dir_flag)
     {
       rrep_error (ERR_SAVE_DIR, NULL);
-      failure_flag = TRUE;
+      failure_flag = true;
     }
   
   /* Process file list.  */
@@ -612,7 +631,7 @@ process_file_list (char **file_list, const size_t file_counter,
       if (lstat (file_list[i], &st) < 0)
 	{
 	  rrep_error (ERR_PROCESS_ARG, file_list[i]);
-	  failure_flag = TRUE;
+	  failure_flag = true;
 	  continue;
 	}
 
@@ -649,14 +668,14 @@ process_file_list (char **file_list, const size_t file_counter,
 		  if (utime (file_list[i], &times) != 0)
 		    {
 		      rrep_error (ERR_KEEP_TIMES, file_list[i]);
-		      failure_flag = TRUE;
+		      failure_flag = true;
 		    }
 		}
 	    }
 	  else
 	    {
 	      rrep_error (ERR_PROCESS_DIR, file_list[i]);
-	      failure_flag = TRUE;
+	      failure_flag = true;
 	    }
 	}
       else if (S_ISREG (st.st_mode) && check_include_name (file_list[i],
@@ -678,14 +697,17 @@ process_file_list (char **file_list, const size_t file_counter,
 	      if (utime (file_list[i], &times) != 0)
 		{
 		  rrep_error (ERR_KEEP_TIMES, file_list[i]);
-		  failure_flag = TRUE;
+		  failure_flag = true;
 		}
 	    }
 	}
     }
   close (wd);
 
-  return failure_flag;
+  if (failure_flag)
+    return FAILURE;
+
+  return SUCCESS;
 }
 
 /* Parses command line arguments and processes file list.  */
@@ -701,9 +723,10 @@ main (int argc, char** argv)
   replace_t replacement; /* Replacement struct.  */
   char **file_list; /* List of files to process.  */
   size_t file_counter = 0; /* Counter for number of files.  */
-  int i;
+  int i, opt;
   int cflags = 0; /* Flags for regcomp.  */
-  int failure_flag = FALSE;
+  bool failure_flag = false;
+  bool exit_flag = false;
 
 #if ENABLE_NLS
   /* Initialization of gettext.  */
@@ -721,161 +744,145 @@ main (int argc, char** argv)
   replacement.part = NULL;
   replacement.part_len = NULL;
   /* Set program invocation name.  */
-  invocation_name = argv[0];
+  set_program_name (argv[0]);
+
+  /* Parse command line arguments.  */
+  while ((opt = getopt_long (argc, argv, short_options, long_options, NULL))
+	 != -1)
+    {
+      switch (opt)
+	{
+	case 'E':
+	  cflags |= REG_EXTENDED;
+	  break;
+
+	case 'F':
+	  options |= OPT_FIXED;
+	  break;
+
+	case 'R':
+	case 'r':
+	  options |= OPT_RECURSIVE;
+	  break;
+
+	case INCLUDE_OPTION:
+	  include_string = optarg;
+	  break;
+
+	case EXCLUDE_OPTION:
+	  exclude_string = optarg;
+	  break;
+
+	case EXCLUDE_DIR_OPTION:
+	  exclude_dir_string = optarg;
+	  break;
+
+	case 'V':
+	  print_version ();
+	  exit_flag = true;
+	  break;
+
+	case 'a':
+	  options |= OPT_ALL;
+	  break;
+
+	case BACKUP_OPTION:
+	  options |= OPT_BACKUP;
+	  break;
+
+	case BINARY_OPTION:
+	  options |= OPT_BINARY;
+	  break;
+
+	case DRY_RUN_OPTION:
+	  options |= OPT_DRY;
+	  break;
+
+	case 'e':
+	  if (pattern_string != NULL)
+	    {
+	      print_invocation ();
+	      failure_flag = true;
+	    }
+	  else
+	    pattern_string = optarg;
+	  break;
+
+	case 'h':
+	  print_help ();
+	  exit_flag = true;
+	  break;
+
+	case 'i':
+	  cflags |= REG_ICASE;
+	  break;
+
+	case KEEP_TIMES_OPTION:
+	  options |= OPT_KEEP_TIMES;
+	  break;
+
+	case 'p':
+	  if (replacement_string != NULL)
+	    {
+	      print_invocation ();
+	      failure_flag = true;
+	    }
+	  else
+	    replacement_string = optarg;
+	  break;
+
+	case INTERACTIVE_OPTION:
+	  options |= OPT_PROMPT;
+	  break;
+
+	case 'q':
+	  options |= OPT_QUIET;
+	  break;
+
+	case 's':
+	  options |= OPT_NO_MESSAGES;
+	  break;
+
+	case 'w':
+	  options |= OPT_WHOLE_WORD;
+	  break;
+
+	case 'x':
+	  options |= OPT_WHOLE_LINE;
+	  break;
+
+	default:
+	  print_invocation ();
+	  failure_flag = true;
+	  break;
+
+	}
+    }
+
+  if (failure_flag)
+    return EXIT_FAILURE;
+  if (exit_flag)
+    return EXIT_SUCCESS;
 
   /* Allocate memory for file list.  */
-  file_list = (char **) malloc (argc * sizeof (char *));
+  file_list = (char **) malloc ((argc-optind) * sizeof (char *));
   if (file_list == NULL)
     {
       rrep_error (ERR_ALLOC_FILELIST, NULL);
       return EXIT_FAILURE;
     }
-  /* Parse command line arguments.  */
-  for (i = 1; i < argc; i++)
+  /* Parse remaining arguments.  */
+  for (i = optind; i < argc; i++)
     {
-      if (!(strcmp (argv[i], "-a") && strcmp (argv[i], "--all")))
-	{
-	  options |= OPT_ALL;
-	}
-      else if (!strcmp (argv[i], "--backup"))
-	{
-	  options |= OPT_BACKUP;
-	}
-      else if (!strcmp (argv[i], "--binary"))
-	{
-	  options |= OPT_BINARY;
-	}
-      else if (!strcmp (argv[i], "--dry-run"))
-	{
-	  options |= OPT_DRY;
-	}
-      else if (!(strcmp (argv[i], "-E")
-		 && strcmp (argv[i], "--extended-regexp")))
-	{
-	  cflags |= REG_EXTENDED;
-	}
-      else if (!strcmp (argv[i], "-e"))
-	{
-	  i++;
-	  if (i >= argc || pattern_string != NULL)
-	    {
-	      print_invocation ();
-	      if (file_list != NULL)
-		free (file_list);
-	      return EXIT_FAILURE;
-	    }
-	  pattern_string = argv[i];
-	}
-      else if (!strncmp (argv[i], "--regexp=", 9))
-	{
-	  if (pattern_string != NULL)
-	    {
-	      print_invocation ();
-	      if (file_list != NULL)
-		free (file_list);
-	      return EXIT_FAILURE;
-	    }
-	  pattern_string = argv[i]+9;
-	}
-      else if (!strncmp (argv[i], "--exclude=", 10))
-	{
-	  exclude_string = argv[i]+10;
-	}
-      else if (!strncmp (argv[i], "--exclude-dir=", 14))
-	{
-	  exclude_dir_string = argv[i]+14;
-	}
-      else if (!(strcmp (argv[i], "-F") && strcmp (argv[i], "--fixed-strings")))
-	{
-	  options |= OPT_FIXED;
-	}
-      else if (!(strcmp (argv[i], "-h") && strcmp (argv[i], "--help")))
-	{
-	  print_help ();
-	  if (file_list != NULL)
-	    free (file_list);
-	  return EXIT_SUCCESS;
-	}
-      else if (!(strcmp (argv[i], "-i") && strcmp (argv[i], "--ignore-case")))
-	{
-	  cflags |= REG_ICASE;
-	}
-      else if (!strncmp (argv[i], "--include=", 10))
-	{
-	  include_string = argv[i]+10;
-	}
-      else if (!(strcmp (argv[i], "--keep-times")))
-	{
-	  options |= OPT_KEEP_TIMES;
-	}
-      else if (!strcmp (argv[i], "-p"))
-	{
-	  i++;
-	  if (i >= argc || replacement_string != NULL)
-	    {
-	      print_invocation ();
-	      if (file_list != NULL)
-		free (file_list);
-	      return EXIT_FAILURE;
-	    }
-	  replacement_string = argv[i];
-	}
-      else if (!strncmp (argv[i], "--replace-with=", 15))
-	{
-	  if (replacement_string != NULL)
-	    {
-	      print_invocation ();
-	      if (file_list != NULL)
-		free (file_list);
-	      return EXIT_FAILURE;
-	    }
-	  replacement_string = argv[i]+15;
-	}
-      else if (!(strcmp (argv[i], "-q") && strcmp (argv[i], "--quiet")
-		 && strcmp (argv[i], "--silent")))
-	{
-	  options |= OPT_QUIET;
-	}
-      else if (!(strcmp (argv[i], "--interactive")))
-	{
-	  options |= OPT_PROMPT;
-	}
-      else if (!(strcmp (argv[i], "-R") && strcmp (argv[i], "-r")
-		 && strcmp (argv[i], "--recursive")))
-	{
-	  options |= OPT_RECURSIVE;
-	}
-      else if (!(strcmp (argv[i], "-s") && strcmp (argv[i], "--no-messages")))
-	{
-	  options |= OPT_NO_MESSAGES;
-	}
-      else if (!(strcmp (argv[i], "-V") && strcmp (argv[i], "--version")))
-	{
-	  print_version ();
-	  if (file_list != NULL)
-	    free (file_list);
-	  return EXIT_SUCCESS;
-	}
-      else if (!(strcmp (argv[i], "-w") && strcmp (argv[i], "--word-regexp")))
-	{
-	  options |= OPT_WHOLE_WORD;
-	}
-      else if (!(strcmp (argv[i], "-x") && strcmp (argv[i], "--line-regexp")))
-	{
-	  options |= OPT_WHOLE_LINE;
-	}
+      if (pattern_string == NULL)
+	pattern_string = argv[i];
+      else if (replacement_string == NULL)
+	replacement_string = argv[i];
       else
 	{
-	  if (pattern_string == NULL)
-	    pattern_string = argv[i];
-	  else if (replacement_string == NULL)
-	    replacement_string = argv[i];
-	  else
-	    {
-	      /* Add argument to file_list.  */
-	      file_list[file_counter] = argv[i];
-	      file_counter++;
-	    }
+	  /* Add argument to file_list.  */
+	  file_list[file_counter] = argv[i];
+	  file_counter++;
 	}
     }
 

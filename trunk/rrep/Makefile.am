@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-SUBDIRS = po doc src
+SUBDIRS = lib src po doc
 dist_doc_DATA = README COPYING
 
 ACLOCAL_AMFLAGS = -I m4
 
-EXTRA_DIST = build-aux/config.rpath m4/ChangeLog
+EXTRA_DIST = build-aux/config.rpath m4/gnulib-cache.m4 m4/ChangeLog

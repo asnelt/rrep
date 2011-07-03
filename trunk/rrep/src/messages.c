@@ -16,16 +16,21 @@
    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
    02110-1301, USA.  */
 
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <regex.h>
-#include "config.h"
+#include "gettext.h"
+#include "progname.h"
+#include "propername.h"
+#include "yesno.h"
 #include "rrep.h"
 #include "messages.h"
-#include "gettext.h"
 
 #define _(string) gettext (string)
+#define AUTHORS proper_name ("Arno Onken")
 
 /* Prints version information.  */
 void
@@ -36,8 +41,7 @@ print_version ()
 Copyright (C) 2011 %s\n\
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\
 This is free software: you are free to change and redistribute it.\n\
-There is NO WARRANTY, to the extent permitted by law.\n"),
-	  "Arno Onken <asnelt@asnelt.org>");
+There is NO WARRANTY, to the extent permitted by law.\n"), AUTHORS);
   printf ("\n");
 }
 
@@ -46,7 +50,7 @@ void
 print_usage ()
 {
   printf (_("Usage: %s [OPTION]... PATTERN REPLACEMENT [FILE]...\n"),
-	  invocation_name);
+	  program_name);
 }
 
 /* Prints the help.  */
@@ -62,7 +66,7 @@ contain the special character & to refer to that portion of the pattern space\n\
 which matched, and the special escapes \\1 through \\9 to refer to the\n\
 corresponding matching sub-expressions in PATTERN.\n"));
   printf (_("Example: %s 'hello world' 'Hello, World!' menu.h main.c\n"),
-	  invocation_name);
+	  program_name);
   printf ("\n");
   printf (_("\
 Options:\n\
@@ -104,7 +108,7 @@ void
 print_invocation ()
 {
   print_usage ();
-  printf (_("Try `%s --help' for more information.\n"), invocation_name);
+  printf (_("Try `%s --help' for more information.\n"), program_name);
 }
 
 /* Prints an error message.  */
@@ -118,117 +122,117 @@ rrep_error (const int errcode, const char *file_name)
     {
     case ERR_PROCESS_ARG:
       fprintf (stderr, _("%s: %s: Could not process argument: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_PROCESS_DIR:
       fprintf (stderr, _("%s: %s: Could not process directory: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_PATTERN:
       fprintf (stderr, _("%s: PATTERN must have at least one character\n"),
-	       invocation_name);
+	       program_name);
       break;
     case ERR_UNKNOWN_ESCAPE:
       fprintf (stderr, _("%s: %s: Unknown escape sequence in REPLACEMENT\n"),
-	       invocation_name, file_name);
+	       program_name, file_name);
       break;
     case ERR_SAVE_DIR:
       fprintf (stderr, _("%s: Could not save current working directory: "),
-	       invocation_name);
+	       program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_BUFFER:
       fprintf (stderr, _("%s: Could not allocate memory for buffer: "),
-	       invocation_name);
+	       program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_FILEBUFFER: 
       fprintf (stderr, _("%s: %s: Could not allocate memory for file_buffer: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_ALLOC_FILELIST:
       fprintf (stderr, _("%s: Could not allocate memory for file_list: "),
-	       invocation_name);
+	       program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_PATHBUFFER:
       fprintf (stderr, _("%s: %s: Could not allocate memory for next_path: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_ALLOC_PATTERN:
       fprintf (stderr, _("%s: Could not allocate memory for pattern: "),
-	       invocation_name);
+	       program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_REPLACEMENT:
       fprintf (stderr, _("%s: Could not allocate memory for replacement: "),
-	       invocation_name);
+	       program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_BACKUP:
       fprintf (stderr, _("\
-%s: %s: Could not allocate memory for backup string: "), invocation_name,
+%s: %s: Could not allocate memory for backup string: "), program_name,
 	       file_name);
       perror (NULL);
       break;
     case ERR_REALLOC_BUFFER:
       fprintf (stderr, _("%s: %s: Could not reallocate memory for buffer: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_REALLOC_FILEBUFFER:
       fprintf (stderr, _("\
-%s: %s: Could not reallocate memory for file_buffer: "), invocation_name,
+%s: %s: Could not reallocate memory for file_buffer: "), program_name,
 	       file_name);
       perror (NULL);
       break;
     case ERR_MEMORY:
       fprintf (stderr, _("%s: %s: Not enough memory to process file: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_OPEN_READ:
       fprintf (stderr, _("%s: %s: Could not open file for reading: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_OPEN_WRITE:
       fprintf (stderr, _("%s: %s: Could not open file for writing: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_OPEN_DIR:
       fprintf (stderr, _("%s: Could not open directory: "),
-	       invocation_name);
+	       program_name);
       perror (NULL);
       break;
     case ERR_READ_FILE:
       fprintf (stderr, _("%s: %s: Could not read file: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_READ_TEMP:
       fprintf (stderr, _("%s: %s: Could not read temporary file: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_WRITE_BACKUP:
       fprintf (stderr, _("%s: %s: Could not write backup file: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_OVERWRITE:
       fprintf (stderr, _("%s: %s: Could not overwrite file: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     case ERR_KEEP_TIMES:
       fprintf (stderr, _("%s: %s: Could keep file times: "),
-	       invocation_name, file_name);
+	       program_name, file_name);
       perror (NULL);
       break;
     }
@@ -243,7 +247,7 @@ print_regerror (const int errcode, regex_t *compiled)
   if (message != NULL)
     {
       regerror (errcode, compiled, message, len);
-      fprintf (stderr, "%s: %s\n", invocation_name, message);
+      fprintf (stderr, "%s: %s\n", program_name, message);
       free (message);
     }
 }
@@ -260,7 +264,7 @@ void
 print_dir_skip (const char *file_name)
 {
   if (!(options & OPT_QUIET))
-    printf (_("%s: %s: Omitting directory\n"), invocation_name,
+    printf (_("%s: %s: Omitting directory\n"), program_name,
 	    file_name);
 }
 
@@ -276,28 +280,12 @@ print_dry ()
 }
 
 /* Prompt user before modification.  */
-int
+bool
 prompt_user (const char *file_name)
 {
-  int i;
-  char c;
-  /* Characters that are considered as a positive response.  */
-  const char *yes_char;
-
   /* TRANSLATORS: This is a user prompt. In English the user can answer with y
-     for 'yes' or n for 'no'. [y/n] should be translated as well and the "yY"
-     string adapted accordingly.  */
+     for 'yes' or n for 'no'. [y/n] should be translated as well.  */
   printf (_("Pattern found in %s. Replace pattern [y/n]? "), file_name);
-  /* TRANSLATORS: This string contains a list of single characters that
-     represent an affirmative answer. In English these are the first letters of
-     'yes' and 'Yes'.  */
-  yes_char = _("yY");
-  c = getchar ();
 
-  for (i = 0; i < strlen (yes_char); i++)
-    {
-      if (c == yes_char[i])
-	return SUCCESS;
-    }
-  return FAILURE;
+  return yesno ();
 }

@@ -72,4 +72,4 @@ extern void print_dir_skip (const char *);
 extern void print_dry ();
 
 /* Prompt user before modification.  */
-extern int prompt_user (const char *);
+extern bool prompt_user (const char *);

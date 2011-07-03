@@ -1,6 +1,15 @@
+Version 1.3.0
+  - Added GNU Gnulib modules fts, exclude, getopt-gnu, stdbool, regex,
+    realloc-gnu, free, tmpfile, malloc-gnu, gettext, propername, yesno, errno,
+    progname, memcpy, memchr, utimens, futimens, chdir-safer, copy-file,
+    backupfile, save-cwd, fchdir, string, stdlib, stdio, unistd, sys_stat,
+    fcntl-h, fnmatch, locale and dirent.
+  - Parsing arguments with getopt_long.
+  - Making use of bool, propername, progname, yesno, backupfile and copy-file.
+
 Version 1.2.8
   - Fixed --keep-times option to include directories.
-  - Add info and man documentation.
+  - Added info and man documentation.
 
 Version 1.2.7
   - Added support for internationalization with GNU gettext.

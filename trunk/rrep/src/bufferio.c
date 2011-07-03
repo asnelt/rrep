@@ -16,8 +16,10 @@
    Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
    02110-1301, USA.  */
 
+#include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <regex.h>
 #include "rrep.h"
 #include "messages.h"
@@ -48,7 +50,8 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
 				      termination.  */
   char *tmp;
   size_t nr; /* Number of characters read by fread.  */
-  int i, search_flag;
+  int i;
+  bool search_flag;
 
   *line_len = 0;
   if (*line == NULL)
@@ -86,7 +89,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
     }
 
   /* Search for end of line.  */
-  search_flag = TRUE;
+  search_flag = true;
   while (search_flag)
     {
       while (search_pos < buffer_fill && *(buffer+search_pos-1) != '\n'
@@ -143,7 +146,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
       else
         {
 	  /* End of line found or file complete.  */
-	  search_flag = FALSE;
+	  search_flag = false;
         }
     }
 

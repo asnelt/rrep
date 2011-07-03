@@ -1,3 +1,14 @@
+2011-07-04 00:46  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c: Add stdbool.
+	* messages.c: Add stdbool, progname, propername and yesno.
+	* messages.h: Make use of bool.
+	* pattern.c: Add stdbool.
+	* rrep.c: Add progname, backupfile, copy-file and getopt. Make use
+	  of getopt_long
+	* rrep.h: Remove boolean constants.
+	* lib: Add GNU Gnulib modules.
+
 2011-05-31 13:30  Arno Onken  <asnelt@asnelt.org>
 
 	* rrep.c: Fix --keep-times option to include directories.

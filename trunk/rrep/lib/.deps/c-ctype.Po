@@ -1,0 +1,8 @@
+c-ctype.o: c-ctype.c ../config.h c-ctype.h \
+ /usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.6.1/include/stdbool.h
+
+../config.h:
+
+c-ctype.h:
+
+/usr/lib/x86_64-linux-gnu/gcc/x86_64-linux-gnu/4.6.1/include/stdbool.h:

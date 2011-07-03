@@ -33,14 +33,6 @@
 #define OPT_WHOLE_LINE  0x400 /* Force PATTERN to match only whole lines.  */
 #define OPT_WHOLE_WORD  0x800 /* Force PATTERN to match only whole words.  */
 
-/* Boolean values.  */
-enum
-  {
-    FALSE = 0,
-    TRUE = 1
-  };
-
-
 /* Processing constants.  */
 enum
   {
@@ -48,9 +40,6 @@ enum
     FAILURE = 1,
     END_REACHED = 2
   };
-
-/* Program invocation name is set in main.  */
-extern char *invocation_name;
 
 /* Option flags are set in main.  */
 extern int options;
