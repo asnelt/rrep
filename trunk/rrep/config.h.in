@@ -77,9 +77,6 @@
 /* Define to 1 if nl_langinfo (YESEXPR) returns a non-empty string. */
 #undef FUNC_NL_LANGINFO_YESEXPR_WORKS
 
-/* Define to 1 if futimesat mishandles a NULL file name. */
-#undef FUTIMESAT_NULL_BUG
-
 /* Define if gettimeofday clobbers the localtime buffer. */
 #undef GETTIMEOFDAY_CLOBBERS_LOCALTIME
 
@@ -166,9 +163,6 @@
 
 /* Define to 1 when the gnulib module ftello should be tested. */
 #undef GNULIB_TEST_FTELLO
-
-/* Define to 1 when the gnulib module futimens should be tested. */
-#undef GNULIB_TEST_FUTIMENS
 
 /* Define to 1 when the gnulib module getcwd should be tested. */
 #undef GNULIB_TEST_GETCWD
@@ -380,12 +374,6 @@
 /* Define to 1 if you have the `chown' function. */
 #undef HAVE_CHOWN
 
-/* Define to 1 if you have the `clock_gettime' function. */
-#undef HAVE_CLOCK_GETTIME
-
-/* Define to 1 if you have the `clock_settime' function. */
-#undef HAVE_CLOCK_SETTIME
-
 /* Define if the GNU dcgettext() function is already present or preinstalled.
    */
 #undef HAVE_DCGETTEXT
@@ -514,15 +502,6 @@
 /* Define to 1 if you have the `funlockfile' function. */
 #undef HAVE_FUNLOCKFILE
 
-/* Define to 1 if you have the `futimens' function. */
-#undef HAVE_FUTIMENS
-
-/* Define to 1 if you have the `futimes' function. */
-#undef HAVE_FUTIMES
-
-/* Define to 1 if you have the `futimesat' function. */
-#undef HAVE_FUTIMESAT
-
 /* Define to 1 if you have the `getacl' function. */
 #undef HAVE_GETACL
 
@@ -597,9 +576,6 @@
 /* Define to 1 if you have the `lstat' function. */
 #undef HAVE_LSTAT
 
-/* Define to 1 if you have the `lutimes' function. */
-#undef HAVE_LUTIMES
-
 /* Define to 1 if your system has a GNU libc compatible 'malloc' function, and
    to 0 otherwise. */
 #undef HAVE_MALLOC_GNU
@@ -626,9 +602,6 @@
 /* Define to 1 if <wchar.h> declares mbstate_t. */
 #undef HAVE_MBSTATE_T
 
-/* Define to 1 if you have the `memcpy' function. */
-#undef HAVE_MEMCPY
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -643,9 +616,6 @@
 
 /* Define to 1 if you have the `mprotect' function. */
 #undef HAVE_MPROTECT
-
-/* Define to 1 if you have the `nanotime' function. */
-#undef HAVE_NANOTIME
 
 /* Define to 1 if you have the `nl_langinfo' function. */
 #undef HAVE_NL_LANGINFO
@@ -1137,9 +1107,6 @@
 /* Define to 1 if _Exit is declared even after undefining macros. */
 #undef HAVE_RAW_DECL__EXIT
 
-/* Define to 1 if you have the `readlink' function. */
-#undef HAVE_READLINK
-
 /* Define to 1 if your system has a GNU libc compatible 'realloc' function,
    and to 0 otherwise. */
 #undef HAVE_REALLOC_GNU
@@ -1187,31 +1154,6 @@
 /* Define to 1 if `f_type' is a member of `struct statfs'. */
 #undef HAVE_STRUCT_STATFS_F_TYPE
 
-/* Define to 1 if `st_atimensec' is a member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_ATIMENSEC
-
-/* Define to 1 if `st_atimespec.tv_nsec' is a member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_ATIMESPEC_TV_NSEC
-
-/* Define to 1 if `st_atim.st__tim.tv_nsec' is a member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_ATIM_ST__TIM_TV_NSEC
-
-/* Define to 1 if `st_atim.tv_nsec' is a member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_ATIM_TV_NSEC
-
-/* Define to 1 if `st_birthtimensec' is a member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_BIRTHTIMENSEC
-
-/* Define to 1 if `st_birthtimespec.tv_nsec' is a member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC_TV_NSEC
-
-/* Define to 1 if `st_birthtim.tv_nsec' is a member of `struct stat'. */
-#undef HAVE_STRUCT_STAT_ST_BIRTHTIM_TV_NSEC
-
-/* Define if struct utimbuf is declared -- usually in <utime.h>. Some systems
-   have utime.h but don't declare the struct anywhere. */
-#undef HAVE_STRUCT_UTIMBUF
-
 /* Define to 1 if you have the <sys/acl.h> header file. */
 #undef HAVE_SYS_ACL_H
 
@@ -1257,9 +1199,6 @@
 /* Define to 1 if you have the `utime' function. */
 #undef HAVE_UTIME
 
-/* Define to 1 if you have the `utimensat' function. */
-#undef HAVE_UTIMENSAT
-
 /* Define to 1 if you have the `utimes' function. */
 #undef HAVE_UTIMES
 
@@ -1304,9 +1243,6 @@
 
 /* Define to 1 if O_NOFOLLOW works. */
 #undef HAVE_WORKING_O_NOFOLLOW
-
-/* Define if utimes works properly. */
-#undef HAVE_WORKING_UTIMES
 
 /* Define to 1 if you have the <xlocale.h> header file. */
 #undef HAVE_XLOCALE_H
@@ -1436,10 +1372,6 @@
 /* Define to 1 if strerror_r returns char *. */
 #undef STRERROR_R_CHAR_P
 
-/* Define to 1 if the type of the st_atim member of a struct stat is struct
-   timespec. */
-#undef TYPEOF_STRUCT_STAT_ST_ATIM_IS_STRUCT_TIMESPEC
-
 /* Define to 1 if unlink() on a parent directory may succeed */
 #undef UNLINK_PARENT_BUG
 
@@ -1510,9 +1442,6 @@
 
 /* Define to a replacement function name for fnmatch(). */
 #undef fnmatch
-
-/* Define to rpl_free if the replacement function should be used. */
-#undef free
 
 /* Define to `int' if <sys/types.h> doesn't define. */
 #undef gid_t

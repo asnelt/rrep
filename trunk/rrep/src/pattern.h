@@ -43,16 +43,16 @@ extern int match_pattern (pattern_t *, const char *, const char *,
 			  regmatch_t *);
 
 /* Frees the memory that was allocated for the fields of pattern.  */
-extern void pattern_free (pattern_t *);
+extern void free_pattern (pattern_t *);
 
 /* Allocates memory for the fields of pattern and compiles the regular
    expression in string with cflags.  */
-extern int pattern_parse (const char *, pattern_t *, int);
+extern int parse_pattern (const char *, pattern_t *, int);
 
 /* Frees the memory that was allocated for the fields of replacement.  */
-extern void replace_free (replace_t *);
+extern void free_replace (replace_t *);
 
 /* Prepares replacement string for quick processing. The string can contain
    escape sequences which are replaced in this function. Moreover, the string
    is split into substrings. The result is stored in replacement.  */
-extern int replace_parse (const char *, replace_t *);
+extern int parse_replace (const char *, replace_t *);

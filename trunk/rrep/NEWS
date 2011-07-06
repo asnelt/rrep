@@ -1,3 +1,8 @@
+Version 1.3.1
+  - Making use of exlude.
+  - Removed GNU Gnulib modules utimens, futimens, save-cwd, chdir-safer, free,
+    memcpy.
+
 Version 1.3.0
   - Added GNU Gnulib modules fts, exclude, getopt-gnu, stdbool, regex,
     realloc-gnu, free, tmpfile, malloc-gnu, gettext, propername, yesno, errno,

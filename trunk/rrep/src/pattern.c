@@ -149,7 +149,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
 
 /* Frees the memory that was allocated for the fields of pattern.  */
 void
-pattern_free (pattern_t *pattern)
+free_pattern (pattern_t *pattern)
 {
   if (pattern->string != NULL)
     {
@@ -168,7 +168,7 @@ pattern_free (pattern_t *pattern)
 /* Allocates memory for the fields of pattern and compiles the regular
    expression in string with cflags.  */
 int
-pattern_parse (const char *string, pattern_t *pattern, int cflags)
+parse_pattern (const char *string, pattern_t *pattern, int cflags)
 {
   int errcode; /* Error code for regcomp.  */
 
@@ -195,7 +195,7 @@ pattern_parse (const char *string, pattern_t *pattern, int cflags)
   if (pattern->compiled == NULL)
     {
       rrep_error (ERR_ALLOC_PATTERN, NULL);
-      pattern_free (pattern);
+      free_pattern (pattern);
       return FAILURE;
     }
   /* Compile regular expression.  */
@@ -203,7 +203,7 @@ pattern_parse (const char *string, pattern_t *pattern, int cflags)
   if (errcode != 0)
     {
       print_regerror (errcode, pattern->compiled);
-      pattern_free (pattern);
+      free_pattern (pattern);
       return FAILURE;
     }
 
@@ -212,7 +212,7 @@ pattern_parse (const char *string, pattern_t *pattern, int cflags)
 
 /* Frees the memory that was allocated for the fields of replacement.  */
 void
-replace_free (replace_t *replacement)
+free_replace (replace_t *replacement)
 {
   int i;
 
@@ -249,7 +249,7 @@ replace_free (replace_t *replacement)
    escape sequences which are replaced in this function. Moreover, the string
    is split into substrings. The result is stored in replacement.  */
 int
-replace_parse (const char *string, replace_t *replacement)
+parse_replace (const char *string, replace_t *replacement)
 {
   const char *next;
   char escape_substring[3]; /* Substring for escape error message.  */
@@ -288,7 +288,7 @@ replace_parse (const char *string, replace_t *replacement)
 	      escape_substring[1] = *(next+1);
 	      escape_substring[2] = '\0';
 	      rrep_error (ERR_UNKNOWN_ESCAPE, escape_substring);
-	      replace_free (replacement);
+	      free_replace (replacement);
 	      return FAILURE;
 	    }
 	  next++;
@@ -302,7 +302,7 @@ replace_parse (const char *string, replace_t *replacement)
   if (replacement->part == NULL)
     {
       rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
-      replace_free (replacement);
+      free_replace (replacement);
       return FAILURE;
     }
   for (i = 0; i < nsub+1; i++)
@@ -311,14 +311,14 @@ replace_parse (const char *string, replace_t *replacement)
   if (replacement->part_len == NULL)
     {
       rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
-      replace_free (replacement);
+      free_replace (replacement);
       return FAILURE;
     }
   replacement->sub = (int *) malloc (nsub * sizeof (int));
   if (replacement->sub == NULL)
     {
       rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
-      replace_free (replacement);
+      free_replace (replacement);
       return FAILURE;
     }
 
@@ -336,7 +336,7 @@ replace_parse (const char *string, replace_t *replacement)
 	  if (replacement->part[i] == NULL)
 	    {
 	      rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
-	      replace_free (replacement);
+	      free_replace (replacement);
 	      return FAILURE;
 	    }
 	  replacement->part_len[i] = len-1;

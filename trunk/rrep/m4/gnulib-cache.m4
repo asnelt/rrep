@@ -15,13 +15,12 @@
 
 
 # Specification in the form of a command-line invocation:
-#   gnulib-tool --import --dir=. --lib=libgnu --source-base=lib --m4-base=m4 --doc-base=doc --tests-base=tests --aux-dir=build-aux --no-conditional-dependencies --no-libtool --macro-prefix=gl backupfile chdir-safer copy-file dirent errno exclude fchdir fcntl-h fnmatch free fts futimens getopt-gnu gettext locale malloc-gnu memchr memcpy progname propername realloc-gnu regex save-cwd stdbool stdio stdlib string sys_stat tmpfile unistd utimens yesno
+#   gnulib-tool --import --dir=. --lib=libgnu --source-base=lib --m4-base=m4 --doc-base=doc --tests-base=tests --aux-dir=build-aux --no-conditional-dependencies --no-libtool --macro-prefix=gl backupfile copy-file dirent errno exclude fchdir fcntl-h fnmatch fts getopt-gnu gettext locale malloc-gnu memchr progname propername realloc-gnu regex stdbool stdio stdlib string sys_stat tmpfile unistd yesno
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
   backupfile
-  chdir-safer
   copy-file
   dirent
   errno
@@ -29,20 +28,16 @@ gl_MODULES([
   fchdir
   fcntl-h
   fnmatch
-  free
   fts
-  futimens
   getopt-gnu
   gettext
   locale
   malloc-gnu
   memchr
-  memcpy
   progname
   propername
   realloc-gnu
   regex
-  save-cwd
   stdbool
   stdio
   stdlib
@@ -50,7 +45,6 @@ gl_MODULES([
   sys_stat
   tmpfile
   unistd
-  utimens
   yesno
 ])
 gl_AVOID([])

@@ -1,3 +1,7 @@
+2011-07-06 18:17  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Make use of exclude.
+
 2011-07-04 00:46  Arno Onken  <asnelt@asnelt.org>
 
 	* bufferio.c: Add stdbool.

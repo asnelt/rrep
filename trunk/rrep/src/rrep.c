@@ -27,7 +27,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <regex.h>
-#include <fnmatch.h>
 #include <utime.h>
 #include <locale.h>
 #include <getopt.h>
@@ -35,6 +34,8 @@
 #include "progname.h"
 #include "backupfile.h"
 #include "copy-file.h"
+#include "exclude.h"
+#include "fts_.h"
 #include "rrep.h"
 #include "messages.h"
 #include "bufferio.h"
@@ -83,6 +84,10 @@ static struct option const long_options[] =
   {"line-regexp", no_argument, NULL, 'x'},
   {NULL, 0, NULL, 0}
 };
+
+static struct exclude *included_patterns = NULL;
+static struct exclude *excluded_patterns = NULL;
+static struct exclude *excluded_directory_patterns = NULL;
 
 /* Option flags set by arguments.  */
 int options = 0;
@@ -439,15 +444,14 @@ process_file (const char *relative_path, const char *file_name,
 /* Checks the include and exclude options and returns true if file_name
    qualifies.  */
 bool
-check_include_name (const char *file_name, const char *included_name,
-		    const char *excluded_name)
+check_include_name (const char *file_name, const struct exclude *included_name,
+		    const struct exclude *excluded_name)
 {
-  /* Check include_string.  */
-  if (included_name != NULL && fnmatch (included_name, file_name, 0) != 0)
+  /* Check include option.  */
+  if (included_name && excluded_file_name (included_name, file_name))
     return false;
-  /* Check exclude_string.  */
-  if (excluded_name != NULL && fnmatch (excluded_name, file_name, 0)
-      != FNM_NOMATCH)
+  /* Check excluded option.  */
+  if (excluded_name && excluded_file_name (excluded_name, file_name))
     return false;
 
   return true;
@@ -455,8 +459,8 @@ check_include_name (const char *file_name, const char *included_name,
 
 /* Returns true if file_name qualifies for processing.  */
 bool
-check_name (const char *file_name, const char *included_name,
-	    const char *excluded_name)
+check_name (const char *file_name, const struct exclude *included_name,
+	    const struct exclude *excluded_name)
 {
   if (file_name == NULL || file_name[0] == '\0')
     return false;
@@ -471,8 +475,7 @@ check_name (const char *file_name, const char *included_name,
 /* Processes the current directory and all subdirectories recursively.  */
 int
 process_dir (const char *relative_path, pattern_t *pattern,
-	     const replace_t *replacement, const char *include_string,
-	     const char *exclude_string, const char *exclude_dir_string)
+	     const replace_t *replacement)
 {
   DIR *d; /* Current directory.  */
   struct dirent *entry; /* Directory entry.  */
@@ -496,7 +499,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
   while ((entry = readdir (d)))
     {
       if (entry->d_type == DT_REG
-	  && check_name (entry->d_name, include_string, exclude_string))
+	  && check_name (entry->d_name, included_patterns, excluded_patterns))
 	{
 	  /* The entry is a regular file.  */
 	  if (options & OPT_KEEP_TIMES)
@@ -531,7 +534,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
         {
 	  if (options & OPT_RECURSIVE && strcmp (entry->d_name, ".")
 	      && strcmp (entry->d_name, "..")
-	      && check_name (entry->d_name, NULL, exclude_dir_string))
+	      && check_name (entry->d_name, NULL, excluded_directory_patterns))
             {
 	      if (options & OPT_KEEP_TIMES)
 		{
@@ -564,9 +567,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
 		  if (path_len == 0 || relative_path[path_len-1] != '/')
 		    strcat (next_path, "/");
 		  strcat (next_path, entry->d_name);
-		  failure_flag |= process_dir (next_path, pattern, replacement,
-					       include_string, exclude_string,
-					       exclude_dir_string);
+		  failure_flag |= process_dir (next_path, pattern, replacement);
 		  if (next_path != NULL)
 		    {
 		      free (next_path);
@@ -605,9 +606,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
 /* Processes the file_counter files in file_list.  */
 int
 process_file_list (char **file_list, const size_t file_counter,
-		   pattern_t *pattern, const replace_t *replacement,
-		   const char *include_string, const char *exclude_string,
-		   const char *exclude_dir_string)
+		   pattern_t *pattern, const replace_t *replacement)
 {
   struct stat st; /* The stat for obtaining file type.  */
   struct utimbuf times; /* File times.  */
@@ -642,7 +641,8 @@ process_file_list (char **file_list, const size_t file_counter,
 	      print_dir_skip (file_list[i]);
 	      continue;
 	    }
-	  if (!check_include_name (file_list[i], NULL, exclude_dir_string))
+	  if (!check_include_name (file_list[i], NULL,
+				   excluded_directory_patterns))
 	    continue;
 	  if (options & OPT_KEEP_TIMES)
 	    {
@@ -652,9 +652,7 @@ process_file_list (char **file_list, const size_t file_counter,
 	    }
 	  if (!chdir (file_list[i]))
 	    {
-	      failure_flag |= process_dir (file_list[i], pattern, replacement,
-					   include_string, exclude_string,
-					   exclude_dir_string);
+	      failure_flag |= process_dir (file_list[i], pattern, replacement);
 	      /* Return to working directory.  */
 	      if (fchdir (wd))
 		{
@@ -679,8 +677,8 @@ process_file_list (char **file_list, const size_t file_counter,
 	    }
 	}
       else if (S_ISREG (st.st_mode) && check_include_name (file_list[i],
-							   include_string,
-							   exclude_string))
+							   included_patterns,
+							   excluded_patterns))
 	{
 	  if (options & OPT_KEEP_TIMES)
 	    {
@@ -716,9 +714,6 @@ main (int argc, char** argv)
 {
   const char *pattern_string = NULL; /* Regular expression to search for.  */
   const char *replacement_string = NULL; /* Replacement string.  */
-  const char *include_string = NULL; /* File names to be included.  */
-  const char *exclude_string = NULL; /* File names to be excluded.  */
-  const char *exclude_dir_string = NULL; /* Directory names to be excluded.  */
   pattern_t pattern; /* Pattern struct.  */
   replace_t replacement; /* Replacement struct.  */
   char **file_list; /* List of files to process.  */
@@ -766,15 +761,22 @@ main (int argc, char** argv)
 	  break;
 
 	case INCLUDE_OPTION:
-	  include_string = optarg;
+	  if (!included_patterns)
+	    included_patterns = new_exclude ();
+	  add_exclude (included_patterns, optarg,
+		       EXCLUDE_WILDCARDS | EXCLUDE_INCLUDE);
 	  break;
 
 	case EXCLUDE_OPTION:
-	  exclude_string = optarg;
+	  if (!excluded_patterns)
+	    excluded_patterns = new_exclude ();
+	  add_exclude (excluded_patterns, optarg, EXCLUDE_WILDCARDS);
 	  break;
 
 	case EXCLUDE_DIR_OPTION:
-	  exclude_dir_string = optarg;
+	  if (!excluded_directory_patterns)
+	    excluded_directory_patterns = new_exclude ();
+	  add_exclude (excluded_directory_patterns, optarg, EXCLUDE_WILDCARDS);
 	  break;
 
 	case 'V':
@@ -906,7 +908,7 @@ main (int argc, char** argv)
   buffer_size = INIT_BUFFER_SIZE;
 
   /* Parse pattern string.  */
-  if (pattern_parse (pattern_string, &pattern, cflags) == FAILURE)
+  if (parse_pattern (pattern_string, &pattern, cflags) == FAILURE)
     {
       if (file_list != NULL)
 	free (file_list);
@@ -916,13 +918,13 @@ main (int argc, char** argv)
     }
 
   /* Parse replacement string.  */
-  if (replace_parse (replacement_string, &replacement) == FAILURE)
+  if (parse_replace (replacement_string, &replacement) == FAILURE)
     {
       if (file_list != NULL)
 	free (file_list);
       if (buffer != NULL)
 	free (buffer);
-      pattern_free (&pattern);
+      free_pattern (&pattern);
       return FAILURE;
     }
 
@@ -937,17 +939,22 @@ main (int argc, char** argv)
     {
       print_dry ();
       failure_flag |= process_file_list (file_list, file_counter, &pattern,
-					 &replacement, include_string,
-					 exclude_string, exclude_dir_string);
+					 &replacement);
     }
 
-  replace_free (&replacement);
-  pattern_free (&pattern);
-  if (file_buffer != NULL)
+  if (included_patterns)
+    free_exclude (included_patterns);
+  if (excluded_patterns)
+    free_exclude (excluded_patterns);
+  if (excluded_directory_patterns)
+    free_exclude (excluded_directory_patterns);
+  free_replace (&replacement);
+  free_pattern (&pattern);
+  if (file_buffer)
     free (file_buffer);
-  if (buffer != NULL)
+  if (buffer)
     free (buffer);
-  if (file_list != NULL)
+  if (file_list)
     free (file_list);
 
   if (failure_flag)

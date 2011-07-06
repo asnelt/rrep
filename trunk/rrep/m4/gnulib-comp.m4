@@ -40,9 +40,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module c-ctype:
   # Code from module c-strcase:
   # Code from module chdir-long:
-  # Code from module chdir-safer:
   # Code from module chown:
-  # Code from module clock-time:
   # Code from module cloexec:
   # Code from module close:
   # Code from module configmake:
@@ -77,7 +75,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module fnmatch:
   # Code from module fpurge:
   # Code from module freading:
-  # Code from module free:
   # Code from module fseek:
   # Code from module fseeko:
   AC_REQUIRE([AC_FUNC_FSEEKO])
@@ -86,7 +83,6 @@ AC_DEFUN([gl_EARLY],
   AC_REQUIRE([AC_FUNC_FSEEKO])
   # Code from module fts:
   # Code from module full-write:
-  # Code from module futimens:
   # Code from module getcwd-lgpl:
   # Code from module getdelim:
   # Code from module getdtablesize:
@@ -95,7 +91,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module getopt-posix:
   # Code from module gettext:
   # Code from module gettext-h:
-  # Code from module gettime:
   # Code from module gettimeofday:
   # Code from module gperf:
   # Code from module hash:
@@ -128,7 +123,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module mbtowc:
   # Code from module mbuiter:
   # Code from module memchr:
-  # Code from module memcpy:
   # Code from module mempcpy:
   # Code from module memrchr:
   # Code from module mkdir:
@@ -156,7 +150,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module save-cwd:
   # Code from module ssize_t:
   # Code from module stat:
-  # Code from module stat-time:
   # Code from module stdbool:
   # Code from module stddef:
   # Code from module stdint:
@@ -174,7 +167,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module sys_time:
   # Code from module tempname:
   # Code from module time:
-  # Code from module timespec:
   # Code from module tmpdir:
   # Code from module tmpfile:
   # Code from module trim:
@@ -188,7 +180,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module uniwidth/width:
   # Code from module unlink:
   # Code from module unused-parameter:
-  # Code from module utimens:
   # Code from module verify:
   # Code from module warn-on-use:
   # Code from module wchar:
@@ -234,7 +225,6 @@ if test $gl_cv_have_arbitrary_file_name_length_limit = yes; then
   AC_LIBOBJ([chdir-long])
   gl_PREREQ_CHDIR_LONG
 fi
-gl_CHDIR_SAFER
 gl_FUNC_CHOWN
 if test $HAVE_CHOWN = 0 || test $REPLACE_CHOWN = 1; then
   AC_LIBOBJ([chown])
@@ -243,7 +233,6 @@ if test $REPLACE_CHOWN = 1 && test $ac_cv_func_fchown = no; then
   AC_LIBOBJ([fchown-stub])
 fi
 gl_UNISTD_MODULE_INDICATOR([chown])
-gl_CLOCK_TIME
 gl_MODULE_INDICATOR_FOR_TESTS([cloexec])
 gl_FUNC_CLOSE
 gl_UNISTD_MODULE_INDICATOR([close])
@@ -311,11 +300,6 @@ if test $HAVE_FPURGE = 0 || test $REPLACE_FPURGE = 1; then
 fi
 gl_STDIO_MODULE_INDICATOR([fpurge])
 gl_FUNC_FREADING
-gl_FUNC_FREE
-if test $gl_cv_func_free = no; then
-  AC_LIBOBJ([free])
-  gl_PREREQ_FREE
-fi
 gl_FUNC_FSEEK
 if test $REPLACE_FSEEK = 1; then
   AC_LIBOBJ([fseek])
@@ -340,11 +324,6 @@ gl_FUNC_FTS
 dnl Use this version of fts unconditionally, since the GNU libc and
 dnl NetBSD versions have bugs and/or unnecessary limitations.
 AC_LIBOBJ([fts])
-gl_FUNC_FUTIMENS
-if test $HAVE_FUTIMENS = 0 || test $REPLACE_FUTIMENS = 1; then
-  AC_LIBOBJ([futimens])
-fi
-gl_SYS_STAT_MODULE_INDICATOR([futimens])
 gl_FUNC_GETCWD_LGPL
 if test $REPLACE_GETCWD = 1; then
   AC_LIBOBJ([getcwd-lgpl])
@@ -384,7 +363,6 @@ dnl you must add AM_GNU_GETTEXT([external]) or similar to configure.ac.
 AM_GNU_GETTEXT_VERSION([0.18.1])
 AC_SUBST([LIBINTL])
 AC_SUBST([LTLIBINTL])
-gl_GETTIME
 gl_FUNC_GETTIMEOFDAY
 if test $HAVE_GETTIMEOFDAY = 0 || test $REPLACE_GETTIMEOFDAY = 1; then
   AC_LIBOBJ([gettimeofday])
@@ -484,11 +462,6 @@ if test $HAVE_MEMCHR = 0 || test $REPLACE_MEMCHR = 1; then
   gl_PREREQ_MEMCHR
 fi
 gl_STRING_MODULE_INDICATOR([memchr])
-gl_FUNC_MEMCPY
-if test $ac_cv_func_memcpy = no; then
-  AC_LIBOBJ([memcpy])
-  gl_PREREQ_MEMCPY
-fi
 gl_FUNC_MEMPCPY
 if test $HAVE_MEMPCPY = 0; then
   AC_LIBOBJ([mempcpy])
@@ -584,8 +557,6 @@ if test $REPLACE_STAT = 1; then
   gl_PREREQ_STAT
 fi
 gl_SYS_STAT_MODULE_INDICATOR([stat])
-gl_STAT_TIME
-gl_STAT_BIRTHTIME
 AM_STDBOOL_H
 gl_STDDEF_H
 gl_STDINT_H
@@ -625,7 +596,6 @@ gl_HEADER_SYS_TIME_H
 AC_PROG_MKDIR_P
 gl_FUNC_GEN_TEMPNAME
 gl_HEADER_TIME_H
-gl_TIMESPEC
 gt_TMPDIR
 gl_FUNC_TMPFILE
 if test $REPLACE_TMPFILE = 1; then
@@ -648,7 +618,6 @@ if test $REPLACE_UNLINK = 1; then
   AC_LIBOBJ([unlink])
 fi
 gl_UNISTD_MODULE_INDICATOR([unlink])
-gl_UTIMENS
 gl_WCHAR_H
 gl_FUNC_WCRTOMB
 if test $HAVE_WCRTOMB = 0 || test $REPLACE_WCRTOMB = 1; then
@@ -835,8 +804,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/c-strncasecmp.c
   lib/chdir-long.c
   lib/chdir-long.h
-  lib/chdir-safer.c
-  lib/chdir-safer.h
   lib/chown.c
   lib/cloexec.c
   lib/cloexec.h
@@ -888,7 +855,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/fpurge.c
   lib/freading.c
   lib/freading.h
-  lib/free.c
   lib/fseek.c
   lib/fseeko.c
   lib/fstatat.c
@@ -899,7 +865,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/fts_.h
   lib/full-write.c
   lib/full-write.h
-  lib/futimens.c
   lib/getcwd-lgpl.c
   lib/getdelim.c
   lib/getdtablesize.c
@@ -909,7 +874,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/getopt1.c
   lib/getopt_int.h
   lib/gettext.h
-  lib/gettime.c
   lib/gettimeofday.c
   lib/hash.c
   lib/hash.h
@@ -953,7 +917,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/mbuiter.h
   lib/memchr.c
   lib/memchr.valgrind
-  lib/memcpy.c
   lib/mempcpy.c
   lib/memrchr.c
   lib/mkdir.c
@@ -998,7 +961,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/save-cwd.c
   lib/save-cwd.h
   lib/set-mode-acl.c
-  lib/stat-time.h
   lib/stat.c
   lib/stdbool.in.h
   lib/stddef.in.h
@@ -1024,7 +986,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/tempname.c
   lib/tempname.h
   lib/time.in.h
-  lib/timespec.h
   lib/tmpdir.c
   lib/tmpdir.h
   lib/tmpfile.c
@@ -1043,8 +1004,6 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/uniwidth/width.c
   lib/unlink.c
   lib/unlinkat.c
-  lib/utimens.c
-  lib/utimens.h
   lib/verify.h
   lib/wchar.in.h
   lib/wcrtomb.c
@@ -1065,9 +1024,7 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/backupfile.m4
   m4/btowc.m4
   m4/chdir-long.m4
-  m4/chdir-safer.m4
   m4/chown.m4
-  m4/clock_time.m4
   m4/close.m4
   m4/codeset.m4
   m4/configmake.m4
@@ -1097,20 +1054,17 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/fnmatch.m4
   m4/fpurge.m4
   m4/freading.m4
-  m4/free.m4
   m4/fseek.m4
   m4/fseeko.m4
   m4/ftell.m4
   m4/ftello.m4
   m4/fts.m4
-  m4/futimens.m4
   m4/getcwd.m4
   m4/getdelim.m4
   m4/getdtablesize.m4
   m4/getline.m4
   m4/getopt.m4
   m4/gettext.m4
-  m4/gettime.m4
   m4/gettimeofday.m4
   m4/glibc2.m4
   m4/glibc21.m4
@@ -1156,7 +1110,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/mbstate_t.m4
   m4/mbtowc.m4
   m4/memchr.m4
-  m4/memcpy.m4
   m4/mempcpy.m4
   m4/memrchr.m4
   m4/mkdir.m4
@@ -1184,7 +1137,6 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/save-cwd.m4
   m4/size_max.m4
   m4/ssize_t.m4
-  m4/stat-time.m4
   m4/stat.m4
   m4/stdbool.m4
   m4/stddef_h.m4
@@ -1202,16 +1154,12 @@ AC_DEFUN([gl_FILE_LIST], [
   m4/tempname.m4
   m4/threadlib.m4
   m4/time_h.m4
-  m4/timespec.m4
   m4/tmpdir.m4
   m4/tmpfile.m4
   m4/uintmax_t.m4
   m4/unistd-safer.m4
   m4/unistd_h.m4
   m4/unlink.m4
-  m4/utimbuf.m4
-  m4/utimens.m4
-  m4/utimes.m4
   m4/visibility.m4
   m4/warn-on-use.m4
   m4/wchar_h.m4
