@@ -66,15 +66,35 @@ matching as described under \fB\-\^\-include\fR).
 .BR \-V ", " \-\^\-version
 Print the version number of \fBrrep\fR.
 .TP
+.BI \-S " SUFFIX" "\fR,\fP \-\^\-suffix=" SUFFIX
+Override default backup suffix. This option implicitly activates
+backups.
+.TP
 .BR \-a ", " \-\^\-all
 Files and sub-directories starting with the \fB.\fR character in
 recursively processed directories (see \fB\-\^\-recursive\fR) are
 processed as well.
 .TP
-.BR \-\^\-backup
+.BR \-b
 Backup before overwriting files. The backup files are written into
-the directory of the original file. The file name of the backup
-file is appended by a \fB~\fR character.
+the directory of the original file. Equivalent to using
+\fB\-\^\-backup=existing\fR.
+.TP
+.BI \-\^\-backup \fR[\fP = CONTROL \fR]\fP
+Like \fB\-b\fR but accepts a version control argument. The file name of
+the backup file is appended by a \fB~\fR character.
+The backup suffix is \fB~\fR, unless set with \fB\-\^\-suffix\fR or
+.I SIMPLE_BACKUP_SUFFIX
+. The version control method may be selected
+via the \fB\-\^\-backup\fR option or through the
+.I VERSION_CONTROL
+environment variable. Here are the values:
+  \fBnone\fR, \fBoff\fR       never make backups
+                  (even if \fB\-\^\-backup\fR is given)
+  \fBnumbered\fR, \fBt\fR     make numbered backups
+  \fBexisting\fR, \fBnil\fR   numbered if numbered backups exist, simple
+                  otherwise
+  \fBsimple\fR, \fBnever\fR   always make simple backups
 .TP
 .BR \-\^\-binary
 Do not ignore binary files. A file is regarded as binary if it

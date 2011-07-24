@@ -15,19 +15,6 @@
 /* Define to the number of bits in type 'wint_t'. */
 #undef BITSIZEOF_WINT_T
 
-/* Define to 1 if chown fails to change ctime when at least one argument was
-   not -1. */
-#undef CHOWN_CHANGE_TIME_BUG
-
-/* Define if chown is not POSIX compliant regarding IDs of -1. */
-#undef CHOWN_FAILS_TO_HONOR_ID_OF_NEGATIVE_ONE
-
-/* Define if chown modifies symlinks. */
-#undef CHOWN_MODIFIES_SYMLINK
-
-/* Define to 1 if chown mishandles trailing slash. */
-#undef CHOWN_TRAILING_SLASH_BUG
-
 /* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
    systems. This function is required for `alloca.c' support on those systems.
    */
@@ -56,23 +43,11 @@
    language is requested. */
 #undef ENABLE_NLS
 
-/* Define to 1 if your platform has fchownat, but it does not reject an empty
-   file name. */
-#undef FCHOWNAT_EMPTY_FILENAME_BUG
-
-/* Define to 1 if your platform has fchownat, but it cannot perform lchown
-   tasks. */
-#undef FCHOWNAT_NOFOLLOW_BUG
-
 /* Define this to 1 if F_DUPFD behavior does not match POSIX */
 #undef FCNTL_DUPFD_BUGGY
 
 /* Define to 1 if the system's ftello function has the Solaris bug. */
 #undef FTELLO_BROKEN_AFTER_SWITCHING_FROM_READ_TO_WRITE
-
-/* Define to 1 if mkdir mistakenly creates a directory given with a trailing
-   dot component. */
-#undef FUNC_MKDIR_DOT_BUG
 
 /* Define to 1 if nl_langinfo (YESEXPR) returns a non-empty string. */
 #undef FUNC_NL_LANGINFO_YESEXPR_WORKS
@@ -89,24 +64,12 @@
 #undef GNULIB_DIRENT_SAFER
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
-   whether the gnulib module fcntl-safer shall be considered present. */
-#undef GNULIB_FCNTL_SAFER
-
-/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
-   whether the gnulib module fdopendir shall be considered present. */
-#undef GNULIB_FDOPENDIR
-
-/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module fflush shall be considered present. */
 #undef GNULIB_FFLUSH
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module malloc-gnu shall be considered present. */
 #undef GNULIB_MALLOC_GNU
-
-/* Define to a C preprocessor expression that evaluates to 1 or 0, depending
-   whether the gnulib module openat-safer shall be considered present. */
-#undef GNULIB_OPENAT_SAFER
 
 /* Define to a C preprocessor expression that evaluates to 1 or 0, depending
    whether the gnulib module realloc-gnu shall be considered present. */
@@ -118,12 +81,6 @@
 
 /* Define to 1 when the gnulib module btowc should be tested. */
 #undef GNULIB_TEST_BTOWC
-
-/* Define to 1 when the gnulib module chown should be tested. */
-#undef GNULIB_TEST_CHOWN
-
-/* Define to 1 when the gnulib module cloexec should be tested. */
-#undef GNULIB_TEST_CLOEXEC
 
 /* Define to 1 when the gnulib module close should be tested. */
 #undef GNULIB_TEST_CLOSE
@@ -142,9 +99,6 @@
 
 /* Define to 1 when the gnulib module fcntl should be tested. */
 #undef GNULIB_TEST_FCNTL
-
-/* Define to 1 when the gnulib module fdopendir should be tested. */
-#undef GNULIB_TEST_FDOPENDIR
 
 /* Define to 1 when the gnulib module fflush should be tested. */
 #undef GNULIB_TEST_FFLUSH
@@ -185,9 +139,6 @@
 /* Define to 1 when the gnulib module iswblank should be tested. */
 #undef GNULIB_TEST_ISWBLANK
 
-/* Define to 1 when the gnulib module lchown should be tested. */
-#undef GNULIB_TEST_LCHOWN
-
 /* Define to 1 when the gnulib module lseek should be tested. */
 #undef GNULIB_TEST_LSEEK
 
@@ -221,12 +172,6 @@
 /* Define to 1 when the gnulib module memchr should be tested. */
 #undef GNULIB_TEST_MEMCHR
 
-/* Define to 1 when the gnulib module mempcpy should be tested. */
-#undef GNULIB_TEST_MEMPCPY
-
-/* Define to 1 when the gnulib module memrchr should be tested. */
-#undef GNULIB_TEST_MEMRCHR
-
 /* Define to 1 when the gnulib module nl_langinfo should be tested. */
 #undef GNULIB_TEST_NL_LANGINFO
 
@@ -238,9 +183,6 @@
 
 /* Define to 1 when the gnulib module realloc-posix should be tested. */
 #undef GNULIB_TEST_REALLOC_POSIX
-
-/* Define to 1 when the gnulib module rmdir should be tested. */
-#undef GNULIB_TEST_RMDIR
 
 /* Define to 1 when the gnulib module rpmatch should be tested. */
 #undef GNULIB_TEST_RPMATCH
@@ -259,9 +201,6 @@
 
 /* Define to 1 when the gnulib module tmpfile should be tested. */
 #undef GNULIB_TEST_TMPFILE
-
-/* Define to 1 when the gnulib module unlink should be tested. */
-#undef GNULIB_TEST_UNLINK
 
 /* Define to 1 when the gnulib module wcrtomb should be tested. */
 #undef GNULIB_TEST_WCRTOMB
@@ -386,10 +325,6 @@
    */
 #undef HAVE_DECL_FCHDIR
 
-/* Define to 1 if you have the declaration of `fdopendir', and to 0 if you
-   don't. */
-#undef HAVE_DECL_FDOPENDIR
-
 /* Define to 1 if you have the declaration of `fpurge', and to 0 if you don't.
    */
 #undef HAVE_DECL_FPURGE
@@ -425,10 +360,6 @@
 /* Define to 1 if you have the declaration of `iswblank', and to 0 if you
    don't. */
 #undef HAVE_DECL_ISWBLANK
-
-/* Define to 1 if you have the declaration of `memrchr', and to 0 if you
-   don't. */
-#undef HAVE_DECL_MEMRCHR
 
 /* Define to 1 if you have the declaration of `program_invocation_name', and
    to 0 if you don't. */
@@ -469,12 +400,6 @@
 /* Define to 1 if you have the `fchdir' function. */
 #undef HAVE_FCHDIR
 
-/* Define to 1 if you have the `fchmodat' function. */
-#undef HAVE_FCHMODAT
-
-/* Define to 1 if you have the `fchown' function. */
-#undef HAVE_FCHOWN
-
 /* Define to 1 if you have the `fcntl' function. */
 #undef HAVE_FCNTL
 
@@ -492,12 +417,6 @@
 
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
-
-/* Define to 1 if you have the `fstatat' function. */
-#undef HAVE_FSTATAT
-
-/* Define to 1 if you have the `fstatfs' function. */
-#undef HAVE_FSTATFS
 
 /* Define to 1 if you have the `funlockfile' function. */
 #undef HAVE_FUNLOCKFILE
@@ -558,12 +477,6 @@
 /* Define if you have <langinfo.h> and nl_langinfo(YESEXPR). */
 #undef HAVE_LANGINFO_YESEXPR
 
-/* Define to 1 if you have the `lchmod' function. */
-#undef HAVE_LCHMOD
-
-/* Define to 1 if you have the `lchown' function. */
-#undef HAVE_LCHOWN
-
 /* Define to 1 if you have the <libintl.h> header file. */
 #undef HAVE_LIBINTL_H
 
@@ -608,20 +521,11 @@
 /* Define to 1 if you have the `mempcpy' function. */
 #undef HAVE_MEMPCPY
 
-/* Define to 1 if you have the `memrchr' function. */
-#undef HAVE_MEMRCHR
-
-/* Define to 1 if you have the `mkdirat' function. */
-#undef HAVE_MKDIRAT
-
 /* Define to 1 if you have the `mprotect' function. */
 #undef HAVE_MPROTECT
 
 /* Define to 1 if you have the `nl_langinfo' function. */
 #undef HAVE_NL_LANGINFO
-
-/* Define to 1 if you have the `openat' function. */
-#undef HAVE_OPENAT
 
 /* Define to 1 if you have the `pathconf' function. */
 #undef HAVE_PATHCONF
@@ -1147,13 +1051,6 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define if there is a member named d_type in the struct describing directory
-   headers. */
-#undef HAVE_STRUCT_DIRENT_D_TYPE
-
-/* Define to 1 if `f_type' is a member of `struct statfs'. */
-#undef HAVE_STRUCT_STATFS_F_TYPE
-
 /* Define to 1 if you have the <sys/acl.h> header file. */
 #undef HAVE_SYS_ACL_H
 
@@ -1184,14 +1081,8 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
-/* Define to 1 if you have the <sys/vfs.h> header file. */
-#undef HAVE_SYS_VFS_H
-
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* Define to 1 if you have the `unlinkat' function. */
-#undef HAVE_UNLINKAT
 
 /* Define to 1 if the system has the type `unsigned long long int'. */
 #undef HAVE_UNSIGNED_LONG_LONG_INT
@@ -1372,9 +1263,6 @@
 /* Define to 1 if strerror_r returns char *. */
 #undef STRERROR_R_CHAR_P
 
-/* Define to 1 if unlink() on a parent directory may succeed */
-#undef UNLINK_PARENT_BUG
-
 /* Define to nonzero if you want access control list support. */
 #undef USE_ACL
 
@@ -1442,9 +1330,6 @@
 
 /* Define to a replacement function name for fnmatch(). */
 #undef fnmatch
-
-/* Define to `int' if <sys/types.h> doesn't define. */
-#undef gid_t
 
 /* Define to rpl_gmtime if the replacement function should be used. */
 #undef gmtime
@@ -1541,9 +1426,6 @@
 
 /* Define as a signed type of the same size as size_t. */
 #undef ssize_t
-
-/* Define to `int' if <sys/types.h> doesn't define. */
-#undef uid_t
 
 /* Define as a marker that can be attached to declarations that might not
     be used.  This helps to reduce warnings, such as from

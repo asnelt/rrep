@@ -35,13 +35,12 @@
 #include "backupfile.h"
 #include "copy-file.h"
 #include "exclude.h"
-#include "fts_.h"
 #include "rrep.h"
 #include "messages.h"
 #include "bufferio.h"
 #include "pattern.h"
 
-static char const short_options[] = "EFRrVae:hip:qswx";
+static char const short_options[] = "EFRrS:Vabe:hip:qswx";
 
 /* Long options that have no equivalent short option.  */
 enum
@@ -49,7 +48,6 @@ enum
   INCLUDE_OPTION = CHAR_MAX + 1,
   EXCLUDE_OPTION,
   EXCLUDE_DIR_OPTION,
-  BACKUP_OPTION,
   BINARY_OPTION,
   DRY_RUN_OPTION,
   KEEP_TIMES_OPTION,
@@ -66,9 +64,10 @@ static struct option const long_options[] =
   {"include", required_argument, NULL, INCLUDE_OPTION},
   {"exclude", required_argument, NULL, EXCLUDE_OPTION},
   {"exclude-dir", required_argument, NULL, EXCLUDE_DIR_OPTION},
+  {"suffix", required_argument, NULL, 'S'},
   {"version", no_argument, NULL, 'V'},
   {"all", no_argument, NULL, 'a'},
-  {"backup", no_argument, NULL, BACKUP_OPTION},
+  {"backup", optional_argument, NULL, 'b'},
   {"binary", no_argument, NULL, BINARY_OPTION},
   {"dry-run", no_argument, NULL, DRY_RUN_OPTION},
   {"regex", required_argument, NULL, 'e'},
@@ -88,6 +87,8 @@ static struct option const long_options[] =
 static struct exclude *included_patterns = NULL;
 static struct exclude *excluded_patterns = NULL;
 static struct exclude *excluded_directory_patterns = NULL;
+
+enum backup_type backup_method = no_backups;
 
 /* Option flags set by arguments.  */
 int options = 0;
@@ -275,8 +276,11 @@ backup_file (const char *file_name)
 {
   char *backup_name;
 
+  if (backup_method == no_backups)
+    return SUCCESS;
+
   /* Generate string for backup file name.  */
-  backup_name = find_backup_file_name (file_name, simple_backups);
+  backup_name = find_backup_file_name (file_name, backup_method);
   if (backup_name == NULL)
     {
       rrep_error (ERR_ALLOC_BACKUP, file_name);
@@ -714,6 +718,8 @@ main (int argc, char** argv)
 {
   const char *pattern_string = NULL; /* Regular expression to search for.  */
   const char *replacement_string = NULL; /* Replacement string.  */
+  char *suffix_string = NULL; /* Suffix for backups.  */
+  char *version_control = NULL; /* Version control for backups.  */
   pattern_t pattern; /* Pattern struct.  */
   replace_t replacement; /* Replacement struct.  */
   char **file_list; /* List of files to process.  */
@@ -740,6 +746,9 @@ main (int argc, char** argv)
   replacement.part_len = NULL;
   /* Set program invocation name.  */
   set_program_name (argv[0]);
+
+  /* Initialize backup suffix.  */
+  suffix_string = getenv ("SIMPLE_BACKUP_SUFFIX");
 
   /* Parse command line arguments.  */
   while ((opt = getopt_long (argc, argv, short_options, long_options, NULL))
@@ -784,12 +793,19 @@ main (int argc, char** argv)
 	  exit_flag = true;
 	  break;
 
+	case 'S':
+	  options |= OPT_BACKUP;
+	  suffix_string = optarg;
+	  break;
+
 	case 'a':
 	  options |= OPT_ALL;
 	  break;
 
-	case BACKUP_OPTION:
+	case 'b':
 	  options |= OPT_BACKUP;
+	  if (optarg)
+	    version_control = optarg;
 	  break;
 
 	case BINARY_OPTION:
@@ -803,7 +819,6 @@ main (int argc, char** argv)
 	case 'e':
 	  if (pattern_string != NULL)
 	    {
-	      print_invocation ();
 	      failure_flag = true;
 	    }
 	  else
@@ -826,7 +841,6 @@ main (int argc, char** argv)
 	case 'p':
 	  if (replacement_string != NULL)
 	    {
-	      print_invocation ();
 	      failure_flag = true;
 	    }
 	  else
@@ -854,7 +868,6 @@ main (int argc, char** argv)
 	  break;
 
 	default:
-	  print_invocation ();
 	  failure_flag = true;
 	  break;
 
@@ -862,9 +875,31 @@ main (int argc, char** argv)
     }
 
   if (failure_flag)
-    return EXIT_FAILURE;
+    {
+      print_invocation ();
+      return EXIT_FAILURE;
+    }
+
   if (exit_flag)
     return EXIT_SUCCESS;
+
+  if (suffix_string)
+    {
+      /* Make a copy of suffix_string, because getenv might overwrite the
+	 memory.  */
+      suffix_string = strdup (suffix_string);
+      if (suffix_string == NULL)
+	{
+	  rrep_error (ERR_ALLOC_SUFFIX, NULL);
+	  return EXIT_FAILURE;
+	}
+      simple_backup_suffix = suffix_string;
+    }
+
+  if (options & OPT_BACKUP)
+    backup_method = xget_version ("backup type", version_control);
+  else
+    backup_method = no_backups;
 
   /* Allocate memory for file list.  */
   file_list = (char **) malloc ((argc-optind) * sizeof (char *));
@@ -891,6 +926,8 @@ main (int argc, char** argv)
   if (pattern_string == NULL || replacement_string == NULL)
     {
       print_invocation ();
+      if (suffix_string != NULL)
+	free (suffix_string);
       if (file_list != NULL)
 	free (file_list);
       return EXIT_FAILURE;
@@ -901,6 +938,8 @@ main (int argc, char** argv)
   if (buffer == NULL)
     {
       rrep_error (ERR_ALLOC_BUFFER, NULL);
+      if (suffix_string != NULL)
+	free (suffix_string);
       if (file_list != NULL)
 	free (file_list);
       return EXIT_FAILURE;
@@ -920,6 +959,8 @@ main (int argc, char** argv)
   /* Parse replacement string.  */
   if (parse_replace (replacement_string, &replacement) == FAILURE)
     {
+      if (suffix_string != NULL)
+	free (suffix_string);
       if (file_list != NULL)
 	free (file_list);
       if (buffer != NULL)
@@ -956,6 +997,8 @@ main (int argc, char** argv)
     free (buffer);
   if (file_list)
     free (file_list);
+  if (suffix_string != NULL)
+    free (suffix_string);
 
   if (failure_flag)
     return EXIT_FAILURE;

@@ -30,10 +30,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: rrep 1.3.1\n"
+"Project-Id-Version: rrep 1.3.2\n"
 "Report-Msgid-Bugs-To: asnelt@asnelt.org\n"
-"POT-Creation-Date: 2011-07-04 17:13+0200\n"
-"PO-Revision-Date: 2011-07-04 17:13+0200\n"
+"POT-Creation-Date: 2011-07-18 16:27+0200\n"
+"PO-Revision-Date: 2011-07-18 16:27+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: en@boldquot\n"
@@ -75,13 +75,13 @@ msgstr "Replace PATTERN by REPLACEMENT in each FILE or standard input.\n"
 #: src/messages.c:63
 #, c-format
 msgid ""
-"PATTERN is, by default, a basic regular expression (BRE). REPLACEMENT may\n"
+"PATTERN is, by default, a basic regular expression (BRE).  REPLACEMENT may\n"
 "contain the special character & to refer to that portion of the pattern "
 "space\n"
 "which matched, and the special escapes \\1 through \\9 to refer to the\n"
 "corresponding matching sub-expressions in PATTERN.\n"
 msgstr ""
-"PATTERN is, by default, a basic regular expression (BRE). REPLACEMENT may\n"
+"PATTERN is, by default, a basic regular expression (BRE).  REPLACEMENT may\n"
 "contain the special character & to refer to that portion of the pattern "
 "space\n"
 "which matched, and the special escapes \\1 through \\9 to refer to the\n"
@@ -105,9 +105,12 @@ msgid ""
 "skipped\n"
 "      --exclude-dir=PATTERN      directories that match PATTERN will be "
 "skipped\n"
+"  -S, --suffix=SUFFIX            override default backup suffix\n"
 "  -V, --version                  print version information and exit\n"
 "  -a, --all                      do not ignore files starting with .\n"
-"      --backup                   backup before overwriting files\n"
+"  -b                             backup before overwriting files\n"
+"      --backup[=CONTROL]         like -b but accepts a version control "
+"argument\n"
 "      --binary                   do not ignore binary files\n"
 "      --dry-run                  simulation mode\n"
 "  -e, --regex=PATTERN            use PATTERN for matching\n"
@@ -131,9 +134,12 @@ msgstr ""
 "skipped\n"
 "      --exclude-dir=PATTERN      directories that match PATTERN will be "
 "skipped\n"
+"  -S, --suffix=SUFFIX            override default backup suffix\n"
 "  -V, --version                  print version information and exit\n"
 "  -a, --all                      do not ignore files starting with .\n"
-"      --backup                   backup before overwriting files\n"
+"  -b                             backup before overwriting files\n"
+"      --backup[=CONTROL]         like -b but accepts a version control "
+"argument\n"
 "      --binary                   do not ignore binary files\n"
 "      --dry-run                  simulation mode\n"
 "  -e, --regex=PATTERN            use PATTERN for matching\n"
@@ -147,163 +153,191 @@ msgstr ""
 "  -w, --word-regexp              force PATTERN to match only whole words\n"
 "  -x, --line-regexp              force PATTERN to match only whole lines\n"
 
-#: src/messages.c:98
+#: src/messages.c:101
 #, c-format
 msgid ""
 "With no FILE, or when FILE is -, read standard input and write to standard\n"
-"output. Exit status is %d if any error occurs, %d otherwise.\n"
+"output.  Exit status is %d if any error occurs, %d otherwise.\n"
 msgstr ""
 "With no FILE, or when FILE is -, read standard input and write to standard\n"
-"output. Exit status is %d if any error occurs, %d otherwise.\n"
+"output.  Exit status is %d if any error occurs, %d otherwise.\n"
 
-#: src/messages.c:103
+#: src/messages.c:106
+#, c-format
+msgid ""
+"The backup suffix is ~, unless set with --suffix or SIMPLE_BACKUP_SUFFIX.\n"
+"The version control method may be selected via the --backup option or "
+"through\n"
+"the VERSION_CONTROL environment variable.  Here are the values:\n"
+"\n"
+"  none, off       never make backups (even if --backup is given)\n"
+"  numbered, t     make numbered backups\n"
+"  existing, nil   numbered if numbered backups exist, simple otherwise\n"
+"  simple, never   always make simple backups\n"
+msgstr ""
+"The backup suffix is ~, unless set with --suffix or SIMPLE_BACKUP_SUFFIX.\n"
+"The version control method may be selected via the --backup option or "
+"through\n"
+"the VERSION_CONTROL environment variable.  Here are the values:\n"
+"\n"
+"  none, off       never make backups (even if --backup is given)\n"
+"  numbered, t     make numbered backups\n"
+"  existing, nil   numbered if numbered backups exist, simple otherwise\n"
+"  simple, never   always make simple backups\n"
+
+#: src/messages.c:116
 #, c-format
 msgid "Report bugs to: %s\n"
 msgstr "Report bugs to: %s\n"
 
-#: src/messages.c:111
+#: src/messages.c:124
 #, c-format
 msgid "Try `%s --help' for more information.\n"
 msgstr "Try ‘[1m%s --help[0m’ for more information.\n"
 
-#: src/messages.c:124
+#: src/messages.c:137
 #, c-format
 msgid "%s: %s: Could not process argument: "
 msgstr "%s: %s: Could not process argument: "
 
-#: src/messages.c:129
+#: src/messages.c:142
 #, c-format
 msgid "%s: %s: Could not process directory: "
 msgstr "%s: %s: Could not process directory: "
 
-#: src/messages.c:134
+#: src/messages.c:147
 #, c-format
 msgid "%s: PATTERN must have at least one character\n"
 msgstr "%s: PATTERN must have at least one character\n"
 
-#: src/messages.c:138
+#: src/messages.c:151
 #, c-format
 msgid "%s: %s: Unknown escape sequence in REPLACEMENT\n"
 msgstr "%s: %s: Unknown escape sequence in REPLACEMENT\n"
 
-#: src/messages.c:142
+#: src/messages.c:155
 #, c-format
 msgid "%s: Could not save current working directory: "
 msgstr "%s: Could not save current working directory: "
 
-#: src/messages.c:147
+#: src/messages.c:160
+#, c-format
+msgid "%s: Could not allocate memory for suffix: "
+msgstr "%s: Could not allocate memory for suffix: "
+
+#: src/messages.c:165
 #, c-format
 msgid "%s: Could not allocate memory for buffer: "
 msgstr "%s: Could not allocate memory for buffer: "
 
-#: src/messages.c:152
+#: src/messages.c:170
 #, c-format
 msgid "%s: %s: Could not allocate memory for file_buffer: "
 msgstr "%s: %s: Could not allocate memory for file_buffer: "
 
-#: src/messages.c:157
+#: src/messages.c:175
 #, c-format
 msgid "%s: Could not allocate memory for file_list: "
 msgstr "%s: Could not allocate memory for file_list: "
 
-#: src/messages.c:162
+#: src/messages.c:180
 #, c-format
 msgid "%s: %s: Could not allocate memory for next_path: "
 msgstr "%s: %s: Could not allocate memory for next_path: "
 
-#: src/messages.c:167
+#: src/messages.c:185
 #, c-format
 msgid "%s: Could not allocate memory for pattern: "
 msgstr "%s: Could not allocate memory for pattern: "
 
-#: src/messages.c:172
+#: src/messages.c:190
 #, c-format
 msgid "%s: Could not allocate memory for replacement: "
 msgstr "%s: Could not allocate memory for replacement: "
 
-#: src/messages.c:177
+#: src/messages.c:195
 #, c-format
 msgid "%s: %s: Could not allocate memory for backup string: "
 msgstr "%s: %s: Could not allocate memory for backup string: "
 
-#: src/messages.c:183
+#: src/messages.c:201
 #, c-format
 msgid "%s: %s: Could not reallocate memory for buffer: "
 msgstr "%s: %s: Could not reallocate memory for buffer: "
 
-#: src/messages.c:188
+#: src/messages.c:206
 #, c-format
 msgid "%s: %s: Could not reallocate memory for file_buffer: "
 msgstr "%s: %s: Could not reallocate memory for file_buffer: "
 
-#: src/messages.c:194
+#: src/messages.c:212
 #, c-format
 msgid "%s: %s: Not enough memory to process file: "
 msgstr "%s: %s: Not enough memory to process file: "
 
-#: src/messages.c:199
+#: src/messages.c:217
 #, c-format
 msgid "%s: %s: Could not open file for reading: "
 msgstr "%s: %s: Could not open file for reading: "
 
-#: src/messages.c:204
+#: src/messages.c:222
 #, c-format
 msgid "%s: %s: Could not open file for writing: "
 msgstr "%s: %s: Could not open file for writing: "
 
-#: src/messages.c:209
+#: src/messages.c:227
 #, c-format
 msgid "%s: Could not open directory: "
 msgstr "%s: Could not open directory: "
 
-#: src/messages.c:214
+#: src/messages.c:232
 #, c-format
 msgid "%s: %s: Could not read file: "
 msgstr "%s: %s: Could not read file: "
 
-#: src/messages.c:219
+#: src/messages.c:237
 #, c-format
 msgid "%s: %s: Could not read temporary file: "
 msgstr "%s: %s: Could not read temporary file: "
 
-#: src/messages.c:224
+#: src/messages.c:242
 #, c-format
 msgid "%s: %s: Could not write backup file: "
 msgstr "%s: %s: Could not write backup file: "
 
-#: src/messages.c:229
+#: src/messages.c:247
 #, c-format
 msgid "%s: %s: Could not overwrite file: "
 msgstr "%s: %s: Could not overwrite file: "
 
-#: src/messages.c:234
+#: src/messages.c:252
 #, c-format
 msgid "%s: %s: Could keep file times: "
 msgstr "%s: %s: Could keep file times: "
 
-#: src/messages.c:259
+#: src/messages.c:277
 #, c-format
 msgid "%s: Pattern replaced\n"
 msgstr "%s: Pattern replaced\n"
 
-#: src/messages.c:267
+#: src/messages.c:285
 #, c-format
 msgid "%s: %s: Omitting directory\n"
 msgstr "%s: %s: Omitting directory\n"
 
-#: src/messages.c:277
+#: src/messages.c:295
 #, c-format
 msgid "Simulation mode: No files are modified.\n"
 msgstr "Simulation mode: No files are modified.\n"
 
-#: src/messages.c:278
+#: src/messages.c:296
 #, c-format
 msgid "PATTERN found in the following files:\n"
 msgstr "PATTERN found in the following files:\n"
 
 #. TRANSLATORS: This is a user prompt. In English the user can answer with y
 #. for 'yes' or n for 'no'. [y/n] should be translated as well.
-#: src/messages.c:288
+#: src/messages.c:306
 #, c-format
 msgid "Pattern found in %s. Replace pattern [y/n]? "
 msgstr "Pattern found in %s. Replace pattern [y/n]? "

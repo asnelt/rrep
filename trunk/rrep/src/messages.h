@@ -24,6 +24,7 @@ enum
     ERR_PATTERN, /* Error in PATTERN.  */
     ERR_UNKNOWN_ESCAPE, /* Unknown escape sequence encountered. */
     ERR_SAVE_DIR, /* Could not save a directory.  */
+    ERR_ALLOC_SUFFIX, /* Error for allocating suffix string.  */
     ERR_ALLOC_BUFFER, /* Error for allocating buffer.  */
     ERR_ALLOC_FILEBUFFER, /* Error for allocating file_buffer.  */
     ERR_ALLOC_FILELIST, /* Error for allocating file_list.  */

@@ -24,7 +24,7 @@ rrep
 
 The `rrep' utility replaces patterns in files.
 
-   This manual is for version 1.3.1 of rrep.
+   This manual is for version 1.3.2 of rrep.
 
    This file documents the `rrep' utility which replaces patterns in
 files.
@@ -124,6 +124,11 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
      that are specifically given on the command line (using wildcard
      matching as described under `--include').
 
+`-S'
+`--suffix=SUFFIX'
+     Override default backup suffix. This option implicitly activates
+     backups.
+
 `-V'
 `--version'
      Print the version number of `rrep'.
@@ -134,10 +139,27 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
      recursively processed directories (see `--recursive') are
      processed as well.
 
-`--backup'
+`-b'
      Backup before overwriting files. The backup files are written into
-     the directory of the original file. The file name of the backup
-     file is appended by a `~' character.
+     the directory of the original file. Equivalent to using
+     `--backup=existing'.
+
+`--backup'
+     Like `-b' but accepts a version control argument. The file name of
+     the backup file is appended by a `~' character. The backup suffix
+     is `~', unless set with `--suffix' or SIMPLE_BACKUP_SUFFIX. The
+     version control method may be selected via the `--backup' option
+     or through the VERSION_CONTROL environment variable. Here are the
+     values:
+        * `none', `off': never make backups (even if `--backup' is
+          given)
+
+        * `numbered', `t': make numbered backups
+
+        * `existing', `nil': numbered if numbered backups exist, simple
+          otherwise
+
+        * `simple', `never': always make simple backups
 
 `--binary'
      Do not ignore binary files. A file is regarded as binary if it
@@ -223,7 +245,7 @@ This command replaces all occurences of the pattern
 `\(hello\).*\(world\)!*' by `\1, \2!', where `\1' and `\2' are the
 corresponding sub-expressions `hello' and `world' in the files `menu.h'
 and `main.c'. For instance, `hEllO wOrLd' will be replaced by `hEllO,
-wOrLd!'.
+wOrLd!'. Backups will be made.
 
      rrep -F -r --binary --interactive '*hello\1' '*hello\2' /home/user/hello
 
@@ -805,11 +827,11 @@ Index
 * Menu:
 
 * all regular files:                     Command-line Options.
-                                                              (line  44)
-* backup:                                Command-line Options.
                                                               (line  49)
-* binary files:                          Command-line Options.
+* backup:                                Command-line Options.
                                                               (line  54)
+* binary files:                          Command-line Options.
+                                                              (line  76)
 * bugs:                                  Reporting Bugs.      (line   6)
 * copying:                               Copying.             (line   6)
 * exclude directories:                   Command-line Options.
@@ -822,37 +844,41 @@ Index
 * fixed strings:                         Command-line Options.
                                                               (line  12)
 * help:                                  Command-line Options.
-                                                              (line  67)
+                                                              (line  89)
 * ignore case:                           Command-line Options.
-                                                              (line  72)
+                                                              (line  94)
 * include files:                         Command-line Options.
                                                               (line  23)
 * interactive:                           Command-line Options.
-                                                              (line  83)
+                                                              (line 105)
 * keep times:                            Command-line Options.
-                                                              (line  75)
+                                                              (line  97)
+* long backup:                           Command-line Options.
+                                                              (line  59)
 * no messages:                           Command-line Options.
-                                                              (line  93)
+                                                              (line 115)
 * pattern list:                          Command-line Options.
-                                                              (line  62)
+                                                              (line  84)
 * problems:                              Reporting Bugs.      (line   6)
 * quiet:                                 Command-line Options.
-                                                              (line  89)
+                                                              (line 111)
 * recursive replacement:                 Command-line Options.
                                                               (line  18)
 * replacement string:                    Command-line Options.
-                                                              (line  80)
+                                                              (line 102)
 * replacing a pattern in multiple files: Introduction.        (line   6)
 * return status:                         Exit Status.         (line   6)
 * simulation:                            Command-line Options.
-                                                              (line  58)
+                                                              (line  80)
+* suffix:                                Command-line Options.
+                                                              (line  40)
 * usage, examples:                       Usage.               (line   6)
 * version:                               Command-line Options.
-                                                              (line  40)
+                                                              (line  45)
 * whole lines:                           Command-line Options.
-                                                              (line 101)
+                                                              (line 123)
 * whole words:                           Command-line Options.
-                                                              (line  97)
+                                                              (line 119)
 
 
 
@@ -861,11 +887,11 @@ Node: Top736
 Node: Introduction1517
 Node: Invoking2019
 Node: Command-line Options2995
-Node: Exit Status5864
-Node: Usage6032
-Node: Reporting Bugs8902
-Node: Copying9495
-Node: GNU Free Documentation License10574
-Node: Index35696
+Node: Exit Status6604
+Node: Usage6772
+Node: Reporting Bugs9664
+Node: Copying10257
+Node: GNU Free Documentation License11336
+Node: Index36458
 
 End Tag Table

@@ -1,3 +1,8 @@
+2011-07-24 17:08  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c, messages.c: Add options for --suffix and --backup with
+	  argument.
+
 2011-07-06 18:17  Arno Onken  <asnelt@asnelt.org>
 
 	* rrep.c: Make use of exclude.

@@ -18,14 +18,12 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
 dnl 02110-1301, USA.
 
-AC_INIT([rrep], [1.3.1], [asnelt@asnelt.org])
+AC_INIT([rrep], [1.3.2], [asnelt@asnelt.org])
 
 AC_CONFIG_AUX_DIR(build-aux)
 AC_CONFIG_SRCDIR(src/rrep.c)
 AM_INIT_AUTOMAKE([-Wall])
-AC_PROG_CC
 AC_CONFIG_HEADERS([config.h])
-AM_GNU_GETTEXT([external])
 
 dnl Checks for programs.
 AC_CANONICAL_HOST
@@ -34,6 +32,8 @@ AC_PROG_CC
 dnl For gnulib.
 gl_EARLY
 gl_INIT
+
+AM_GNU_GETTEXT([external])
 
 AC_CONFIG_FILES([
  Makefile

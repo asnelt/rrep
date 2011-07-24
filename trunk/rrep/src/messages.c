@@ -61,7 +61,7 @@ print_help ()
   printf (_("\
 Replace PATTERN by REPLACEMENT in each FILE or standard input.\n"));
   printf (_("\
-PATTERN is, by default, a basic regular expression (BRE). REPLACEMENT may\n\
+PATTERN is, by default, a basic regular expression (BRE).  REPLACEMENT may\n\
 contain the special character & to refer to that portion of the pattern space\n\
 which matched, and the special escapes \\1 through \\9 to refer to the\n\
 corresponding matching sub-expressions in PATTERN.\n"));
@@ -79,9 +79,12 @@ Options:\n\
  skipped\n\
       --exclude-dir=PATTERN      directories that match PATTERN will be\
  skipped\n\
+  -S, --suffix=SUFFIX            override default backup suffix\n\
   -V, --version                  print version information and exit\n\
   -a, --all                      do not ignore files starting with .\n\
-      --backup                   backup before overwriting files\n\
+  -b                             backup before overwriting files\n\
+      --backup[=CONTROL]         like -b but accepts a version control\
+ argument\n\
       --binary                   do not ignore binary files\n\
       --dry-run                  simulation mode\n\
   -e, --regex=PATTERN            use PATTERN for matching\n\
@@ -97,8 +100,18 @@ Options:\n\
   printf ("\n");
   printf (_("\
 With no FILE, or when FILE is -, read standard input and write to standard\n\
-output. Exit status is %d if any error occurs, %d otherwise.\n"), EXIT_FAILURE,
+output.  Exit status is %d if any error occurs, %d otherwise.\n"), EXIT_FAILURE,
 	  EXIT_SUCCESS);
+  printf ("\n");
+  printf (_("\
+The backup suffix is ~, unless set with --suffix or SIMPLE_BACKUP_SUFFIX.\n\
+The version control method may be selected via the --backup option or through\n\
+the VERSION_CONTROL environment variable.  Here are the values:\n\
+\n\
+  none, off       never make backups (even if --backup is given)\n\
+  numbered, t     make numbered backups\n\
+  existing, nil   numbered if numbered backups exist, simple otherwise\n\
+  simple, never   always make simple backups\n"));
   printf ("\n");
   printf (_("Report bugs to: %s\n"), PACKAGE_BUGREPORT);
 }
@@ -140,6 +153,11 @@ rrep_error (const int errcode, const char *file_name)
       break;
     case ERR_SAVE_DIR:
       fprintf (stderr, _("%s: Could not save current working directory: "),
+	       program_name);
+      perror (NULL);
+      break;
+    case ERR_ALLOC_SUFFIX:
+      fprintf (stderr, _("%s: Could not allocate memory for suffix: "),
 	       program_name);
       perror (NULL);
       break;

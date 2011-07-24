@@ -150,6 +150,11 @@ Directories that match @var{PATTERN} will be skipped, except for files that are
 specifically given on the command line (using wildcard matching as described
 under @samp{--include}).
 
+@item -S
+@itemx --suffix=@var{SUFFIX}
+@cindex suffix
+Override default backup suffix. This option implicitly activates backups.
+
 @item -V
 @itemx --version
 @cindex version
@@ -161,11 +166,27 @@ Print the version number of @command{rrep}.
 Files and sub-directories starting with the @samp{.} character in recursively
 processed directories (see @samp{--recursive}) are processed as well.
 
-@item --backup
+@item -b
 @cindex backup
-Backup before overwriting files. The backup files are written into the
-directory of the original file. The file name of the backup file is appended by
-a @samp{~} character.
+Backup before overwriting files. The backup files are written into
+the directory of the original file. Equivalent to using
+@samp{--backup=existing}.
+
+@item --backup
+@cindex long backup
+Like @samp{-b} but accepts a version control argument. The file name of the
+backup file is appended by a @samp{~} character. The backup suffix is @samp{~},
+unless set with @samp{--suffix} or @var{SIMPLE_BACKUP_SUFFIX}. The version
+control method may be selected via the @samp{--backup} option or through the
+@var{VERSION_CONTROL} environment variable. Here are the values:
+@itemize @bullet
+@item @samp{none}, @samp{off}: never make backups (even if @samp{--backup} is
+given)
+@item @samp{numbered}, @samp{t}: make numbered backups
+@item @samp{existing}, @samp{nil}: numbered if numbered backups exist, simple
+otherwise
+@item @samp{simple}, @samp{never}: always make simple backups
+@end itemize
 
 @item --binary
 @cindex binary files
@@ -272,7 +293,7 @@ This command replaces all occurences of the pattern
 @samp{\(hello\).*\(world\)!*} by @samp{\1, \2!}, where @samp{\1} and @samp{\2}
 are the corresponding sub-expressions @samp{hello} and @samp{world} in the
 files @samp{menu.h} and @samp{main.c}. For instance, @samp{hEllO wOrLd} will be
-replaced by @samp{hEllO, wOrLd!}.
+replaced by @samp{hEllO, wOrLd!}. Backups will be made.
 
 @example
 rrep -F -r --binary --interactive '*hello\1' '*hello\2' /home/user/hello
