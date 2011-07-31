@@ -18,7 +18,7 @@ dnl along with this program; if not, write to the Free Software
 dnl Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
 dnl 02110-1301, USA.
 
-AC_INIT([rrep], [1.3.2], [asnelt@asnelt.org])
+AC_INIT([rrep], [1.3.3], [asnelt@asnelt.org])
 
 AC_CONFIG_AUX_DIR(build-aux)
 AC_CONFIG_SRCDIR(src/rrep.c)
