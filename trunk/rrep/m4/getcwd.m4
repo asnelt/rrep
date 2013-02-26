@@ -1,20 +1,25 @@
 # getcwd.m4 - check for working getcwd that is compatible with glibc
 
-# Copyright (C) 2001, 2003-2007, 2009-2011 Free Software Foundation, Inc.
+# Copyright (C) 2001, 2003-2007, 2009-2013 Free Software Foundation, Inc.
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
 
 # Written by Paul Eggert.
-# serial 7
+# serial 12
 
 AC_DEFUN([gl_FUNC_GETCWD_NULL],
   [
    AC_REQUIRE([AC_CANONICAL_HOST]) dnl for cross-compiles
+   AC_CHECK_HEADERS_ONCE([unistd.h])
    AC_CACHE_CHECK([whether getcwd (NULL, 0) allocates memory for result],
      [gl_cv_func_getcwd_null],
      [AC_RUN_IFELSE([AC_LANG_PROGRAM([[
-#        include <unistd.h>
+#        if HAVE_UNISTD_H
+#         include <unistd.h>
+#        else /* on Windows with MSVC */
+#         include <direct.h>
+#        endif
 #        ifndef getcwd
          char *getcwd ();
 #        endif
@@ -37,24 +42,38 @@ AC_DEFUN([gl_FUNC_GETCWD_NULL],
                return 0;
              }
 #endif
-         /* If size is non-zero, allocation must fail if size is too small */
-         if (getcwd (NULL, 1))
-           return 5;
          ]])],
         [gl_cv_func_getcwd_null=yes],
         [gl_cv_func_getcwd_null=no],
-        [[
-       case "$host_os" in
-                               # Guess yes on glibc systems.
-         *-gnu*)               gl_cv_func_getcwd_null="guessing yes";;
-                               # Guess yes on Cygwin.
-         cygwin*)              gl_cv_func_getcwd_null="guessing yes";;
-                               # If we don't know, assume the worst.
-         *)                    gl_cv_func_getcwd_null="guessing no";;
-       esac
+        [[case "$host_os" in
+                     # Guess yes on glibc systems.
+            *-gnu*)  gl_cv_func_getcwd_null="guessing yes";;
+                     # Guess yes on Cygwin.
+            cygwin*) gl_cv_func_getcwd_null="guessing yes";;
+                     # If we don't know, assume the worst.
+            *)       gl_cv_func_getcwd_null="guessing no";;
+          esac
         ]])])
 ])
 
+AC_DEFUN([gl_FUNC_GETCWD_SIGNATURE],
+[
+  AC_CACHE_CHECK([for getcwd with POSIX signature],
+    [gl_cv_func_getcwd_posix_signature],
+    [AC_COMPILE_IFELSE(
+      [AC_LANG_PROGRAM(
+         [[#include <unistd.h>]],
+         [[extern
+           #ifdef __cplusplus
+           "C"
+           #endif
+           char *getcwd (char *, size_t);
+         ]])
+      ],
+      [gl_cv_func_getcwd_posix_signature=yes],
+      [gl_cv_func_getcwd_posix_signature=no])
+   ])
+])
 
 dnl Guarantee that getcwd will malloc with a NULL first argument.  Assumes
 dnl that either the system getcwd is robust, or that calling code is okay
@@ -67,9 +86,10 @@ AC_DEFUN([gl_FUNC_GETCWD_LGPL],
 [
   AC_REQUIRE([gl_UNISTD_H_DEFAULTS])
   AC_REQUIRE([gl_FUNC_GETCWD_NULL])
+  AC_REQUIRE([gl_FUNC_GETCWD_SIGNATURE])
 
-  case $gl_cv_func_getcwd_null in
-  *yes) ;;
+  case $gl_cv_func_getcwd_null,$gl_cv_func_getcwd_posix_signature in
+  *yes,yes) ;;
   *)
     dnl Minimal replacement lib/getcwd-lgpl.c.
     REPLACE_GETCWD=1
@@ -83,23 +103,47 @@ AC_DEFUN([gl_FUNC_GETCWD],
 [
   AC_REQUIRE([gl_UNISTD_H_DEFAULTS])
   AC_REQUIRE([gl_FUNC_GETCWD_NULL])
+  AC_REQUIRE([gl_FUNC_GETCWD_SIGNATURE])
   AC_REQUIRE([AC_CANONICAL_HOST]) dnl for cross-compiles
 
   gl_abort_bug=no
-  case $gl_cv_func_getcwd_null,$host_os in
-  *,mingw*)
-    gl_cv_func_getcwd_path_max=yes;;
-  yes,*)
-    gl_FUNC_GETCWD_PATH_MAX
-    gl_FUNC_GETCWD_ABORT_BUG([gl_abort_bug=yes]);;
+  case "$host_os" in
+    mingw*)
+      gl_cv_func_getcwd_path_max=yes
+      ;;
+    *)
+      gl_FUNC_GETCWD_PATH_MAX
+      case "$gl_cv_func_getcwd_null" in
+        *yes)
+          gl_FUNC_GETCWD_ABORT_BUG([gl_abort_bug=yes])
+          ;;
+      esac
+      ;;
+  esac
+  dnl Define HAVE_MINIMALLY_WORKING_GETCWD and HAVE_PARTLY_WORKING_GETCWD
+  dnl if appropriate.
+  case "$gl_cv_func_getcwd_path_max" in
+    "no"|"no, it has the AIX bug") ;;
+    *)
+      AC_DEFINE([HAVE_MINIMALLY_WORKING_GETCWD], [1],
+        [Define to 1 if getcwd minimally works, that is, its result can be
+         trusted when it succeeds.])
+      ;;
+  esac
+  case "$gl_cv_func_getcwd_path_max" in
+    "no, but it is partly working")
+      AC_DEFINE([HAVE_PARTLY_WORKING_GETCWD], [1],
+        [Define to 1 if getcwd works, except it sometimes fails when it
+         shouldn't, setting errno to ERANGE, ENAMETOOLONG, or ENOENT.])
+      ;;
   esac
 
-  case $gl_cv_func_getcwd_null,$gl_cv_func_getcwd_path_max,$gl_abort_bug in
-  *yes,yes,no) ;;
-  *)
-    dnl Full replacement lib/getcwd.c, overrides LGPL replacement.
-    REPLACE_GETCWD=1;;
-  esac
+  if { case "$gl_cv_func_getcwd_null" in *yes) false;; *) true;; esac; } \
+     || test $gl_cv_func_getcwd_posix_signature != yes \
+     || test "$gl_cv_func_getcwd_path_max" != yes \
+     || test $gl_abort_bug = yes; then
+    REPLACE_GETCWD=1
+  fi
 ])
 
 # Prerequisites of lib/getcwd.c, when full replacement is in effect.

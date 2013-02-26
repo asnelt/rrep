@@ -1,5 +1,5 @@
-# write.m4 serial 3
-dnl Copyright (C) 2008-2011 Free Software Foundation, Inc.
+# write.m4 serial 5
+dnl Copyright (C) 2008-2013 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
 dnl gives unlimited permission to copy and/or distribute it,
 dnl with or without modifications, as long as this notice is preserved.
@@ -7,6 +7,10 @@ dnl with or without modifications, as long as this notice is preserved.
 AC_DEFUN([gl_FUNC_WRITE],
 [
   AC_REQUIRE([gl_UNISTD_H_DEFAULTS])
+  AC_REQUIRE([gl_MSVC_INVAL])
+  if test $HAVE_MSVC_INVALID_PARAMETER_HANDLER = 1; then
+    REPLACE_WRITE=1
+  fi
   dnl This ifdef is just an optimization, to avoid performing a configure
   dnl check whose result is not used. It does not make the test of
   dnl GNULIB_UNISTD_H_SIGPIPE or GNULIB_SIGPIPE redundant.
@@ -23,3 +27,6 @@ AC_DEFUN([gl_FUNC_WRITE],
     fi
   ])
 ])
+
+# Prerequisites of lib/write.c.
+AC_DEFUN([gl_PREREQ_WRITE], [:])

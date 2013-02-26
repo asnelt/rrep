@@ -1,5 +1,5 @@
 /* Open a descriptor to a file.
-   Copyright (C) 2007-2011 Free Software Foundation, Inc.
+   Copyright (C) 2007-2013 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,22 +16,27 @@
 
 /* Written by Bruno Haible <bruno@clisp.org>, 2007.  */
 
+/* If the user's config.h happens to include <fcntl.h>, let it include only
+   the system's <fcntl.h> here, so that orig_open doesn't recurse to
+   rpl_open.  */
+#define __need_system_fcntl_h
 #include <config.h>
 
 /* Get the original definition of open.  It might be defined as a macro.  */
-#define __need_system_fcntl_h
 #include <fcntl.h>
-#undef __need_system_fcntl_h
 #include <sys/types.h>
+#undef __need_system_fcntl_h
 
-static inline int
+static int
 orig_open (const char *filename, int flags, mode_t mode)
 {
   return open (filename, flags, mode);
 }
 
 /* Specification.  */
-#include <fcntl.h>
+/* Write "fcntl.h" here, not <fcntl.h>, otherwise OSF/1 5.1 DTK cc eliminates
+   this include because of the preliminary #include <fcntl.h> above.  */
+#include "fcntl.h"
 
 #include <errno.h>
 #include <stdarg.h>

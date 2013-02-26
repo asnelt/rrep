@@ -1,5 +1,5 @@
 /* Create a temporary file.
-   Copyright (C) 2007, 2009-2011 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2009-2013 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -37,6 +37,9 @@
 #include "tempname.h"
 #include "tmpdir.h"
 
+/* PATH_MAX is guaranteed to be defined, because this replacement is only
+   used on native Windows.  */
+
 /* On Windows, opening a file with _O_TEMPORARY has the effect of passing
    the FILE_FLAG_DELETE_ON_CLOSE flag to CreateFile(), which has the effect
    of deleting the file when it is closed - even when the program crashes.
@@ -50,6 +53,11 @@ supports_delete_on_close ()
   if (!known)
     {
       OSVERSIONINFO v;
+
+      /* According to
+         <http://msdn.microsoft.com/en-us/library/windows/desktop/ms724451(v=vs.85).aspx>
+         this structure must be initialised as follows:  */
+      v.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
 
       if (GetVersionEx (&v))
         known = (v.dwPlatformId == VER_PLATFORM_WIN32_NT ? 1 : -1);

@@ -11,7 +11,7 @@
 @copying
 This file documents the @command{rrep} utility which replaces patterns in files.
 
-Copyright @copyright{} 2011 Arno Onken
+Copyright @copyright{} 2011, 2013 Arno Onken
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -72,12 +72,13 @@ This manual is for version @value{VERSION} of rrep.
 @cindex replacing a pattern in multiple files
 
 The @command{rrep} utility searches input files for matches to a given pattern
-and replaces those matches by a given replacement string. The pattern is, by
-default, a basic regular expression. The replacement string may contain special
-characters to refer to portions of the matched pattern.
+and replaces those matches by a given replacement string.
+The pattern is, by default, a basic regular expression.
+The replacement string may contain special characters to refer to portions of
+the matched pattern.
 
-Binary files are, by default, ignored. A file is regarded as binary if it
-contains the null character.
+Binary files are, by default, ignored.
+A file is regarded as binary if it contains the null character.
 
 @node Invoking
 @chapter Invoking @command{rrep}
@@ -89,9 +90,9 @@ rrep @var{options} @var{pattern} @var{replacement} @var{input_file_names}
 @end example
 
 @noindent
-There can be zero or more @var{options}. @var{pattern} is, by default, a basic
-regular expression (BRE) that is searched in the @var{input_file_names} and
-replaced by @var{replacement}.
+There can be zero or more @var{options}.
+@var{pattern} is, by default, a basic regular expression (BRE) that is searched
+in the @var{input_file_names} and replaced by @var{replacement}.
 @var{replacement} may contain the special character @samp{&} to refer to that
 portion of the pattern space which matched, and the special escapes @samp{\1}
 through @samp{\9} to refer to the corresponding matching sub-expressions in
@@ -135,8 +136,8 @@ ignored.
 Only files are processed that match the pattern @var{FILE_PATTERN}, except for
 files that are specifically given on the command line.
 @samp{*}, @samp{?}, and @samp{[}...@samp{]} can be used as wildcards in
-@var{FILE_PATTERN}. Wildcards and backslash characters can be quoted with
-@code{\}.
+@var{FILE_PATTERN}.
+Wildcards and backslash characters can be quoted with @code{\}.
 
 @item --exclude=@var{FILE_PATTERN}
 @cindex exclude files
@@ -153,7 +154,8 @@ under @samp{--include}).
 @item -S
 @itemx --suffix=@var{SUFFIX}
 @cindex suffix
-Override default backup suffix. This option implicitly activates backups.
+Override default backup suffix.
+This option implicitly activates backups.
 
 @item -V
 @itemx --version
@@ -168,17 +170,19 @@ processed directories (see @samp{--recursive}) are processed as well.
 
 @item -b
 @cindex backup
-Backup before overwriting files. The backup files are written into
-the directory of the original file. Equivalent to using
-@samp{--backup=existing}.
+Backup before overwriting files.
+The backup files are written into the directory of the original file.
+Equivalent to using @samp{--backup=existing}.
 
 @item --backup
 @cindex long backup
-Like @samp{-b} but accepts a version control argument. The file name of the
-backup file is appended by a @samp{~} character. The backup suffix is @samp{~},
-unless set with @samp{--suffix} or @var{SIMPLE_BACKUP_SUFFIX}. The version
-control method may be selected via the @samp{--backup} option or through the
-@var{VERSION_CONTROL} environment variable. Here are the values:
+Like @samp{-b} but accepts a version control argument.
+The file name of the backup file is appended by a @samp{~} character.
+The backup suffix is @samp{~}, unless set with @samp{--suffix} or
+@var{SIMPLE_BACKUP_SUFFIX}.
+The version control method may be selected via the @samp{--backup} option or
+through the @var{VERSION_CONTROL} environment variable.
+Here are the values:
 @itemize @bullet
 @item @samp{none}, @samp{off}: never make backups (even if @samp{--backup} is
 given)
@@ -190,18 +194,19 @@ otherwise
 
 @item --binary
 @cindex binary files
-Do not ignore binary files. A file is regarded as binary if it contains the
-null character @samp{\0}.
+Do not ignore binary files.
+A file is regarded as binary if it contains the null character @samp{\0}.
 
 @item --dry-run
 @cindex simulation
-The replacement is just simulated. No file is actually modified.
+The replacement is just simulated.
+No file is actually modified.
 
 @item -e
 @itemx --regex=@var{PATTERN}
 @cindex pattern list
-Use @var{PATTERN} for matching. This option can be used to specify a pattern
-beginning with @samp{-}.
+Use @var{PATTERN} for matching.
+This option can be used to specify a pattern beginning with @samp{-}.
 
 @item -h
 @itemx --help
@@ -279,10 +284,11 @@ rrep -i 'hello.*world!*' 'Hello, world!' menu.h main.c
 
 @noindent
 All occurences of the pattern @samp{hello.*world!*'} like @samp{hello world},
-@samp{hello, world}, or @samp{hello,, world!!} (see regular expressions) is
+@samp{hello, world}, or @samp{hello,, world!!} (see regular expressions) are
 replaced by the string @samp{Hello, world!} in the files @samp{menu.h} and
-@samp{main.c}. The @samp{-i} option causes @command{rrep} to ignore cases, so,
-for instance, @samp{HeLLo WoRlD} will be replaced as well.
+@samp{main.c}.
+The @samp{-i} option causes @command{rrep} to ignore cases, so, for instance,
+@samp{HeLLo WoRlD} will be replaced as well.
 
 @example
 rrep -i --backup '\(hello\).*\(world\)!*' '\1, \2!' menu.h main.c
@@ -292,8 +298,9 @@ rrep -i --backup '\(hello\).*\(world\)!*' '\1, \2!' menu.h main.c
 This command replaces all occurences of the pattern
 @samp{\(hello\).*\(world\)!*} by @samp{\1, \2!}, where @samp{\1} and @samp{\2}
 are the corresponding sub-expressions @samp{hello} and @samp{world} in the
-files @samp{menu.h} and @samp{main.c}. For instance, @samp{hEllO wOrLd} will be
-replaced by @samp{hEllO, wOrLd!}. Backups will be made.
+files @samp{menu.h} and @samp{main.c}.
+For instance, @samp{hEllO wOrLd} will be replaced by @samp{hEllO, wOrLd!}.
+Backups will be made.
 
 @example
 rrep -F -r --binary --interactive '*hello\1' '*hello\2' /home/user/hello
@@ -301,14 +308,16 @@ rrep -F -r --binary --interactive '*hello\1' '*hello\2' /home/user/hello
 
 @noindent
 All occurences of the string @samp{*hello\1} are replaced by the string
-@samp{*hello\2} in @samp{/home/user/hello}. Due to the @samp{-F} option, the
-strings are not interpreted as regular expressions or escape sequenses. If
-@samp{/home/user/hello} is a directory, then the @samp{-r} option causes
+@samp{*hello\2} in @samp{/home/user/hello}.
+Due to the @samp{-F} option, the strings are not interpreted as regular
+expressions or escape sequenses.
+If @samp{/home/user/hello} is a directory, then the @samp{-r} option causes
 @command{rrep} to process all files and sub-directories in
-@samp{/home/user/hello} as well. However, files and directories starting with
-the @samp{.} character are ignored. The @samp{--binary} option causes
-@command{rrep} to the replace the string in binary files as well. The
-@samp{--interactive} option causes @command{rrep} to prompt the user before
+@samp{/home/user/hello} as well.
+However, files and directories starting with the @samp{.} character are ignored.
+The @samp{--binary} option causes @command{rrep} to the replace the string in
+binary files as well.
+The @samp{--interactive} option causes @command{rrep} to prompt the user before
 modifying any file.
 
 @example
@@ -317,10 +326,12 @@ rrep -r -a 'hello' 'Hello' /home/user/.hello
 
 @noindent
 This command replaces all occurences of @samp{hello} by @samp{Hello} in
-@samp{/home/user/hello}. If @samp{/home/user/hello} is a directory, then the
-@samp{-r} option causes @command{rrep} to process all files and sub-directories
-in @samp{/home/user/hello} as well. The @samp{-a} option causes @command{rrep}
-to process files and directories starting with the @samp{.} character as well.
+@samp{/home/user/hello}.
+If @samp{/home/user/hello} is a directory, then the @samp{-r} option causes
+@command{rrep} to process all files and sub-directories in
+@samp{/home/user/hello} as well.
+The @samp{-a} option causes @command{rrep} to process files and directories
+starting with the @samp{.} character as well.
 However, binary files (files that contain the null character) are ignored.
 
 @example
@@ -329,8 +340,8 @@ rrep -e '-hello' --dry-run 'Hello' menu.h main.c
 
 @noindent
 This command simulates the replacement of @samp{-hello} by @samp{Hello} in the
-files @samp{menu.h} and @samp{main.c}. The files are not actually modified due
-to the @samp{--dry-run} option.
+files @samp{menu.h} and @samp{main.c}.
+The files are not actually modified due to the @samp{--dry-run} option.
 
 @example
 rrep -r --include=*.c 'hello world' 'Hello, world!' /home/user/hello
@@ -338,12 +349,14 @@ rrep -r --include=*.c 'hello world' 'Hello, world!' /home/user/hello
 
 @noindent
 All occurences of @samp{hello world} are replaced by @samp{Hello, world!} in
-@samp{/home/user/hello}. If @samp{/home/user/hello} is a directory, then the
-@samp{-r} option causes @command{rrep} to process all files and sub-directories
-in @samp{/home/user/hello} as well. However, files and directories starting
-with the @samp{.} character and binary files are ignored. Moreover, the
-@samp{--include=*c} option causes @command{rrep} to process only files with
-file names that end with @samp{.c}.
+@samp{/home/user/hello}.
+If @samp{/home/user/hello} is a directory, then the @samp{-r} option causes
+@command{rrep} to process all files and sub-directories in
+@samp{/home/user/hello} as well.
+However, files and directories starting with the @samp{.} character and binary
+files are ignored.
+Moreover, the @samp{--include=*c} option causes @command{rrep} to process only
+files with file names that end with @samp{.c}.
 
 
 @node Reporting Bugs
@@ -352,39 +365,39 @@ file names that end with @samp{.c}.
 @cindex problems
 
 If you find a bug in @command{rrep}, please send electronic mail to
-@email{asnelt@@asnelt.org}. Include the version number, which you can find by
-running @w{@samp{rrep --version}}. Also include in your message the
-output that the program produced and the output you expected.@refill
+@email{asnelt@@asnelt.org}.
+Include the version number, which you can find by running
+@w{@samp{rrep --version}}.
+Also include in your message the output that the program produced and the output
+you expected.@refill
 
-If you have other questions, comments or suggestions about
-@command{rrep}, contact the author via electronic mail to
-@email{asnelt@@asnelt.org}. The author will try to help you out, although he
-may not have time to fix your problems.
+If you have other questions, comments or suggestions about @command{rrep},
+contact the author via electronic mail to @email{asnelt@@asnelt.org}.
+The author will try to help you out, although he may not have time to fix your
+problems.
 
 
 @node Copying
 @chapter Copying
 @cindex copying
 
-rrep is licensed under the GNU GPL, which makes it @dfn{free
-software}.
+rrep is licensed under the GNU GPL, which makes it @dfn{free software}.
 
-The ``free'' in ``free software'' refers to liberty, not price. As
-some GNU project advocates like to point out, think of ``free speech''
-rather than ``free beer''.  In short, you have the right (freedom) to
-run and change rrep and distribute it to other people, and---if you
-want---charge money for doing either.  The important restriction is
-that you have to grant your recipients the same rights and impose the
-same restrictions.
+The ``free'' in ``free software'' refers to liberty, not price.
+As some GNU project advocates like to point out, think of ``free speech''
+rather than ``free beer''.
+In short, you have the right (freedom) to run and change rrep and distribute it
+to other people, and---if you want---charge money for doing either.
+The important restriction is that you have to grant your recipients the same
+rights and impose the same restrictions.
 
-This general method of licensing software is sometimes called
-@dfn{open source}.  The GNU project prefers the term ``free software''
-for reasons outlined at
+This general method of licensing software is sometimes called @dfn{open source}.
+The GNU project prefers the term ``free software'' for reasons outlined at
 @url{http://www.gnu.org/philosophy/open-source-misses-the-point.html}.
 
-This manual is free documentation in the same sense.  The
-documentation license is included below.  The license for the program
-is available with the source code, or at
+This manual is free documentation in the same sense.
+The documentation license is included below.
+The license for the program is available with the source code, or at
 @url{http://www.gnu.org/licenses/gpl.html}.
 
 @menu

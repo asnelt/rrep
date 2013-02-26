@@ -1,8 +1,8 @@
-# serial 21   -*- Autoconf -*-
+# serial 22   -*- Autoconf -*-
 
 dnl Find out how to get the file descriptor associated with an open DIR*.
 
-# Copyright (C) 2001-2006, 2008-2011 Free Software Foundation, Inc.
+# Copyright (C) 2001-2006, 2008-2013 Free Software Foundation, Inc.
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -18,8 +18,8 @@ AC_DEFUN([gl_FUNC_DIRFD],
 
   AC_CHECK_FUNCS([dirfd])
   AC_CHECK_DECLS([dirfd], , ,
-    [#include <sys/types.h>
-     #include <dirent.h>])
+    [[#include <sys/types.h>
+      #include <dirent.h>]])
   if test $ac_cv_have_decl_dirfd = no; then
     HAVE_DECL_DIRFD=0
   fi

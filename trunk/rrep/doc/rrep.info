@@ -2,7 +2,7 @@ This is rrep.info, produced by makeinfo version 4.13 from rrep.texi.
 
 This file documents the `rrep' utility which replaces patterns in files.
 
-   Copyright (C) 2011 Arno Onken
+   Copyright (C) 2011, 2013 Arno Onken
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -24,12 +24,12 @@ rrep
 
 The `rrep' utility replaces patterns in files.
 
-   This manual is for version 1.3.3 of rrep.
+   This manual is for version 1.3.4 of rrep.
 
    This file documents the `rrep' utility which replaces patterns in
 files.
 
-   Copyright (C) 2011 Arno Onken
+   Copyright (C) 2011, 2013 Arno Onken
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -54,11 +54,11 @@ File: rrep.info,  Node: Introduction,  Next: Invoking,  Prev: Top,  Up: Top
 **************
 
 The `rrep' utility searches input files for matches to a given pattern
-and replaces those matches by a given replacement string. The pattern
-is, by default, a basic regular expression. The replacement string may
+and replaces those matches by a given replacement string.  The pattern
+is, by default, a basic regular expression.  The replacement string may
 contain special characters to refer to portions of the matched pattern.
 
-   Binary files are, by default, ignored. A file is regarded as binary
+   Binary files are, by default, ignored.  A file is regarded as binary
 if it contains the null character.
 
 
@@ -71,7 +71,7 @@ The synopsis of `rrep' is
 
      rrep OPTIONS PATTERN REPLACEMENT INPUT_FILE_NAMES
 
-There can be zero or more OPTIONS. PATTERN is, by default, a basic
+There can be zero or more OPTIONS.  PATTERN is, by default, a basic
 regular expression (BRE) that is searched in the INPUT_FILE_NAMES and
 replaced by REPLACEMENT.  REPLACEMENT may contain the special character
 `&' to refer to that portion of the pattern space which matched, and
@@ -126,7 +126,7 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
 
 `-S'
 `--suffix=SUFFIX'
-     Override default backup suffix. This option implicitly activates
+     Override default backup suffix.  This option implicitly activates
      backups.
 
 `-V'
@@ -140,17 +140,17 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
      processed as well.
 
 `-b'
-     Backup before overwriting files. The backup files are written into
-     the directory of the original file. Equivalent to using
+     Backup before overwriting files.  The backup files are written
+     into the directory of the original file.  Equivalent to using
      `--backup=existing'.
 
 `--backup'
-     Like `-b' but accepts a version control argument. The file name of
-     the backup file is appended by a `~' character. The backup suffix
-     is `~', unless set with `--suffix' or SIMPLE_BACKUP_SUFFIX. The
-     version control method may be selected via the `--backup' option
-     or through the VERSION_CONTROL environment variable. Here are the
-     values:
+     Like `-b' but accepts a version control argument.  The file name
+     of the backup file is appended by a `~' character.  The backup
+     suffix is `~', unless set with `--suffix' or SIMPLE_BACKUP_SUFFIX.
+     The version control method may be selected via the `--backup'
+     option or through the VERSION_CONTROL environment variable.  Here
+     are the values:
         * `none', `off': never make backups (even if `--backup' is
           given)
 
@@ -162,15 +162,15 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
         * `simple', `never': always make simple backups
 
 `--binary'
-     Do not ignore binary files. A file is regarded as binary if it
+     Do not ignore binary files.  A file is regarded as binary if it
      contains the null character `\0'.
 
 `--dry-run'
-     The replacement is just simulated. No file is actually modified.
+     The replacement is just simulated.  No file is actually modified.
 
 `-e'
 `--regex=PATTERN'
-     Use PATTERN for matching. This option can be used to specify a
+     Use PATTERN for matching.  This option can be used to specify a
      pattern beginning with `-'.
 
 `-h'
@@ -234,9 +234,9 @@ string `Hello, World!' in the files `menu.h' and `main.c'.
      rrep -i 'hello.*world!*' 'Hello, world!' menu.h main.c
 
 All occurences of the pattern `hello.*world!*'' like `hello world',
-`hello, world', or `hello,, world!!' (see regular expressions) is
+`hello, world', or `hello,, world!!' (see regular expressions) are
 replaced by the string `Hello, world!' in the files `menu.h' and
-`main.c'. The `-i' option causes `rrep' to ignore cases, so, for
+`main.c'.  The `-i' option causes `rrep' to ignore cases, so, for
 instance, `HeLLo WoRlD' will be replaced as well.
 
      rrep -i --backup '\(hello\).*\(world\)!*' '\1, \2!' menu.h main.c
@@ -244,27 +244,27 @@ instance, `HeLLo WoRlD' will be replaced as well.
 This command replaces all occurences of the pattern
 `\(hello\).*\(world\)!*' by `\1, \2!', where `\1' and `\2' are the
 corresponding sub-expressions `hello' and `world' in the files `menu.h'
-and `main.c'. For instance, `hEllO wOrLd' will be replaced by `hEllO,
-wOrLd!'. Backups will be made.
+and `main.c'.  For instance, `hEllO wOrLd' will be replaced by `hEllO,
+wOrLd!'.  Backups will be made.
 
      rrep -F -r --binary --interactive '*hello\1' '*hello\2' /home/user/hello
 
 All occurences of the string `*hello\1' are replaced by the string
-`*hello\2' in `/home/user/hello'. Due to the `-F' option, the strings
-are not interpreted as regular expressions or escape sequenses. If
+`*hello\2' in `/home/user/hello'.  Due to the `-F' option, the strings
+are not interpreted as regular expressions or escape sequenses.  If
 `/home/user/hello' is a directory, then the `-r' option causes `rrep'
 to process all files and sub-directories in `/home/user/hello' as well.
 However, files and directories starting with the `.' character are
-ignored. The `--binary' option causes `rrep' to the replace the string
-in binary files as well. The `--interactive' option causes `rrep' to
+ignored.  The `--binary' option causes `rrep' to the replace the string
+in binary files as well.  The `--interactive' option causes `rrep' to
 prompt the user before modifying any file.
 
      rrep -r -a 'hello' 'Hello' /home/user/.hello
 
 This command replaces all occurences of `hello' by `Hello' in
-`/home/user/hello'. If `/home/user/hello' is a directory, then the `-r'
-option causes `rrep' to process all files and sub-directories in
-`/home/user/hello' as well. The `-a' option causes `rrep' to process
+`/home/user/hello'.  If `/home/user/hello' is a directory, then the
+`-r' option causes `rrep' to process all files and sub-directories in
+`/home/user/hello' as well.  The `-a' option causes `rrep' to process
 files and directories starting with the `.' character as well.
 However, binary files (files that contain the null character) are
 ignored.
@@ -272,16 +272,16 @@ ignored.
      rrep -e '-hello' --dry-run 'Hello' menu.h main.c
 
 This command simulates the replacement of `-hello' by `Hello' in the
-files `menu.h' and `main.c'. The files are not actually modified due to
-the `--dry-run' option.
+files `menu.h' and `main.c'.  The files are not actually modified due
+to the `--dry-run' option.
 
      rrep -r --include=*.c 'hello world' 'Hello, world!' /home/user/hello
 
 All occurences of `hello world' are replaced by `Hello, world!' in
-`/home/user/hello'. If `/home/user/hello' is a directory, then the `-r'
-option causes `rrep' to process all files and sub-directories in
-`/home/user/hello' as well. However, files and directories starting
-with the `.' character and binary files are ignored. Moreover, the
+`/home/user/hello'.  If `/home/user/hello' is a directory, then the
+`-r' option causes `rrep' to process all files and sub-directories in
+`/home/user/hello' as well.  However, files and directories starting
+with the `.' character and binary files are ignored.  Moreover, the
 `--include=*c' option causes `rrep' to process only files with file
 names that end with `.c'.
 
@@ -292,12 +292,12 @@ File: rrep.info,  Node: Reporting Bugs,  Next: Copying,  Prev: Usage,  Up: Top
 ****************
 
 If you find a bug in `rrep', please send electronic mail to
-<asnelt@asnelt.org>. Include the version number, which you can find by
-running `rrep --version'. Also include in your message the output that
+<asnelt@asnelt.org>.  Include the version number, which you can find by
+running `rrep --version'.  Also include in your message the output that
 the program produced and the output you expected.
 
    If you have other questions, comments or suggestions about `rrep',
-contact the author via electronic mail to <asnelt@asnelt.org>. The
+contact the author via electronic mail to <asnelt@asnelt.org>.  The
 author will try to help you out, although he may not have time to fix
 your problems.
 
@@ -309,7 +309,7 @@ File: rrep.info,  Node: Copying,  Next: Index,  Prev: Reporting Bugs,  Up: Top
 
 rrep is licensed under the GNU GPL, which makes it "free software".
 
-   The "free" in "free software" refers to liberty, not price. As some
+   The "free" in "free software" refers to liberty, not price.  As some
 GNU project advocates like to point out, think of "free speech" rather
 than "free beer".  In short, you have the right (freedom) to run and
 change rrep and distribute it to other people, and--if you want--charge
@@ -883,15 +883,15 @@ Index
 
 
 Tag Table:
-Node: Top736
-Node: Introduction1517
-Node: Invoking2019
-Node: Command-line Options2995
-Node: Exit Status6604
-Node: Usage6772
-Node: Reporting Bugs9664
-Node: Copying10257
-Node: GNU Free Documentation License11336
-Node: Index36458
+Node: Top742
+Node: Introduction1529
+Node: Invoking2034
+Node: Command-line Options3011
+Node: Exit Status6629
+Node: Usage6797
+Node: Reporting Bugs9703
+Node: Copying10299
+Node: GNU Free Documentation License11379
+Node: Index36501
 
 End Tag Table

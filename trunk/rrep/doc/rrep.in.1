@@ -16,12 +16,12 @@ for matches to a given
 .I PATTERN
 and replaces those matches by a given
 .IR REPLACEMENT .
-The pattern is, by
-default, a basic regular expression. The replacement string may
-contain special characters to refer to portions of the matched pattern.
+The pattern is, by default, a basic regular expression.
+The replacement string may contain special characters to refer to portions of
+the matched pattern.
 .PP
-Binary files are, by default, ignored. A file is regarded as binary
-if it contains the null character.
+Binary files are, by default, ignored.
+A file is regarded as binary if it contains the null character.
 .SH "OPTIONS"
 .TP
 .BR \-E ", " \-\^\-extended\-regexp
@@ -32,12 +32,12 @@ is interpreted as an extended regular expression (ERE).
 .I PATTERN
 and
 .I REPLACEMENT
-are interpreted as fixed strings, not as
-regular expressions or escape sequences.
+are interpreted as fixed strings, not as regular expressions or escape
+sequences.
 .TP
 .BR \-R ", " \-r ", " \-\^\-recursive
-Each directory that is given on the command line is processed
-recursively.  Files and sub-directories starting with the
+Each directory that is given on the command line is processed recursively.
+Files and sub-directories starting with the
 .B .
 character are, by default, ignored.
 .TP
@@ -52,41 +52,39 @@ Wildcards and backslash characters can be quoted with \fB\e\fR.
 .BI \-\^\-exclude= FILE_PATTERN
 Files that match the pattern
 .I FILE_PATTERN
-will be skipped, except
-for files that are specifically given on the command line (using
-wildcard matching as described under \fB\-\^\-include\fR).
+will be skipped, except for files that are specifically given on the command
+line (using wildcard matching as described under \fB\-\^\-include\fR).
 .TP
 .BI \-\^\-exclude\-dir= PATTERN
 Directories that match
 .I PATTERN
-will be skipped, except for files
-that are specifically given on the command line (using wildcard
-matching as described under \fB\-\^\-include\fR).
+will be skipped, except for files that are specifically given on the command
+line (using wildcard matching as described under \fB\-\^\-include\fR).
 .TP
 .BR \-V ", " \-\^\-version
 Print the version number of \fBrrep\fR.
 .TP
 .BI \-S " SUFFIX" "\fR,\fP \-\^\-suffix=" SUFFIX
-Override default backup suffix. This option implicitly activates
-backups.
+Override default backup suffix.
+This option implicitly activates backups.
 .TP
 .BR \-a ", " \-\^\-all
-Files and sub-directories starting with the \fB.\fR character in
-recursively processed directories (see \fB\-\^\-recursive\fR) are
-processed as well.
+Files and sub-directories starting with the \fB.\fR character in recursively
+processed directories (see \fB\-\^\-recursive\fR) are processed as well.
 .TP
 .BR \-b
-Backup before overwriting files. The backup files are written into
-the directory of the original file. Equivalent to using
+Backup before overwriting files.
+The backup files are written into the directory of the original file.
+Equivalent to using
 \fB\-\^\-backup=existing\fR.
 .TP
 .BI \-\^\-backup \fR[\fP = CONTROL \fR]\fP
-Like \fB\-b\fR but accepts a version control argument. The file name of
-the backup file is appended by a \fB~\fR character.
+Like \fB\-b\fR but accepts a version control argument.
+The file name of the backup file is appended by a \fB~\fR character.
 The backup suffix is \fB~\fR, unless set with \fB\-\^\-suffix\fR or
 .IR SIMPLE_BACKUP_SUFFIX .
-The version control method may be selected
-via the \fB\-\^\-backup\fR option or through the
+The version control method may be selected via the \fB\-\^\-backup\fR option or
+through the
 .I VERSION_CONTROL
 environment variable. Here are the values:
   \fBnone\fR, \fBoff\fR       never make backups
@@ -97,21 +95,22 @@ environment variable. Here are the values:
   \fBsimple\fR, \fBnever\fR   always make simple backups
 .TP
 .BR \-\^\-binary
-Do not ignore binary files. A file is regarded as binary if it
-contains the null character \fB\e0\fR.
+Do not ignore binary files.
+A file is regarded as binary if it contains the null character \fB\e0\fR.
 .TP
 .BR \-\^\-dry\-run
-The replacement is just simulated. No file is actually modified.
+The replacement is just simulated.
+No file is actually modified.
 .TP
 .BI \-e " PATTERN" "\fR,\fP \-\^\-regexp=" PATTERN
 Use
 .I PATTERN
-for matching. This option can be used to specify a
-pattern beginning with \fB\-\fR.
+for matching.
+This option can be used to specify a pattern beginning with \fB\-\fR.
 .TP
 .BR \-h ", " \-\^\-help
-Display a help message that descibes the command line options and
-exit afterwards.
+Display a help message that descibes the command line options and exit
+afterwards.
 .TP
 .BR \-i ", " \-\^\-ignore\-case
 Case distinctions in
@@ -119,8 +118,8 @@ Case distinctions in
 are ignored.
 .TP
 .BR \-\^\-keep\-times
-The original access and modification times of files and
-directories are restored after processing.
+The original access and modification times of files and directories are
+restored after processing.
 .TP
 .BI \-p " REPLACEMENT" "\fR,\fP \-\^\-replace\-with=" REPLACEMENT
 Use
@@ -128,8 +127,8 @@ Use
 for substitution.
 .TP
 .BR \-\^\-interactive
-Each time before a file is modified the user is prompted and can
-cancel the modification.
+Each time before a file is modified the user is prompted and can cancel the
+modification.
 .TP
 .BR \-q ", " \-\^\-quiet ", " \-\^\-silent
 All normal output messages are suppressed.
@@ -154,26 +153,27 @@ Written by Arno Onken.
 If you find a bug in \fBrrep\fR, please send electronic mail to
 .RB < asnelt@asnelt.org >.
 Include the version number, which you can find by
-running \fBrrep \-\-version\fR. Also include in your message the output that
-the program produced and the output you expected.
+running \fBrrep \-\-version\fR.
+Also include in your message the output that the program produced and the
+output you expected.
 .PP
-If you have other questions, comments or suggestions about \fBrrep\fR,
-contact the author via electronic mail to
+If you have other questions, comments or suggestions about \fBrrep\fR, contact
+the author via electronic mail to
 .RB < asnelt@asnelt.org >.
-The
-author will try to help you out, although he may not have time to fix
-your problems.
+The author will try to help you out, although he may not have time to fix your
+problems.
 .SH "COPYRIGHT"
-Copyright 2011 Arno Onken
+Copyright 2011, 2013 Arno Onken
 .PP
-This is free software; see the source for copying conditions. There is NO
-warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This is free software; see the source for copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
 .SH "SEE ALSO"
 .SS "Regular Manual Pages"
 find(1), grep(1), sed(1), xargs(1), regex(7).
 .SS "TeXinfo Documentation"
-The full documentation for rrep is maintained as a TeXinfo manual. If the info
-and rrep programs are properly installed at your site, the command
+The full documentation for rrep is maintained as a TeXinfo manual.
+If the info and rrep programs are properly installed at your site, the command
 .IP
 .B info rrep
 .PP
