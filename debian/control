@@ -1,0 +1,20 @@
+Source: rrep
+Section: utils
+Priority: optional
+Maintainer: Arno Onken <asnelt@asnelt.org>
+Build-Depends: debhelper (>= 9), autotools-dev, gettext
+Standards-Version: 3.9.4
+Homepage: http://sourceforge.net/projects/rrep/
+Vcs-Git: git://git.code.sf.net/p/rrep/code -b debian
+Vcs-Browser: http://sourceforge.net/p/rrep/code/
+
+Package: rrep
+Architecture: any
+Pre-Depends: ${shlibs:Depends}
+Depends: ${misc:Depends}
+Description: recursive pattern replacement utility
+ rrep is a pattern replacement utility.  It comes with
+ support for regular expressions, recursive directory
+ processing, backup, simulation and prompting.  The
+ replacement string may contain special characters to
+ refer to portions of the matched pattern.
