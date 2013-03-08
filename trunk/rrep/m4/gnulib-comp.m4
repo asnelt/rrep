@@ -155,7 +155,6 @@ AC_DEFUN([gl_EARLY],
   # Code from module stdint:
   # Code from module stdio:
   # Code from module stdlib:
-  # Code from module strdup:
   # Code from module strdup-posix:
   # Code from module streq:
   # Code from module strerror:
@@ -512,12 +511,6 @@ AC_DEFUN([gl_INIT],
   gl_STDINT_H
   gl_STDIO_H
   gl_STDLIB_H
-  gl_FUNC_STRDUP
-  if test $ac_cv_func_strdup = no; then
-    AC_LIBOBJ([strdup])
-    gl_PREREQ_STRDUP
-  fi
-  gl_STRING_MODULE_INDICATOR([strdup])
   gl_FUNC_STRDUP_POSIX
   if test $ac_cv_func_strdup = no || test $REPLACE_STRDUP = 1; then
     AC_LIBOBJ([strdup])

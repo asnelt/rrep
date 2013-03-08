@@ -1,3 +1,8 @@
+2013-03-05 22:47  Arno Onken  <asnelt@asnelt.org>
+
+    * lib: Replaced obsolete GNU Gnulib module strdup with
+      strdup-posix.
+
 2013-02-26 10:57  Arno Onken  <asnelt@asnelt.org>
 
 	* rrep.in.1, rrep.texi: Reformatted documentation.
