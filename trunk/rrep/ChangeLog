@@ -1,3 +1,7 @@
+2013-03-16 21:48  Arno Onken  <asnelt@asnelt.org>
+
+    * rrep.c, pattern.c: Silence compiler warnings.
+
 2013-03-05 22:47  Arno Onken  <asnelt@asnelt.org>
 
     * lib: Replaced obsolete GNU Gnulib module strdup with
