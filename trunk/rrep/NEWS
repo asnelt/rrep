@@ -1,5 +1,6 @@
 Version 1.3.6
   - Silenced compiler warnings.
+  - Updated all files in build-aux.
 
 Version 1.3.5
   - Replaced obsolete GNU Gnulib module strdup with strdup-posix.
