@@ -1,5 +1,5 @@
 /* pattern.c - pattern and replacement routines for rrep.
-   Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2013 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -43,8 +43,8 @@ check_whole (const char *line, const char *start, size_t len)
 	return false;
 
       c = *(start-1);
-      if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z'
-	  || c >= '0' && c <= '9' || c == '_')
+      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+	  || (c >= '0' && c <= '9') || c == '_')
 	return false;
     }
 
@@ -55,8 +55,8 @@ check_whole (const char *line, const char *start, size_t len)
       if (options & OPT_WHOLE_LINE)
 	return false;
 
-      if (c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z'
-	  || c >= '0' && c <= '9' || c == '_')
+      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+	  || (c >= '0' && c <= '9') || c == '_')
 	return false;
     }
 

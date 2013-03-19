@@ -1,3 +1,16 @@
+2013-03-19 20:14  Arno Onken  <asnelt@asnelt.org>
+
+    * lib: Updated GNU Gnulib modules.
+    * rrep.c: Changed inline to static inline functions.
+
+2013-03-18 17:53  Arno Onken  <asnelt@asnelt.org>
+
+    * build-aux: Update all files in directory.
+
+2013-03-16 21:48  Arno Onken  <asnelt@asnelt.org>
+
+    * rrep.c, pattern.c: Silence compiler warnings.
+
 2013-03-05 22:47  Arno Onken  <asnelt@asnelt.org>
 
     * lib: Replaced obsolete GNU Gnulib module strdup with

@@ -1,5 +1,5 @@
 /* rrep.c - source file of rrep, a search and replace utility.
-   Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2013 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ int options = 0;
 
 /* Writes string to fp or file_buffer and reallocates memory of file_buffer if
    necessary. *pos points to the end of the written string.  */
-inline int
+static inline int
 write_string (FILE *fp, const char *string, const size_t string_len,
 	      const char *file_name, char **pos)
 {
@@ -131,7 +131,7 @@ write_string (FILE *fp, const char *string, const size_t string_len,
 
 /* Writes the replacement to fp or file_buffer. *pos points to the end
    of the written string.  */
-inline int
+static inline int
 write_replacement (FILE *fp, const char *start, const regmatch_t *match,
 		   const replace_t *replacement, const char *file_name,
 		   char **pos)
@@ -572,11 +572,8 @@ process_dir (const char *relative_path, pattern_t *pattern,
 		    strcat (next_path, "/");
 		  strcat (next_path, entry->d_name);
 		  failure_flag |= process_dir (next_path, pattern, replacement);
-		  if (next_path != NULL)
-		    {
-		      free (next_path);
-		      next_path = NULL;
-		    }
+		  free (next_path);
+		  next_path = NULL;
 		  if (chdir (".."))
 		    {
 		      rrep_error (ERR_PROCESS_DIR, entry->d_name);
