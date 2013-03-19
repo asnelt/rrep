@@ -95,7 +95,7 @@ int options = 0;
 
 /* Writes string to fp or file_buffer and reallocates memory of file_buffer if
    necessary. *pos points to the end of the written string.  */
-inline int
+static inline int
 write_string (FILE *fp, const char *string, const size_t string_len,
 	      const char *file_name, char **pos)
 {
@@ -131,7 +131,7 @@ write_string (FILE *fp, const char *string, const size_t string_len,
 
 /* Writes the replacement to fp or file_buffer. *pos points to the end
    of the written string.  */
-inline int
+static inline int
 write_replacement (FILE *fp, const char *start, const regmatch_t *match,
 		   const replace_t *replacement, const char *file_name,
 		   char **pos)

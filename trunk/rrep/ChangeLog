@@ -1,6 +1,7 @@
-2013-03-19 19:27  Arno Onken  <asnelt@asnelt.org>
+2013-03-19 20:14  Arno Onken  <asnelt@asnelt.org>
 
     * lib: Updated GNU Gnulib modules.
+    * rrep.c: Changed inline to static inline functions.
 
 2013-03-18 17:53  Arno Onken  <asnelt@asnelt.org>
 
