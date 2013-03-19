@@ -3238,7 +3238,6 @@ gl_header_list="$gl_header_list sys/mman.h"
 gl_func_list="$gl_func_list mprotect"
 gl_func_list="$gl_func_list nl_langinfo"
 gl_header_list="$gl_header_list sys/param.h"
-gl_func_list="$gl_func_list alarm"
 gl_func_list="$gl_func_list wcscoll"
 gl_func_list="$gl_func_list secure_getenv"
 gl_header_list="$gl_header_list wchar.h"
@@ -6023,6 +6022,7 @@ fi
   # Code from module iconv:
   # Code from module iconv-h:
   # Code from module iconv_open:
+  # Code from module ignore-value:
   # Code from module include_next:
   # Code from module inline:
   # Code from module intprops:
@@ -12287,8 +12287,16 @@ _ACEOF
   REPLACE_RAISE=0;
 
 
+      ac_fn_c_check_decl "$LINENO" "alarm" "ac_cv_have_decl_alarm" "$ac_includes_default"
+if test "x$ac_cv_have_decl_alarm" = xyes; then :
+  ac_have_decl=1
+else
+  ac_have_decl=0
+fi
 
-
+cat >>confdefs.h <<_ACEOF
+#define HAVE_DECL_ALARM $ac_have_decl
+_ACEOF
 
 
 
@@ -13421,6 +13429,82 @@ fi
 cat >>confdefs.h <<_ACEOF
 #define HAVE_DECL_STRNLEN $ac_have_decl
 _ACEOF
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     if test $gl_cv_have_include_next = yes; then
+       gl_cv_next_sys_types_h='<'sys/types.h'>'
+     else
+       { $as_echo "$as_me:${as_lineno-$LINENO}: checking absolute name of <sys/types.h>" >&5
+$as_echo_n "checking absolute name of <sys/types.h>... " >&6; }
+if ${gl_cv_next_sys_types_h+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+               cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <sys/types.h>
+
+_ACEOF
+                                                                                                                        case "$host_os" in
+                 aix*) gl_absname_cpp="$ac_cpp -C" ;;
+                 *)    gl_absname_cpp="$ac_cpp" ;;
+               esac
+
+               case "$host_os" in
+                 mingw*)
+                                                                                                                                     gl_dirsep_regex='[/\\]'
+                   ;;
+                 *)
+                   gl_dirsep_regex='\/'
+                   ;;
+               esac
+                                             gl_make_literal_regex_sed='s,[]$^\\.*/[],\\&,g'
+
+               gl_header_literal_regex=`echo 'sys/types.h' \
+                                        | sed -e "$gl_make_literal_regex_sed"`
+               gl_absolute_header_sed="/${gl_dirsep_regex}${gl_header_literal_regex}/"'{
+                   s/.*"\(.*'"${gl_dirsep_regex}${gl_header_literal_regex}"'\)".*/\1/
+                   s|^/[^/]|//&|
+                   p
+                   q
+                 }'
+                                                            gl_cv_next_sys_types_h='"'`(eval "$gl_absname_cpp conftest.$ac_ext") 2>&5 |
+                      sed -n "$gl_absolute_header_sed"`'"'
+
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $gl_cv_next_sys_types_h" >&5
+$as_echo "$gl_cv_next_sys_types_h" >&6; }
+     fi
+     NEXT_SYS_TYPES_H=$gl_cv_next_sys_types_h
+
+     if test $gl_cv_have_include_next = yes || test $gl_cv_have_include_next = buggy; then
+       # INCLUDE_NEXT_AS_FIRST_DIRECTIVE='include_next'
+       gl_next_as_first_directive='<'sys/types.h'>'
+     else
+       # INCLUDE_NEXT_AS_FIRST_DIRECTIVE='include'
+       gl_next_as_first_directive=$gl_cv_next_sys_types_h
+     fi
+     NEXT_AS_FIRST_DIRECTIVE_SYS_TYPES_H=$gl_next_as_first_directive
+
 
 
 
@@ -19727,7 +19811,7 @@ else
             #include <locale.h>
             #include <limits.h>
             #include <string.h>
-            #if HAVE_ALARM
+            #if HAVE_DECL_ALARM
             # include <unistd.h>
             # include <signal.h>
             #endif
@@ -19742,7 +19826,7 @@ int result = 0;
             const char *s;
             struct re_registers regs;
 
-#if HAVE_ALARM
+#if HAVE_DECL_ALARM
             /* Some builds of glibc go into an infinite loop on this test.  */
             signal (SIGALRM, SIG_DFL);
             alarm (2);
@@ -21350,81 +21434,6 @@ _ACEOF
                      eval ac_cv_have_decl_$gl_func=yes
 fi
       done
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-     if test $gl_cv_have_include_next = yes; then
-       gl_cv_next_sys_types_h='<'sys/types.h'>'
-     else
-       { $as_echo "$as_me:${as_lineno-$LINENO}: checking absolute name of <sys/types.h>" >&5
-$as_echo_n "checking absolute name of <sys/types.h>... " >&6; }
-if ${gl_cv_next_sys_types_h+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-               cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <sys/types.h>
-
-_ACEOF
-                                                                                                                        case "$host_os" in
-                 aix*) gl_absname_cpp="$ac_cpp -C" ;;
-                 *)    gl_absname_cpp="$ac_cpp" ;;
-               esac
-
-               case "$host_os" in
-                 mingw*)
-                                                                                                                                     gl_dirsep_regex='[/\\]'
-                   ;;
-                 *)
-                   gl_dirsep_regex='\/'
-                   ;;
-               esac
-                                             gl_make_literal_regex_sed='s,[]$^\\.*/[],\\&,g'
-
-               gl_header_literal_regex=`echo 'sys/types.h' \
-                                        | sed -e "$gl_make_literal_regex_sed"`
-               gl_absolute_header_sed="/${gl_dirsep_regex}${gl_header_literal_regex}/"'{
-                   s/.*"\(.*'"${gl_dirsep_regex}${gl_header_literal_regex}"'\)".*/\1/
-                   s|^/[^/]|//&|
-                   p
-                   q
-                 }'
-                                                            gl_cv_next_sys_types_h='"'`(eval "$gl_absname_cpp conftest.$ac_ext") 2>&5 |
-                      sed -n "$gl_absolute_header_sed"`'"'
-
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $gl_cv_next_sys_types_h" >&5
-$as_echo "$gl_cv_next_sys_types_h" >&6; }
-     fi
-     NEXT_SYS_TYPES_H=$gl_cv_next_sys_types_h
-
-     if test $gl_cv_have_include_next = yes || test $gl_cv_have_include_next = buggy; then
-       # INCLUDE_NEXT_AS_FIRST_DIRECTIVE='include_next'
-       gl_next_as_first_directive='<'sys/types.h'>'
-     else
-       # INCLUDE_NEXT_AS_FIRST_DIRECTIVE='include'
-       gl_next_as_first_directive=$gl_cv_next_sys_types_h
-     fi
-     NEXT_AS_FIRST_DIRECTIVE_SYS_TYPES_H=$gl_next_as_first_directive
-
-
-
 
 
 
@@ -25794,7 +25803,7 @@ $as_echo X"$file" |
       case "$ac_file" in */Makefile.in)
         # Adjust a relative srcdir.
         ac_dir=`echo "$ac_file"|sed 's%/[^/][^/]*$%%'`
-        ac_dir_suffix="/`echo "$ac_dir"|sed 's%^\./%%'`"
+        ac_dir_suffix=/`echo "$ac_dir"|sed 's%^\./%%'`
         ac_dots=`echo "$ac_dir_suffix"|sed 's%/[^/]*%../%g'`
         # In autoconf-2.13 it is called $ac_given_srcdir.
         # In autoconf-2.50 it is called $srcdir.
