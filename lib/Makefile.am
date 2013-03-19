@@ -660,6 +660,13 @@ EXTRA_libgnu_a_SOURCES += iconv.c iconv_close.c iconv_open.c
 
 ## end   gnulib module iconv_open
 
+## begin gnulib module ignore-value
+
+
+EXTRA_DIST += ignore-value.h
+
+## end   gnulib module ignore-value
+
 ## begin gnulib module intprops
 
 

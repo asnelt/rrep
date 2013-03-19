@@ -1,3 +1,9 @@
+Version 1.3.6
+  - Silenced compiler warnings.
+  - Updated all files in build-aux.
+  - Updated GNU Gnulib modules.
+  - Changed inline to static inline functions.
+
 Version 1.3.5
   - Replaced obsolete GNU Gnulib module strdup with strdup-posix.
 

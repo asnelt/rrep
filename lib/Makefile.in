@@ -1101,13 +1101,14 @@ EXTRA_DIST = acl-internal.h acl.h acl_entries.c alloca.c alloca.in.h \
 	iconv.c iconv_close.c iconv_open-aix.gperf \
 	iconv_open-hpux.gperf iconv_open-irix.gperf \
 	iconv_open-osf.gperf iconv_open-solaris.gperf iconv_open.c \
-	intprops.h iswblank.c langinfo.in.h config.charset ref-add.sin \
-	ref-del.sin locale.in.h localeconv.c lstat.c malloc.c malloc.c \
-	malloca.h malloca.valgrind mbchar.h mbrtowc.c mbsinit.c \
-	mbsrtowcs-impl.h mbsrtowcs-state.c mbsrtowcs.c str-kmp.h \
-	mbtowc-impl.h mbtowc.c memchr.c memchr.valgrind msvc-inval.c \
-	msvc-inval.h msvc-nothrow.c msvc-nothrow.h nl_langinfo.c \
-	open.c dirent-private.h opendir.c pathmax.h quote.h quote.h \
+	ignore-value.h intprops.h iswblank.c langinfo.in.h \
+	config.charset ref-add.sin ref-del.sin locale.in.h \
+	localeconv.c lstat.c malloc.c malloc.c malloca.h \
+	malloca.valgrind mbchar.h mbrtowc.c mbsinit.c mbsrtowcs-impl.h \
+	mbsrtowcs-state.c mbsrtowcs.c str-kmp.h mbtowc-impl.h mbtowc.c \
+	memchr.c memchr.valgrind msvc-inval.c msvc-inval.h \
+	msvc-nothrow.c msvc-nothrow.h nl_langinfo.c open.c \
+	dirent-private.h opendir.c pathmax.h quote.h quote.h \
 	quotearg.h raise.c read.c dirent-private.h readdir.c realloc.c \
 	realloc.c regcomp.c regex.c regex.h regex_internal.c \
 	regex_internal.h regexec.c rpmatch.c safe-read.h safe-read.c \

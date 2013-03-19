@@ -94,6 +94,7 @@ AC_DEFUN([gl_EARLY],
   # Code from module iconv:
   # Code from module iconv-h:
   # Code from module iconv_open:
+  # Code from module ignore-value:
   # Code from module include_next:
   # Code from module inline:
   # Code from module intprops:
@@ -813,6 +814,7 @@ AC_DEFUN([gl_FILE_LIST], [
   lib/iconv_open-osf.gperf
   lib/iconv_open-solaris.gperf
   lib/iconv_open.c
+  lib/ignore-value.h
   lib/intprops.h
   lib/iswblank.c
   lib/langinfo.in.h
