@@ -1,14 +1,8 @@
-rrep (1.3.6-2) unstable; urgency=low
-
-  * Removed libacl1 from Depends to leave that to shlibs.
-
- -- Arno Onken <asnelt@asnelt.org>  Mon, 01 Jul 2013 11:46:00 +0100
-
-rrep (1.3.6-1) experimental; urgency=low
+rrep (1.3.6-1) unstable; urgency=low
 
   * New upstream release.
+  * Added Vcs-Git and Vcs-Browser fields.
   * Removed Pre-Depends field.
-  * Added libacl1 to Depends.
   * Added dh-autoreconf, libacl1-dev, texinfo to Build-Depends.
   * Added Free Software Foundation files to copyright.
   * Not distributing README anymore.
@@ -16,15 +10,10 @@ rrep (1.3.6-1) experimental; urgency=low
   * Added autoreconf and parallel to dh.
   * Improved watch file.
   * Removed dh_installinfo installation of info file.
+  * Removed libacl1 from Depends to leave that to shlibs.
+  * Changed distribution from experimental to unstable.
 
- -- Arno Onken <asnelt@asnelt.org>  Thu, 21 Mar 2013 10:59:00 +0100
-
-rrep (1.3.5-1) experimental; urgency=low
-
-  * New upstream release.
-  * Added Vcs-Git and Vcs-Browser fields.
-
- -- Arno Onken <asnelt@asnelt.org>  Fri, 08 Mar 2013 16:51:00 +0100
+ -- Arno Onken <asnelt@asnelt.org>  Mon, 01 Jul 2013 15:47:00 +0100
 
 rrep (1.3.4-1) experimental; urgency=low
 
