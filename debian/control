@@ -10,7 +10,7 @@ Vcs-Browser: http://sourceforge.net/p/rrep/code/
 
 Package: rrep
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libacl1
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: recursive pattern replacement utility
  rrep is a pattern replacement utility.  It comes with
  support for regular expressions, recursive directory
