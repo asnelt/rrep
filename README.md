@@ -2,7 +2,7 @@
 Recursive pattern replacement utility
 
 Description
-===========
+-----------
 
 This is rrep, a pattern replacement utility that searches input files for
 matches to a given pattern and replaces those matches by a given replacement
