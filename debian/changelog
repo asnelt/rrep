@@ -1,3 +1,13 @@
+rrep (1.3.6-2) unstable; urgency=high
+
+  * Reordered LDADD libraries to make the compiler aware of the
+    needed libacl references (Closes: #925819) 
+  * Removed obsolete man macro and fixed spelling mistake.
+  * Updated Standards-Version to 4.4.0.
+  * Fixed copyright format.
+
+ -- Arno Onken <asnelt@asnelt.org>  Sun, 18 Aug 2019 12:10:47 +0100
+
 rrep (1.3.6-1) unstable; urgency=low
 
   * New upstream release.

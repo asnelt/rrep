@@ -3,10 +3,10 @@ Section: utils
 Priority: optional
 Maintainer: Arno Onken <asnelt@asnelt.org>
 Build-Depends: debhelper (>= 9), autotools-dev, dh-autoreconf, gettext, libacl1-dev, texinfo
-Standards-Version: 3.9.4
-Homepage: http://sourceforge.net/projects/rrep/
-Vcs-Git: git://git.code.sf.net/p/rrep/code -b debian
-Vcs-Browser: http://sourceforge.net/p/rrep/code/
+Standards-Version: 4.4.0
+Homepage: https://sourceforge.net/projects/rrep/
+Vcs-Git: https://git.code.sf.net/p/rrep/code -b debian
+Vcs-Browser: https://sourceforge.net/p/rrep/code/
 
 Package: rrep
 Architecture: any
