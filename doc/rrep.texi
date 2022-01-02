@@ -211,7 +211,7 @@ This option can be used to specify a pattern beginning with @samp{-}.
 @item -h
 @itemx --help
 @cindex help
-Display a help message that descibes the command line options and exit
+Display a help message that describes the command line options and exit
 afterwards.
 
 @item -i

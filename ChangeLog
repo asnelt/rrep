@@ -1,25 +1,31 @@
+2019-08-18 12:10  Arno Onken  <asnelt@asnelt.org>
+
+	* Makefile.am: Reordered LDADD libraries to make the compiler aware
+	  of the needed libacl references.
+	* rrep.in.1: Removed obsolete man macro and fixed spelling mistake.
+
 2013-03-19 20:14  Arno Onken  <asnelt@asnelt.org>
 
-    * lib: Updated GNU Gnulib modules.
-    * rrep.c: Changed inline to static inline functions.
+	* lib: Updated GNU Gnulib modules.
+	* rrep.c: Changed inline to static inline functions.
 
 2013-03-18 17:53  Arno Onken  <asnelt@asnelt.org>
 
-    * build-aux: Update all files in directory.
+	* build-aux: Update all files in directory.
 
 2013-03-16 21:48  Arno Onken  <asnelt@asnelt.org>
 
-    * rrep.c, pattern.c: Silence compiler warnings.
+	* rrep.c, pattern.c: Silence compiler warnings.
 
 2013-03-05 22:47  Arno Onken  <asnelt@asnelt.org>
 
-    * lib: Replaced obsolete GNU Gnulib module strdup with
-      strdup-posix.
+	* lib: Replaced obsolete GNU Gnulib module strdup with
+	  strdup-posix.
 
 2013-02-26 10:57  Arno Onken  <asnelt@asnelt.org>
 
 	* rrep.in.1, rrep.texi: Reformatted documentation.
-    * lib: Updated GNU Gnulib modules.
+	* lib: Updated GNU Gnulib modules.
 
 2011-07-31 19:39  Arno Onken  <asnelt@asnelt.org>
 
