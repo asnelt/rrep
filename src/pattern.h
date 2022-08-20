@@ -40,7 +40,7 @@ typedef struct
    found, REG_NOMATCH if no match was found or regerror error value if a
    regerror occured. Match offsets are stored in match.  */
 extern int match_pattern (pattern_t *, const char *, const char *,
-			  regmatch_t *);
+                          regmatch_t *);
 
 /* Frees the memory that was allocated for the fields of pattern.  */
 extern void free_pattern (pattern_t *);

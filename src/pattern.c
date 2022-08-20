@@ -40,12 +40,12 @@ check_whole (const char *line, const char *start, size_t len)
   if (start > line)
     {
       if (options & OPT_WHOLE_LINE)
-	return false;
+        return false;
 
       c = *(start-1);
       if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
-	  || (c >= '0' && c <= '9') || c == '_')
-	return false;
+          || (c >= '0' && c <= '9') || c == '_')
+        return false;
     }
 
   /* Check end.  */
@@ -53,11 +53,11 @@ check_whole (const char *line, const char *start, size_t len)
   if (c != '\n')
     {
       if (options & OPT_WHOLE_LINE)
-	return false;
+        return false;
 
       if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
-	  || (c >= '0' && c <= '9') || c == '_')
-	return false;
+          || (c >= '0' && c <= '9') || c == '_')
+        return false;
     }
 
   return true;
@@ -68,7 +68,7 @@ check_whole (const char *line, const char *start, size_t len)
    regerror occured. Match offsets are stored in match.  */
 int
 match_pattern (pattern_t *pattern, const char *line, const char *start,
-	       regmatch_t *match)
+               regmatch_t *match)
 {
   int i;
   const char *first; /* Start of first occurence of pattern->string.  */
@@ -79,33 +79,33 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
     {
       /* Prepare match.  */
       for (i = 1; i < 10; i++)
-	{
-	  match[i].rm_so = -1;
-	  match[i].rm_eo = -1;
-	}
+        {
+          match[i].rm_so = -1;
+          match[i].rm_eo = -1;
+        }
       /* Match string.  */
       first = start - pattern->string_len;
       do
-	{
-	  first += pattern->string_len;
-	  first = strstr (first, pattern->string);
-	}
+        {
+          first += pattern->string_len;
+          first = strstr (first, pattern->string);
+        }
       while (first != NULL && !check_whole (line, first, pattern->string_len));
 
       if (first == NULL)
-	{
-	  /* String not found.  */
-	  match[0].rm_so = -1;
-	  match[0].rm_eo = -1;
-	  return REG_NOMATCH;
-	}
+        {
+          /* String not found.  */
+          match[0].rm_so = -1;
+          match[0].rm_eo = -1;
+          return REG_NOMATCH;
+        }
       else
-	{
-	  /* Set offsets in match[0].  */
-	  match[0].rm_so = first - start;
-	  match[0].rm_eo = match[0].rm_so + pattern->string_len;
-	  return 0;
-	}
+        {
+          /* Set offsets in match[0].  */
+          match[0].rm_so = first - start;
+          match[0].rm_eo = match[0].rm_so + pattern->string_len;
+          return 0;
+        }
     }
   else
     {
@@ -113,35 +113,35 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
       match[0].rm_eo = 0;
       first = start - 1; /* Decrement due to increment in loop.  */
       do
-	{
-	  if (match[0].rm_eo == 0)
-	    {
-	      /* Initial iteration or found PATTERN has zero length.  */
-	      if (first >= start && (*first == '\n' || *first == '\0'))
-		  return REG_NOMATCH;
-	      first++;
-	    }
-	  else
-	    first += match[0].rm_eo;
-	  /* Set flags for regexec.  */
-	  if (first == line)
-	    eflags = 0;
-	  else
-	    eflags = REG_NOTBOL;
-	  errcode = regexec (pattern->compiled, first, 10, match, eflags);
-	}
+        {
+          if (match[0].rm_eo == 0)
+            {
+              /* Initial iteration or found PATTERN has zero length.  */
+              if (first >= start && (*first == '\n' || *first == '\0'))
+                  return REG_NOMATCH;
+              first++;
+            }
+          else
+            first += match[0].rm_eo;
+          /* Set flags for regexec.  */
+          if (first == line)
+            eflags = 0;
+          else
+            eflags = REG_NOTBOL;
+          errcode = regexec (pattern->compiled, first, 10, match, eflags);
+        }
       while (errcode == 0
-	     && !check_whole (line, first+match[0].rm_so,
-			      match[0].rm_eo-match[0].rm_so));
+             && !check_whole (line, first+match[0].rm_so,
+                              match[0].rm_eo-match[0].rm_so));
       /* Correct offsets.  */
       for (i = 0; i < 10; i++)
-	{
-	  if (match[i].rm_eo > -1)
-	    {
-	      match[i].rm_so += first - start;
-	      match[i].rm_eo += first - start;
-	    }
-	}
+        {
+          if (match[i].rm_eo > -1)
+            {
+              match[i].rm_so += first - start;
+              match[i].rm_eo += first - start;
+            }
+        }
 
       return errcode;
     }
@@ -229,12 +229,12 @@ free_replace (replace_t *replacement)
   if (replacement->part != NULL)
     {
       for (i=0; i < replacement->nsub+1; i++)
-	{
-	  if (replacement->part[i] != NULL)
-	    {
-	      free (replacement->part[i]);
-	    }
-	}
+        {
+          if (replacement->part[i] != NULL)
+            {
+              free (replacement->part[i]);
+            }
+        }
       free (replacement->part);
       replacement->part = NULL;
     }
@@ -260,7 +260,7 @@ parse_replace (const char *string, replace_t *replacement)
   /* Copy original string into replacement.  */
   replacement->string_len = strlen (string);
   replacement->string = (char *) malloc ((replacement->string_len + 1)
-					 * sizeof (char));
+                                         * sizeof (char));
   if (replacement->string == NULL)
     {
       rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
@@ -277,22 +277,22 @@ parse_replace (const char *string, replace_t *replacement)
   while (*next != '\0')
     {
       if (*next == '&')
-	nsub++;
+        nsub++;
       else if (*next == '\\')
-	{
-	  if (*(next+1) >= '1' && *(next+1) <= '9')
-	    nsub++;
-	  else if (*(next+1) != '&' && *(next+1) != 'n' && *(next+1) != '\\')
-	    {
-	      escape_substring[0] = '\\';
-	      escape_substring[1] = *(next+1);
-	      escape_substring[2] = '\0';
-	      rrep_error (ERR_UNKNOWN_ESCAPE, escape_substring);
-	      free_replace (replacement);
-	      return FAILURE;
-	    }
-	  next++;
-	}
+        {
+          if (*(next+1) >= '1' && *(next+1) <= '9')
+            nsub++;
+          else if (*(next+1) != '&' && *(next+1) != 'n' && *(next+1) != '\\')
+            {
+              escape_substring[0] = '\\';
+              escape_substring[1] = *(next+1);
+              escape_substring[2] = '\0';
+              rrep_error (ERR_UNKNOWN_ESCAPE, escape_substring);
+              free_replace (replacement);
+              return FAILURE;
+            }
+          next++;
+        }
       next++;
     }
 
@@ -330,23 +330,23 @@ parse_replace (const char *string, replace_t *replacement)
     {
       len++;
       if (*next == '\0' || *next == '&'
-	  || (*next == '\\' && *(next+1) >= '1' && *(next+1) <= '9'))
-	{
-	  replacement->part[i] = (char *) malloc (len * sizeof (char));
-	  if (replacement->part[i] == NULL)
-	    {
-	      rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
-	      free_replace (replacement);
-	      return FAILURE;
-	    }
-	  replacement->part_len[i] = len-1;
-	  len = 0;
-	  i++;
-	  if (*next == '\\')
-	    next++;
-	}
+          || (*next == '\\' && *(next+1) >= '1' && *(next+1) <= '9'))
+        {
+          replacement->part[i] = (char *) malloc (len * sizeof (char));
+          if (replacement->part[i] == NULL)
+            {
+              rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
+              free_replace (replacement);
+              return FAILURE;
+            }
+          replacement->part_len[i] = len-1;
+          len = 0;
+          i++;
+          if (*next == '\\')
+            next++;
+        }
       if (*next == '\0')
-	break;
+        break;
       next++;
     }
 
@@ -357,41 +357,41 @@ parse_replace (const char *string, replace_t *replacement)
   while (true)
     {
       if (*next == '\0')
-	{
-	  replacement->part[i][j] = '\0';
-	  break;
-	}
+        {
+          replacement->part[i][j] = '\0';
+          break;
+        }
       else if (*next == '&')
-	{
-	  replacement->part[i][j] = '\0';
-	  replacement->sub[i] = 0;
-	  i++;
-	  j = 0;
-	}
+        {
+          replacement->part[i][j] = '\0';
+          replacement->sub[i] = 0;
+          i++;
+          j = 0;
+        }
       else if (*next == '\\')
-	{
-	  if (*(next+1) >= '1' && *(next+1) <= '9')
-	    {
-	      replacement->part[i][j] = '\0';
-	      replacement->sub[i] = *(next+1)-'0';
-	      i++;
-	      j = 0;
-	    }
-	  else
-	    {
-	      if (*(next+1) == 'n')
-		replacement->part[i][j] = '\n';
-	      else
-		replacement->part[i][j] = *(next+1);
-	      j++;
-	    }
-	  next++;
-	}
+        {
+          if (*(next+1) >= '1' && *(next+1) <= '9')
+            {
+              replacement->part[i][j] = '\0';
+              replacement->sub[i] = *(next+1)-'0';
+              i++;
+              j = 0;
+            }
+          else
+            {
+              if (*(next+1) == 'n')
+                replacement->part[i][j] = '\n';
+              else
+                replacement->part[i][j] = *(next+1);
+              j++;
+            }
+          next++;
+        }
       else
-	{
-	  replacement->part[i][j] = *next;
-	  j++;
-	}
+        {
+          replacement->part[i][j] = *next;
+          j++;
+        }
 
       next++;
     }

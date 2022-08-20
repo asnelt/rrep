@@ -50,7 +50,7 @@ void
 print_usage ()
 {
   printf (_("Usage: %s [OPTION]... PATTERN REPLACEMENT [FILE]...\n"),
-	  program_name);
+          program_name);
 }
 
 /* Prints the help.  */
@@ -66,7 +66,7 @@ contain the special character & to refer to that portion of the pattern space\n\
 which matched, and the special escapes \\1 through \\9 to refer to the\n\
 corresponding matching sub-expressions in PATTERN.\n"));
   printf (_("Example: %s 'hello world' 'Hello, World!' menu.h main.c\n"),
-	  program_name);
+          program_name);
   printf ("\n");
   printf (_("\
 Options:\n\
@@ -101,7 +101,7 @@ Options:\n\
   printf (_("\
 With no FILE, or when FILE is -, read standard input and write to standard\n\
 output.  Exit status is %d if any error occurs, %d otherwise.\n"), EXIT_FAILURE,
-	  EXIT_SUCCESS);
+          EXIT_SUCCESS);
   printf ("\n");
   printf (_("\
 The backup suffix is ~, unless set with --suffix or SIMPLE_BACKUP_SUFFIX.\n\
@@ -135,122 +135,122 @@ rrep_error (const int errcode, const char *file_name)
     {
     case ERR_PROCESS_ARG:
       fprintf (stderr, _("%s: %s: Could not process argument: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_PROCESS_DIR:
       fprintf (stderr, _("%s: %s: Could not process directory: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_PATTERN:
       fprintf (stderr, _("%s: PATTERN must have at least one character\n"),
-	       program_name);
+               program_name);
       break;
     case ERR_UNKNOWN_ESCAPE:
       fprintf (stderr, _("%s: %s: Unknown escape sequence in REPLACEMENT\n"),
-	       program_name, file_name);
+               program_name, file_name);
       break;
     case ERR_SAVE_DIR:
       fprintf (stderr, _("%s: Could not save current working directory: "),
-	       program_name);
+               program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_SUFFIX:
       fprintf (stderr, _("%s: Could not allocate memory for suffix: "),
-	       program_name);
+               program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_BUFFER:
       fprintf (stderr, _("%s: Could not allocate memory for buffer: "),
-	       program_name);
+               program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_FILEBUFFER: 
       fprintf (stderr, _("%s: %s: Could not allocate memory for file_buffer: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_ALLOC_FILELIST:
       fprintf (stderr, _("%s: Could not allocate memory for file_list: "),
-	       program_name);
+               program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_PATHBUFFER:
       fprintf (stderr, _("%s: %s: Could not allocate memory for next_path: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_ALLOC_PATTERN:
       fprintf (stderr, _("%s: Could not allocate memory for pattern: "),
-	       program_name);
+               program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_REPLACEMENT:
       fprintf (stderr, _("%s: Could not allocate memory for replacement: "),
-	       program_name);
+               program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_BACKUP:
       fprintf (stderr, _("\
 %s: %s: Could not allocate memory for backup string: "), program_name,
-	       file_name);
+               file_name);
       perror (NULL);
       break;
     case ERR_REALLOC_BUFFER:
       fprintf (stderr, _("%s: %s: Could not reallocate memory for buffer: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_REALLOC_FILEBUFFER:
       fprintf (stderr, _("\
 %s: %s: Could not reallocate memory for file_buffer: "), program_name,
-	       file_name);
+               file_name);
       perror (NULL);
       break;
     case ERR_MEMORY:
       fprintf (stderr, _("%s: %s: Not enough memory to process file: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_OPEN_READ:
       fprintf (stderr, _("%s: %s: Could not open file for reading: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_OPEN_WRITE:
       fprintf (stderr, _("%s: %s: Could not open file for writing: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_OPEN_DIR:
       fprintf (stderr, _("%s: Could not open directory: "),
-	       program_name);
+               program_name);
       perror (NULL);
       break;
     case ERR_READ_FILE:
       fprintf (stderr, _("%s: %s: Could not read file: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_READ_TEMP:
       fprintf (stderr, _("%s: %s: Could not read temporary file: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_WRITE_BACKUP:
       fprintf (stderr, _("%s: %s: Could not write backup file: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_OVERWRITE:
       fprintf (stderr, _("%s: %s: Could not overwrite file: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     case ERR_KEEP_TIMES:
       fprintf (stderr, _("%s: %s: Could keep file times: "),
-	       program_name, file_name);
+               program_name, file_name);
       perror (NULL);
       break;
     }
@@ -283,7 +283,7 @@ print_dir_skip (const char *file_name)
 {
   if (!(options & OPT_QUIET))
     printf (_("%s: %s: Omitting directory\n"), program_name,
-	    file_name);
+            file_name);
 }
 
 /* Prints the simulation message.  */
