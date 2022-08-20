@@ -136,8 +136,8 @@ am_rrep_OBJECTS = rrep.$(OBJEXT) messages.$(OBJEXT) bufferio.$(OBJEXT) \
 rrep_OBJECTS = $(am_rrep_OBJECTS)
 rrep_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
-rrep_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) ../lib/libgnu.a
+rrep_DEPENDENCIES = ../lib/libgnu.a $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__depfiles_maybe = depfiles
@@ -974,6 +974,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -985,7 +986,7 @@ top_srcdir = @top_srcdir@
 rrep_SOURCES = rrep.c messages.c bufferio.c pattern.c
 noinst_HEADERS = bufferio.h messages.h pattern.h rrep.h
 AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\" -I$(top_builddir)/lib -I$(top_srcdir)/lib
-LDADD = $(LIB_ACL) $(LIBICONV) $(LIBINTL) ../lib/libgnu.a
+LDADD = ../lib/libgnu.a $(LIB_ACL) $(LIBICONV) $(LIBINTL)
 all: all-am
 
 .SUFFIXES:

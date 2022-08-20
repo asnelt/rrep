@@ -1,3 +1,7 @@
+2022-08-20 23:02  Arno Onken  <asnelt@asnelt.org>
+
+	* Makefile.in: Updated file for reordered libraries.
+
 2022-08-20 21:34  Arno Onken  <asnelt@asnelt.org>
 
 	* bufferio.c, messages.c, pattern.c, pattern.h, rrep.c: Replaced
