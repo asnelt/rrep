@@ -1,3 +1,7 @@
+2022-09-03 18:50  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.info, rrep.texi, NEWS: Corrected GFDL license text.
+
 2022-08-27 15:43  Arno Onken  <asnelt@asnelt.org>
 
 	* rrep.texi: Fixed character omission.
