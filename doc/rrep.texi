@@ -211,7 +211,7 @@ This option can be used to specify a pattern beginning with @samp{-}.
 @item -h
 @itemx --help
 @cindex help
-Display a help message that descibes the command line options and exit
+Display a help message that describes the command line options and exit
 afterwards.
 
 @item -i
@@ -355,7 +355,7 @@ If @samp{/home/user/hello} is a directory, then the @samp{-r} option causes
 @samp{/home/user/hello} as well.
 However, files and directories starting with the @samp{.} character and binary
 files are ignored.
-Moreover, the @samp{--include=*c} option causes @command{rrep} to process only
+Moreover, the @samp{--include=*.c} option causes @command{rrep} to process only
 files with file names that end with @samp{.c}.
 
 

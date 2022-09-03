@@ -1,7 +1,7 @@
 Description: Reorder LDADD libraries
  The patch reorders the LDADD libraries to make the compiler aware of the
  needed libacl references.  GCC-9 uses the --as-needed flag by default which
- does not the detect the required references when using the old order.
+ does not detect the required references when using the old order.
 Author: Arno Onken <asnelt@asnelt.org>
 Bug-Debian: https://bugs.debian.org/925819
 Index: rrep-1.3.6/src/Makefile.am

@@ -2,8 +2,10 @@ Source: rrep
 Section: utils
 Priority: optional
 Maintainer: Arno Onken <asnelt@asnelt.org>
-Build-Depends: debhelper (>= 9), autotools-dev, dh-autoreconf, gettext, libacl1-dev, texinfo
-Standards-Version: 4.4.0
+Build-Depends: debhelper (>= 13), debhelper-compat (= 13), gettext,
+ libacl1-dev, texinfo
+Rules-Requires-Root: no
+Standards-Version: 4.6.1
 Homepage: https://sourceforge.net/projects/rrep/
 Vcs-Git: https://git.code.sf.net/p/rrep/code -b debian
 Vcs-Browser: https://sourceforge.net/p/rrep/code/
