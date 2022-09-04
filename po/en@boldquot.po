@@ -42,7 +42,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. This is a proper name. See the gettext manual, section Names.
+#. This is a proper name.  See the gettext manual, section Names.
 #: src/messages.c:33
 msgid "Arno Onken"
 msgstr "Arno Onken"
@@ -335,9 +335,9 @@ msgstr "Simulation mode: No files are modified.\n"
 msgid "PATTERN found in the following files:\n"
 msgstr "PATTERN found in the following files:\n"
 
-#. TRANSLATORS: This is a user prompt. In English the user can answer with y
-#. for 'yes' or n for 'no'. [y/n] should be translated as well.
+#. TRANSLATORS: This is a user prompt.  In English the user can answer with y
+#. for 'yes' or n for 'no'.  [y/n] should be translated as well.
 #: src/messages.c:306
 #, c-format
-msgid "Pattern found in %s. Replace pattern [y/n]? "
-msgstr "Pattern found in %s. Replace pattern [y/n]? "
+msgid "Pattern found in %s.  Replace pattern [y/n]? "
+msgstr "Pattern found in %s.  Replace pattern [y/n]? "

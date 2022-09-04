@@ -3,6 +3,7 @@ Version ?.?.?
     references.
   - Removed obsolete man macro, fixed spelling mistake and character omission.
   - Corrected GFDL license text.
+  - Improved comment formatting.
 
 Version 1.3.6
   - Silenced compiler warnings.

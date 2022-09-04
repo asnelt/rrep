@@ -94,7 +94,7 @@ enum backup_type backup_method = no_backups;
 int options = 0;
 
 /* Writes string to fp or file_buffer and reallocates memory of file_buffer if
-   necessary. *pos points to the end of the written string.  */
+   necessary.  *pos points to the end of the written string.  */
 static inline int
 write_string (FILE *fp, const char *string, const size_t string_len,
               const char *file_name, char **pos)
@@ -129,7 +129,7 @@ write_string (FILE *fp, const char *string, const size_t string_len,
   return SUCCESS;
 }
 
-/* Writes the replacement to fp or file_buffer. *pos points to the end
+/* Writes the replacement to fp or file_buffer.  *pos points to the end
    of the written string.  */
 static inline int
 write_replacement (FILE *fp, const char *start, const regmatch_t *match,
@@ -624,7 +624,7 @@ process_file_list (char **file_list, const size_t file_counter,
       rrep_error (ERR_SAVE_DIR, NULL);
       failure_flag = true;
     }
-  
+
   /* Process file list.  */
   for (i = 0; i < file_counter; i++)
     {

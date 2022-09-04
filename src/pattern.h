@@ -36,9 +36,9 @@ typedef struct
   size_t nsub; /* Number of subpatterns in replacement.  */
 } replace_t;
 
-/* Matches regular expression or string in start. Returns 0 if a match was
+/* Matches regular expression or string in start.  Returns 0 if a match was
    found, REG_NOMATCH if no match was found or regerror error value if a
-   regerror occured. Match offsets are stored in match.  */
+   regerror occurred.  Match offsets are stored in match.  */
 extern int match_pattern (pattern_t *, const char *, const char *,
                           regmatch_t *);
 
@@ -52,7 +52,7 @@ extern int parse_pattern (const char *, pattern_t *, int);
 /* Frees the memory that was allocated for the fields of replacement.  */
 extern void free_replace (replace_t *);
 
-/* Prepares replacement string for quick processing. The string can contain
-   escape sequences which are replaced in this function. Moreover, the string
-   is split into substrings. The result is stored in replacement.  */
+/* Prepares replacement string for quick processing.  The string can contain
+   escape sequences which are replaced in this function.  Moreover, the string
+   is split into substrings.  The result is stored in replacement.  */
 extern int parse_replace (const char *, replace_t *);

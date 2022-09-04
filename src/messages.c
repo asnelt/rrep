@@ -301,9 +301,9 @@ print_dry ()
 bool
 prompt_user (const char *file_name)
 {
-  /* TRANSLATORS: This is a user prompt. In English the user can answer with y
-     for 'yes' or n for 'no'. [y/n] should be translated as well.  */
-  printf (_("Pattern found in %s. Replace pattern [y/n]? "), file_name);
+  /* TRANSLATORS: This is a user prompt.  In English the user can answer with y
+     for 'yes' or n for 'no'.  [y/n] should be translated as well.  */
+  printf (_("Pattern found in %s.  Replace pattern [y/n]? "), file_name);
 
   return yesno ();
 }

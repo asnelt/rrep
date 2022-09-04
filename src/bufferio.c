@@ -26,7 +26,7 @@
 
 /* Pointer to buffer.  */
 char *buffer = NULL;
-/* Size of  buffer.  */
+/* Size of buffer.  */
 size_t buffer_size = 0;
 
 /* Pointer to buffer for tmpfile replacement.  */
@@ -35,10 +35,10 @@ char *file_buffer = NULL;
 size_t file_buffer_size = 0;
 
 
-/* Read in a buffered line from fp. The line starts at *line and has
-   length *line_len. Line delimiters are '\n' and, if binary files are not
-   ignored, '\0'. If a line could be placed at the line pointer, SUCCESS is
-   returned. Otherwise, if the end of file was reached END_REACHED is returned
+/* Read in a buffered line from fp.  The line starts at *line and has
+   length *line_len.  Line delimiters are '\n' and, if binary files are not
+   ignored, '\0'.  If a line could be placed at the line pointer, SUCCESS is
+   returned.  Otherwise, if the end of file was reached END_REACHED is returned
    or if an error occurred FAILURE is returned.  */
 int
 read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
@@ -131,7 +131,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
               buffer = tmp;
               buffer_size += INIT_BUFFER_SIZE;
 
-              /* fill allocated memory */
+              /* Fill allocated memory.  */
               nr = fread (buffer+search_pos, sizeof (char),
                           INIT_BUFFER_SIZE, fp);
               if (nr != INIT_BUFFER_SIZE && ferror (fp))

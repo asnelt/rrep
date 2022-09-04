@@ -63,15 +63,15 @@ check_whole (const char *line, const char *start, size_t len)
   return true;
 }
 
-/* Matches regular expression or string in start. Returns 0 if a match was
+/* Matches regular expression or string in start.  Returns 0 if a match was
    found, REG_NOMATCH if no match was found or regerror error value if a
-   regerror occured. Match offsets are stored in match.  */
+   regerror occurred.  Match offsets are stored in match.  */
 int
 match_pattern (pattern_t *pattern, const char *line, const char *start,
                regmatch_t *match)
 {
   int i;
-  const char *first; /* Start of first occurence of pattern->string.  */
+  const char *first; /* Start of first occurrence of pattern->string.  */
   int errcode; /* Return value of regexec.  */
   int eflags; /* Flags for regexec.  */
 
@@ -245,9 +245,9 @@ free_replace (replace_t *replacement)
     }
 }
 
-/* Prepares replacement string for quick processing. The string can contain
-   escape sequences which are replaced in this function. Moreover, the string
-   is split into substrings. The result is stored in replacement.  */
+/* Prepares replacement string for quick processing.  The string can contain
+   escape sequences which are replaced in this function.  Moreover, the string
+   is split into substrings.  The result is stored in replacement.  */
 int
 parse_replace (const char *string, replace_t *replacement)
 {
@@ -272,7 +272,7 @@ parse_replace (const char *string, replace_t *replacement)
     return SUCCESS;
 
   /* Do three swipes over string.  */
-  /* First swipe: count number of subpatterns.  */
+  /* First swipe: Count number of subpatterns.  */
   next = string;
   while (*next != '\0')
     {
@@ -322,7 +322,7 @@ parse_replace (const char *string, replace_t *replacement)
       return FAILURE;
     }
 
-  /* Second swipe: allocate memory for substrings.  */
+  /* Second swipe: Allocate memory for substrings.  */
   next = string;
   len = 0;
   i = 0;
@@ -350,7 +350,7 @@ parse_replace (const char *string, replace_t *replacement)
       next++;
     }
 
-  /* Third swipe: extract substrings.  */
+  /* Third swipe: Extract substrings.  */
   next = string;
   i = 0;
   j = 0;

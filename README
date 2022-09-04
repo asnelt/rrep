@@ -6,8 +6,8 @@
 
 This is rrep, a pattern replacement utility that searches input files for
 matches to a given pattern and replaces those matches by a given replacement
-string. The replacement string may contain special characters to refer to
-portions of the matched pattern. rrep comes with support for regular
+string.  The replacement string may contain special characters to refer to
+portions of the matched pattern.  rrep comes with support for regular
 expressions, recursive directory processing, simulation, prompting and much
 more.
 
