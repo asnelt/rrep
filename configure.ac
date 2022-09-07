@@ -1,7 +1,7 @@
 dnl
 dnl autoconf input file for ``rrep''
 dnl
-dnl Copyright (C) 2011, 2013 Arno Onken <asnelt@asnelt.org>
+dnl Copyright (C) 2011, 2013, 2022 Arno Onken <asnelt@asnelt.org>
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by

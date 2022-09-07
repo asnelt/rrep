@@ -2,7 +2,7 @@ This is rrep.info, produced by makeinfo version 4.13 from rrep.texi.
 
 This file documents the `rrep' utility which replaces patterns in files.
 
-   Copyright (C) 2011, 2013 Arno Onken
+   Copyright (C) 2011, 2013, 2019, 2022 Arno Onken
 
      Permission is granted to copy, distribute and/or modify this document
      under the terms of the GNU Free Documentation License, Version 1.3
@@ -29,7 +29,7 @@ The `rrep' utility replaces patterns in files.
    This file documents the `rrep' utility which replaces patterns in
 files.
 
-   Copyright (C) 2011, 2013 Arno Onken
+   Copyright (C) 2011, 2013, 2019, 2022 Arno Onken
 
      Permission is granted to copy, distribute and/or modify this document
      under the terms of the GNU Free Documentation License, Version 1.3

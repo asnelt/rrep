@@ -11,7 +11,7 @@
 @copying
 This file documents the @command{rrep} utility which replaces patterns in files.
 
-Copyright @copyright{} 2011, 2013 Arno Onken
+Copyright @copyright{} 2011, 2013, 2019, 2022 Arno Onken
 
 @quotation
 Permission is granted to copy, distribute and/or modify this

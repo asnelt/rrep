@@ -1,6 +1,6 @@
 # Process this file with automake to create Makefile.in
 #
-# Copyright 2011 Arno Onken <asnelt@asnelt.org>
+# Copyright 2011, 2019 Arno Onken <asnelt@asnelt.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

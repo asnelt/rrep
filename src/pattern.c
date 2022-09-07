@@ -1,5 +1,5 @@
 /* pattern.c - pattern and replacement routines for rrep.
-   Copyright (C) 2011, 2013 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2013, 2022 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

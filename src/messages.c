@@ -1,5 +1,5 @@
 /* messages.c - message routines for rrep.
-   Copyright (C) 2011, 2013 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2013, 2022 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ print_version ()
 {
   printf ("%s\n\n", PACKAGE_STRING);
   printf (_("\
-Copyright (C) 2011, 2013 %s\n\
+Copyright (C) 2011, 2013, 2019, 2022 %s\n\
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\
 This is free software: you are free to change and redistribute it.\n\
 There is NO WARRANTY, to the extent permitted by law.\n"), AUTHORS);
