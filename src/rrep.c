@@ -280,7 +280,7 @@ backup_file (const char *file_name)
     return SUCCESS;
 
   /* Generate string for backup file name.  */
-  backup_name = find_backup_file_name (file_name, backup_method);
+  backup_name = find_backup_file_name (AT_FDCWD, file_name, backup_method);
   if (backup_name == NULL)
     {
       rrep_error (ERR_ALLOC_BACKUP, file_name);

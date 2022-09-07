@@ -4,6 +4,8 @@ Version ?.?.?
   - Removed obsolete man macro, fixed spelling mistake and character omission.
   - Corrected GFDL license text.
   - Improved comment formatting.
+  - Updated GNU Gnulib modules.
+  - Replaced obsolete GNU Gnulib module gettext with gettext-h.
 
 Version 1.3.6
   - Silenced compiler warnings.

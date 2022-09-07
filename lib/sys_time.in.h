@@ -1,19 +1,19 @@
 /* Provide a more complete sys/time.h.
 
-   Copyright (C) 2007-2013 Free Software Foundation, Inc.
+   Copyright (C) 2007-2022 Free Software Foundation, Inc.
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
+   This file is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of the
+   License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
+   This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* Written by Paul Eggert.  */
 
@@ -23,6 +23,15 @@
 @PRAGMA_SYSTEM_HEADER@
 #endif
 @PRAGMA_COLUMNS@
+
+/* On Cygwin and on many BSDish systems, <sys/time.h> includes itself
+   recursively via <sys/select.h>.
+   Simply delegate to the system's header in this case; it is a no-op.
+   Without this extra ifdef, the C++ gettimeofday declaration below
+   would be a forward declaration in gnulib's nested <sys/time.h>.  */
+#if defined _CYGWIN_SYS_TIME_H || defined _SYS_TIME_H || defined _SYS_TIME_H_
+# @INCLUDE_NEXT@ @NEXT_SYS_TIME_H@
+#else
 
 /* The include_next requires a split double-inclusion guard.  */
 #if @HAVE_SYS_TIME_H@
@@ -100,6 +109,17 @@ _GL_CXXALIAS_SYS_CAST (gettimeofday, int,
                        (struct timeval *restrict, void *restrict));
 # endif
 _GL_CXXALIASWARN (gettimeofday);
+# if defined __cplusplus && defined GNULIB_NAMESPACE
+namespace GNULIB_NAMESPACE {
+  typedef ::timeval
+#  undef timeval
+    timeval;
+#  if @REPLACE_STRUCT_TIMEVAL@
+#   define timeval rpl_timeval
+  typedef ::timeval timeval;
+#  endif
+}
+# endif
 #elif defined GNULIB_POSIXCHECK
 # undef gettimeofday
 # if HAVE_RAW_DECL_GETTIMEOFDAY
@@ -115,7 +135,7 @@ _GL_WARN_ON_USE (gettimeofday, "gettimeofday is unportable - "
 #  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
 #   undef close
 #   define close close_used_without_including_unistd_h
-#  else
+#  elif !defined __clang__
      _GL_WARN_ON_USE (close,
                       "close() used without including <unistd.h>");
 #  endif
@@ -200,4 +220,5 @@ _GL_WARN_ON_USE (gettimeofday, "gettimeofday is unportable - "
 #endif
 
 #endif /* _@GUARD_PREFIX@_SYS_TIME_H */
+#endif /* _CYGWIN_SYS_TIME_H */
 #endif /* _@GUARD_PREFIX@_SYS_TIME_H */

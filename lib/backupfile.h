@@ -1,11 +1,11 @@
 /* backupfile.h -- declarations for making Emacs style backup file names
 
-   Copyright (C) 1990-1992, 1997-1999, 2003-2004, 2009-2013 Free Software
+   Copyright (C) 1990-1992, 1997-1999, 2003-2004, 2009-2022 Free Software
    Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -14,14 +14,19 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #ifndef BACKUPFILE_H_
-# define BACKUPFILE_H_
+#define BACKUPFILE_H_
 
-# ifdef __cplusplus
+/* Get AT_FDCWD, as a convenience for users of this file.  */
+#include <fcntl.h>
+
+#include <stdlib.h>
+
+#ifdef __cplusplus
 extern "C" {
-# endif
+#endif
 
 
 /* When to make backup files. */
@@ -41,19 +46,23 @@ enum backup_type
   numbered_backups
 };
 
-# define VALID_BACKUP_TYPE(Type)        \
+#define VALID_BACKUP_TYPE(Type) \
   ((unsigned int) (Type) <= numbered_backups)
 
 extern char const *simple_backup_suffix;
 
-char *find_backup_file_name (char const *, enum backup_type);
+void set_simple_backup_suffix (char const *);
+char *backup_file_rename (int, char const *, enum backup_type)
+  _GL_ATTRIBUTE_MALLOC _GL_ATTRIBUTE_DEALLOC_FREE;
+char *find_backup_file_name (int, char const *, enum backup_type)
+  _GL_ATTRIBUTE_MALLOC _GL_ATTRIBUTE_DEALLOC_FREE
+  _GL_ATTRIBUTE_RETURNS_NONNULL;
 enum backup_type get_version (char const *context, char const *arg);
 enum backup_type xget_version (char const *context, char const *arg);
-void addext (char *, char const *, int);
 
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif
+#endif
 
 #endif /* ! BACKUPFILE_H_ */

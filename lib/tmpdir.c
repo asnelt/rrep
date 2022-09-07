@@ -1,19 +1,19 @@
-/* Copyright (C) 1999, 2001-2002, 2006, 2009-2013 Free Software Foundation,
+/* Copyright (C) 1999, 2001-2002, 2006, 2009-2022 Free Software Foundation,
    Inc.
    This file is part of the GNU C Library.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3 of the License, or
-   (at your option) any later version.
+   This file is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation, either version 3 of the
+   License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
+   This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* Extracted from sysdeps/posix/tempname.c.  */
 
@@ -42,25 +42,31 @@
 
 #include <sys/stat.h>
 
-#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
+#if defined _WIN32 && ! defined __CYGWIN__
 # define WIN32_LEAN_AND_MEAN  /* avoid including junk */
 # include <windows.h>
 #endif
 
 #include "pathmax.h"
 
+#if defined _WIN32 && ! defined __CYGWIN__
+/* Don't assume that UNICODE is not defined.  */
+# undef GetTempPath
+# define GetTempPath GetTempPathA
+#endif
+
 #if _LIBC
 # define struct_stat64 struct stat64
 #else
 # define struct_stat64 struct stat
-# define __secure_getenv secure_getenv
+# define __libc_secure_getenv secure_getenv
 # define __xstat64(version, path, buf) stat (path, buf)
 #endif
 
 /* Pathname support.
    ISSLASH(C)           tests whether C is a directory separator character.
  */
-#if defined _WIN32 || defined __WIN32__ || defined __CYGWIN__ || defined __EMX__ || defined __DJGPP__
+#if defined _WIN32 || defined __CYGWIN__ || defined __EMX__ || defined __DJGPP__
   /* Native Windows, Cygwin, OS/2, DOS */
 # define ISSLASH(C) ((C) == '/' || (C) == '\\')
 #else
@@ -89,6 +95,7 @@ path_search (char *tmpl, size_t tmpl_len, const char *dir, const char *pfx,
 {
   const char *d;
   size_t dlen, plen;
+  bool add_slash;
 
   if (!pfx || !pfx[0])
     {
@@ -104,7 +111,7 @@ path_search (char *tmpl, size_t tmpl_len, const char *dir, const char *pfx,
 
   if (try_tmpdir)
     {
-      d = __secure_getenv ("TMPDIR");
+      d = __libc_secure_getenv ("TMPDIR");
       if (d != NULL && direxists (d))
         dir = d;
       else if (dir != NULL && direxists (dir))
@@ -114,7 +121,7 @@ path_search (char *tmpl, size_t tmpl_len, const char *dir, const char *pfx,
     }
   if (dir == NULL)
     {
-#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
+#if defined _WIN32 && ! defined __CYGWIN__
       char dirbuf[PATH_MAX];
       DWORD retval;
 
@@ -139,16 +146,20 @@ path_search (char *tmpl, size_t tmpl_len, const char *dir, const char *pfx,
     }
 
   dlen = strlen (dir);
-  while (dlen >= 1 && ISSLASH (dir[dlen - 1]))
-    dlen--;                     /* remove trailing slashes */
+#ifdef __VMS
+  add_slash = 0;
+#else
+  add_slash = dlen != 0 && !ISSLASH (dir[dlen - 1]);
+#endif
 
   /* check we have room for "${dir}/${pfx}XXXXXX\0" */
-  if (tmpl_len < dlen + 1 + plen + 6 + 1)
+  if (tmpl_len < dlen + add_slash + plen + 6 + 1)
     {
       __set_errno (EINVAL);
       return -1;
     }
 
-  sprintf (tmpl, "%.*s/%.*sXXXXXX", (int) dlen, dir, (int) plen, pfx);
+  memcpy (tmpl, dir, dlen);
+  sprintf (tmpl + dlen, &"/%.*sXXXXXX"[!add_slash], (int) plen, pfx);
   return 0;
 }

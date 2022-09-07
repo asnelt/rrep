@@ -1,19 +1,19 @@
 /* Charset conversion.
-   Copyright (C) 2001-2007, 2010-2013 Free Software Foundation, Inc.
+   Copyright (C) 2001-2007, 2010-2022 Free Software Foundation, Inc.
    Written by Bruno Haible and Simon Josefsson.
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
+   This file is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of the
+   License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
+   This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 
@@ -193,11 +193,7 @@ mem_cd_iconv (const char *src, size_t srclen, iconv_t cd,
  fail:
   {
     if (result != *resultp)
-      {
-        int saved_errno = errno;
-        free (result);
-        errno = saved_errno;
-      }
+      free (result);
     return -1;
   }
 # undef tmpbufsize
@@ -385,12 +381,8 @@ str_cd_iconv (const char *src, iconv_t cd)
   return result;
 
  failed:
-  {
-    int saved_errno = errno;
-    free (result);
-    errno = saved_errno;
-    return NULL;
-  }
+  free (result);
+  return NULL;
 
 # endif
 }
@@ -441,11 +433,7 @@ str_iconv (const char *src, const char *from_codeset, const char *to_codeset)
         {
           if (iconv_close (cd) < 0)
             {
-              /* Return NULL, but free the allocated memory, and while doing
-                 that, preserve the errno from iconv_close.  */
-              int saved_errno = errno;
               free (result);
-              errno = saved_errno;
               return NULL;
             }
         }

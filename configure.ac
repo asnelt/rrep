@@ -33,6 +33,7 @@ dnl For gnulib.
 gl_EARLY
 gl_INIT
 
+AM_GNU_GETTEXT_VERSION([0.21])
 AM_GNU_GETTEXT([external])
 
 AC_CONFIG_FILES([

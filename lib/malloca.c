@@ -1,19 +1,19 @@
 /* Safe automatic memory allocation.
-   Copyright (C) 2003, 2006-2007, 2009-2013 Free Software Foundation, Inc.
-   Written by Bruno Haible <bruno@clisp.org>, 2003.
+   Copyright (C) 2003, 2006-2007, 2009-2022 Free Software Foundation, Inc.
+   Written by Bruno Haible <bruno@clisp.org>, 2003, 2018.
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
+   This file is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of the
+   License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
+   This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #define _GL_USE_STDLIB_ALLOC 1
 #include <config.h>
@@ -21,75 +21,57 @@
 /* Specification.  */
 #include "malloca.h"
 
-#include <stdint.h>
+#include <stdckdint.h>
 
+#include "idx.h"
 #include "verify.h"
 
 /* The speed critical point in this file is freea() applied to an alloca()
    result: it must be fast, to match the speed of alloca().  The speed of
    mmalloca() and freea() in the other case are not critical, because they
-   are only invoked for big memory sizes.  */
+   are only invoked for big memory sizes.
+   Here we use a bit in the address as an indicator, an idea by Ondřej Bílka.
+   malloca() can return three types of pointers:
+     - Pointers ≡ 0 mod 2*sa_alignment_max come from stack allocation.
+     - Pointers ≡ sa_alignment_max mod 2*sa_alignment_max come from heap
+       allocation.
+     - NULL comes from a failed heap allocation.  */
 
-#if HAVE_ALLOCA
-
-/* Store the mmalloca() results in a hash table.  This is needed to reliably
-   distinguish a mmalloca() result and an alloca() result.
-
-   Although it is possible that the same pointer is returned by alloca() and
-   by mmalloca() at different times in the same application, it does not lead
-   to a bug in freea(), because:
-     - Before a pointer returned by alloca() can point into malloc()ed memory,
-       the function must return, and once this has happened the programmer must
-       not call freea() on it anyway.
-     - Before a pointer returned by mmalloca() can point into the stack, it
-       must be freed.  The only function that can free it is freea(), and
-       when freea() frees it, it also removes it from the hash table.  */
-
-#define MAGIC_NUMBER 0x1415fb4a
-#define MAGIC_SIZE sizeof (int)
-/* This is how the header info would look like without any alignment
-   considerations.  */
-struct preliminary_header { void *next; char room[MAGIC_SIZE]; };
-/* But the header's size must be a multiple of sa_alignment_max.  */
-#define HEADER_SIZE \
-  (((sizeof (struct preliminary_header) + sa_alignment_max - 1) / sa_alignment_max) * sa_alignment_max)
-struct header { void *next; char room[HEADER_SIZE - sizeof (struct preliminary_header) + MAGIC_SIZE]; };
-verify (HEADER_SIZE == sizeof (struct header));
-/* We make the hash table quite big, so that during lookups the probability
-   of empty hash buckets is quite high.  There is no need to make the hash
-   table resizable, because when the hash table gets filled so much that the
-   lookup becomes slow, it means that the application has memory leaks.  */
-#define HASH_TABLE_SIZE 257
-static void * mmalloca_results[HASH_TABLE_SIZE];
-
-#endif
+/* Type for holding very small pointer differences.  */
+typedef unsigned char small_t;
+/* Verify that it is wide enough.  */
+verify (2 * sa_alignment_max - 1 <= (small_t) -1);
 
 void *
 mmalloca (size_t n)
 {
 #if HAVE_ALLOCA
-  /* Allocate one more word, that serves as an indicator for malloc()ed
-     memory, so that freea() of an alloca() result is fast.  */
-  size_t nplus = n + HEADER_SIZE;
-
-  if (nplus >= n)
+  /* Allocate one more word, used to determine the address to pass to freea(),
+     and room for the alignment ≡ sa_alignment_max mod 2*sa_alignment_max.  */
+  uintptr_t alignment2_mask = 2 * sa_alignment_max - 1;
+  int plus = sizeof (small_t) + alignment2_mask;
+  idx_t nplus;
+  if (!ckd_add (&nplus, n, plus) && !xalloc_oversized (nplus, 1))
     {
-      char *p = (char *) malloc (nplus);
+      char *mem = (char *) malloc (nplus);
 
-      if (p != NULL)
+      if (mem != NULL)
         {
-          size_t slot;
-
-          p += HEADER_SIZE;
-
-          /* Put a magic number into the indicator word.  */
-          ((int *) p)[-1] = MAGIC_NUMBER;
-
-          /* Enter p into the hash table.  */
-          slot = (uintptr_t) p % HASH_TABLE_SIZE;
-          ((struct header *) (p - HEADER_SIZE))->next = mmalloca_results[slot];
-          mmalloca_results[slot] = p;
-
+          uintptr_t umem = (uintptr_t)mem, umemplus;
+          /* The ckd_add avoids signed integer overflow on
+             theoretical platforms where UINTPTR_MAX <= INT_MAX.  */
+          ckd_add (&umemplus, umem, sizeof (small_t) + sa_alignment_max - 1);
+          idx_t offset = ((umemplus & ~alignment2_mask)
+                          + sa_alignment_max - umem);
+          void *vp = mem + offset;
+          small_t *p = vp;
+          /* Here p >= mem + sizeof (small_t),
+             and p <= mem + sizeof (small_t) + 2 * sa_alignment_max - 1
+             hence p + n <= mem + nplus.
+             So, the memory range [p, p+n) lies in the allocated memory range
+             [mem, mem + nplus).  */
+          p[-1] = offset;
+          /* p ≡ sa_alignment_max mod 2*sa_alignment_max.  */
           return p;
         }
     }
@@ -108,33 +90,24 @@ mmalloca (size_t n)
 void
 freea (void *p)
 {
-  /* mmalloca() may have returned NULL.  */
-  if (p != NULL)
+  /* Check argument.  */
+  if ((uintptr_t) p & (sa_alignment_max - 1))
     {
-      /* Attempt to quickly distinguish the mmalloca() result - which has
-         a magic indicator word - and the alloca() result - which has an
-         uninitialized indicator word.  It is for this test that sa_increment
-         additional bytes are allocated in the alloca() case.  */
-      if (((int *) p)[-1] == MAGIC_NUMBER)
-        {
-          /* Looks like a mmalloca() result.  To see whether it really is one,
-             perform a lookup in the hash table.  */
-          size_t slot = (uintptr_t) p % HASH_TABLE_SIZE;
-          void **chain = &mmalloca_results[slot];
-          for (; *chain != NULL;)
-            {
-              if (*chain == p)
-                {
-                  /* Found it.  Remove it from the hash table and free it.  */
-                  char *p_begin = (char *) p - HEADER_SIZE;
-                  *chain = ((struct header *) p_begin)->next;
-                  free (p_begin);
-                  return;
-                }
-              chain = &((struct header *) ((char *) *chain - HEADER_SIZE))->next;
-            }
-        }
-      /* At this point, we know it was not a mmalloca() result.  */
+      /* p was not the result of a malloca() call.  Invalid argument.  */
+      abort ();
+    }
+  /* Determine whether p was a non-NULL pointer returned by mmalloca().  */
+  if ((uintptr_t) p & sa_alignment_max)
+    {
+      void *mem = (char *) p - ((small_t *) p)[-1];
+      free (mem);
     }
 }
 #endif
+
+/*
+ * Hey Emacs!
+ * Local Variables:
+ * coding: utf-8
+ * End:
+ */
