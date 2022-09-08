@@ -138,7 +138,7 @@ write_replacement (FILE *fp, const char *start, const regmatch_t *match,
 {
   bool failure_flag = false;
   size_t i;
-  
+
   if (options & OPT_FIXED)
     {
       /* REPLACEMENT is a fixed string.  */
