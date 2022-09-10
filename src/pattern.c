@@ -272,7 +272,7 @@ parse_replace (const char *string, replace_t *replacement)
     return SUCCESS;
 
   /* Do three swipes over string.  */
-  /* First swipe: Count number of subpatterns.  */
+  /* First swipe: count number of subpatterns.  */
   next = string;
   while (*next != '\0')
     {
@@ -322,7 +322,7 @@ parse_replace (const char *string, replace_t *replacement)
       return FAILURE;
     }
 
-  /* Second swipe: Allocate memory for substrings.  */
+  /* Second swipe: allocate memory for substrings.  */
   next = string;
   len = 0;
   i = 0;
@@ -350,7 +350,7 @@ parse_replace (const char *string, replace_t *replacement)
       next++;
     }
 
-  /* Third swipe: Extract substrings.  */
+  /* Third swipe: extract substrings.  */
   next = string;
   i = 0;
   j = 0;

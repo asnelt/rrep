@@ -134,12 +134,12 @@ rrep_error (const int errcode, const char *file_name)
   switch (errcode)
     {
     case ERR_PROCESS_ARG:
-      fprintf (stderr, _("%s: %s: Could not process argument: "),
+      fprintf (stderr, _("%s: %s: could not process argument: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_PROCESS_DIR:
-      fprintf (stderr, _("%s: %s: Could not process directory: "),
+      fprintf (stderr, _("%s: %s: could not process directory: "),
                program_name, file_name);
       perror (NULL);
       break;
@@ -148,108 +148,108 @@ rrep_error (const int errcode, const char *file_name)
                program_name);
       break;
     case ERR_UNKNOWN_ESCAPE:
-      fprintf (stderr, _("%s: %s: Unknown escape sequence in REPLACEMENT\n"),
+      fprintf (stderr, _("%s: %s: unknown escape sequence in REPLACEMENT\n"),
                program_name, file_name);
       break;
     case ERR_SAVE_DIR:
-      fprintf (stderr, _("%s: Could not save current working directory: "),
+      fprintf (stderr, _("%s: could not save current working directory: "),
                program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_SUFFIX:
-      fprintf (stderr, _("%s: Could not allocate memory for suffix: "),
+      fprintf (stderr, _("%s: could not allocate memory for suffix: "),
                program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_BUFFER:
-      fprintf (stderr, _("%s: Could not allocate memory for buffer: "),
+      fprintf (stderr, _("%s: could not allocate memory for buffer: "),
                program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_FILEBUFFER:
-      fprintf (stderr, _("%s: %s: Could not allocate memory for file_buffer: "),
+      fprintf (stderr, _("%s: %s: could not allocate memory for file_buffer: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_ALLOC_FILELIST:
-      fprintf (stderr, _("%s: Could not allocate memory for file_list: "),
+      fprintf (stderr, _("%s: could not allocate memory for file_list: "),
                program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_PATHBUFFER:
-      fprintf (stderr, _("%s: %s: Could not allocate memory for next_path: "),
+      fprintf (stderr, _("%s: %s: could not allocate memory for next_path: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_ALLOC_PATTERN:
-      fprintf (stderr, _("%s: Could not allocate memory for pattern: "),
+      fprintf (stderr, _("%s: could not allocate memory for pattern: "),
                program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_REPLACEMENT:
-      fprintf (stderr, _("%s: Could not allocate memory for replacement: "),
+      fprintf (stderr, _("%s: could not allocate memory for replacement: "),
                program_name);
       perror (NULL);
       break;
     case ERR_ALLOC_BACKUP:
       fprintf (stderr, _("\
-%s: %s: Could not allocate memory for backup string: "), program_name,
+%s: %s: could not allocate memory for backup string: "), program_name,
                file_name);
       perror (NULL);
       break;
     case ERR_REALLOC_BUFFER:
-      fprintf (stderr, _("%s: %s: Could not reallocate memory for buffer: "),
+      fprintf (stderr, _("%s: %s: could not reallocate memory for buffer: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_REALLOC_FILEBUFFER:
       fprintf (stderr, _("\
-%s: %s: Could not reallocate memory for file_buffer: "), program_name,
+%s: %s: could not reallocate memory for file_buffer: "), program_name,
                file_name);
       perror (NULL);
       break;
     case ERR_MEMORY:
-      fprintf (stderr, _("%s: %s: Not enough memory to process file: "),
+      fprintf (stderr, _("%s: %s: not enough memory to process file: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_OPEN_READ:
-      fprintf (stderr, _("%s: %s: Could not open file for reading: "),
+      fprintf (stderr, _("%s: %s: could not open file for reading: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_OPEN_WRITE:
-      fprintf (stderr, _("%s: %s: Could not open file for writing: "),
+      fprintf (stderr, _("%s: %s: could not open file for writing: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_OPEN_DIR:
-      fprintf (stderr, _("%s: Could not open directory: "),
+      fprintf (stderr, _("%s: could not open directory: "),
                program_name);
       perror (NULL);
       break;
     case ERR_READ_FILE:
-      fprintf (stderr, _("%s: %s: Could not read file: "),
+      fprintf (stderr, _("%s: %s: could not read file: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_READ_TEMP:
-      fprintf (stderr, _("%s: %s: Could not read temporary file: "),
+      fprintf (stderr, _("%s: %s: could not read temporary file: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_WRITE_BACKUP:
-      fprintf (stderr, _("%s: %s: Could not write backup file: "),
+      fprintf (stderr, _("%s: %s: could not write backup file: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_OVERWRITE:
-      fprintf (stderr, _("%s: %s: Could not overwrite file: "),
+      fprintf (stderr, _("%s: %s: could not overwrite file: "),
                program_name, file_name);
       perror (NULL);
       break;
     case ERR_KEEP_TIMES:
-      fprintf (stderr, _("%s: %s: Could keep file times: "),
+      fprintf (stderr, _("%s: %s: could keep file times: "),
                program_name, file_name);
       perror (NULL);
       break;
@@ -274,7 +274,7 @@ print_regerror (const int errcode, regex_t *compiled)
 void
 print_confirmation (const char *file_name)
 {
-  printf (_("%s: Pattern replaced\n"), file_name);
+  printf (_("%s: pattern replaced\n"), file_name);
 }
 
 /* Prints directory omission.  */
@@ -282,7 +282,7 @@ void
 print_dir_skip (const char *file_name)
 {
   if (!(options & OPT_QUIET))
-    printf (_("%s: %s: Omitting directory\n"), program_name,
+    printf (_("%s: %s: omitting directory\n"), program_name,
             file_name);
 }
 
@@ -292,7 +292,7 @@ print_dry ()
 {
   if (options & OPT_DRY && !(options & OPT_QUIET))
     {
-      printf (_("Simulation mode: No files are modified.\n"));
+      printf (_("Simulation mode: no files are modified.\n"));
       printf (_("PATTERN found in the following files:\n"));
     }
 }
@@ -301,7 +301,7 @@ print_dry ()
 bool
 prompt_user (const char *file_name)
 {
-  /* TRANSLATORS: This is a user prompt.  In English the user can answer with y
+  /* TRANSLATORS: this is a user prompt.  In English the user can answer with y
      for 'yes' or n for 'no'.  [y/n] should be translated as well.  */
   printf (_("Pattern found in %s.  Replace pattern [y/n]? "), file_name);
 
