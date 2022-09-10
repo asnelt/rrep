@@ -166,7 +166,7 @@ rrep_error (const int errcode, const char *file_name)
                program_name);
       perror (NULL);
       break;
-    case ERR_ALLOC_FILEBUFFER: 
+    case ERR_ALLOC_FILEBUFFER:
       fprintf (stderr, _("%s: %s: Could not allocate memory for file_buffer: "),
                program_name, file_name);
       perror (NULL);
