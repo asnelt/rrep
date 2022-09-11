@@ -1,5 +1,5 @@
 /* messages.h - declarations for message functions for rrep.
-   Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2022 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ enum
     ERR_PROCESS_ARG, /* Could not process an argument.  */
     ERR_PROCESS_DIR, /* Could not process a directory.  */
     ERR_PATTERN, /* Error in PATTERN.  */
-    ERR_UNKNOWN_ESCAPE, /* Unknown escape sequence encountered. */
+    ERR_UNKNOWN_ESCAPE, /* Unknown escape sequence encountered.  */
     ERR_SAVE_DIR, /* Could not save a directory.  */
     ERR_ALLOC_SUFFIX, /* Error for allocating suffix string.  */
     ERR_ALLOC_BUFFER, /* Error for allocating buffer.  */

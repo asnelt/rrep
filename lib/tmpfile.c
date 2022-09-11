@@ -1,18 +1,18 @@
 /* Create a temporary file.
-   Copyright (C) 2007, 2009-2013 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2009-2022 Free Software Foundation, Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3 of the License, or
-   (at your option) any later version.
+   This file is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation, either version 3 of the
+   License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
+   This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* Written by Ben Pfaff. */
 
@@ -21,24 +21,44 @@
 /* Specification.  */
 #include <stdio.h>
 
-/* This replacement is used only on native Windows platforms.  */
-
 #include <errno.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/stat.h>
+#include <stdbool.h>
 
-#include <io.h>
+#if defined _WIN32 && ! defined __CYGWIN__
+/* A native Windows platform.  */
 
-#define WIN32_LEAN_AND_MEAN  /* avoid including junk */
-#include <windows.h>
+# include <fcntl.h>
+# include <string.h>
+# include <sys/stat.h>
+
+# include <io.h>
+
+# define WIN32_LEAN_AND_MEAN  /* avoid including junk */
+# include <windows.h>
+
+#else
+
+# include <unistd.h>
+
+#endif
 
 #include "pathmax.h"
 #include "tempname.h"
 #include "tmpdir.h"
 
 /* PATH_MAX is guaranteed to be defined, because this replacement is only
-   used on native Windows.  */
+   used on native Windows and Android.  */
+
+#if defined _WIN32 && ! defined __CYGWIN__
+/* A native Windows platform.  */
+
+/* Don't assume that UNICODE is not defined.  */
+# undef OSVERSIONINFO
+# define OSVERSIONINFO OSVERSIONINFOA
+# undef GetVersionEx
+# define GetVersionEx GetVersionExA
+# undef GetTempPath
+# define GetTempPath GetTempPathA
 
 /* On Windows, opening a file with _O_TEMPORARY has the effect of passing
    the FILE_FLAG_DELETE_ON_CLOSE flag to CreateFile(), which has the effect
@@ -55,8 +75,8 @@ supports_delete_on_close ()
       OSVERSIONINFO v;
 
       /* According to
-         <http://msdn.microsoft.com/en-us/library/windows/desktop/ms724451(v=vs.85).aspx>
-         this structure must be initialised as follows:  */
+         <https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getversionexa>
+         this structure must be initialized as follows:  */
       v.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
 
       if (GetVersionEx (&v))
@@ -130,3 +150,38 @@ tmpfile (void)
 
   return NULL;
 }
+
+#else
+
+FILE *
+tmpfile (void)
+{
+  char buf[PATH_MAX];
+  int fd;
+  FILE *fp;
+
+  /* Try $TMPDIR first, not /tmp nor P_tmpdir, because we need this replacement
+     on Android, and /tmp does not exist on Android.  */
+
+  if (path_search (buf, sizeof buf, NULL, "tmpf", true))
+    return NULL;
+
+  fd = gen_tempname (buf, 0, 0, GT_FILE);
+  if (fd < 0)
+    return NULL;
+
+  /* Note that this relies on the Unix semantics that
+     a file is not really removed until it is closed.  */
+  (void) unlink (buf);
+
+  if ((fp = fdopen (fd, "w+b")) == NULL)
+    {
+      int saved_errno = errno;
+      close (fd);
+      errno = saved_errno;
+    }
+
+  return fp;
+}
+
+#endif

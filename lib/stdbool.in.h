@@ -1,18 +1,18 @@
-/* Copyright (C) 2001-2003, 2006-2013 Free Software Foundation, Inc.
+/* Copyright (C) 2001-2003, 2006-2022 Free Software Foundation, Inc.
    Written by Bruno Haible <haible@clisp.cons.org>, 2001.
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
+   This file is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of the
+   License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
+   This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #ifndef _GL_STDBOOL_H
 #define _GL_STDBOOL_H
@@ -58,33 +58,19 @@
 
 /* 7.16. Boolean type and values */
 
-/* BeOS <sys/socket.h> already #defines false 0, true 1.  We use the same
-   definitions below, but temporarily we have to #undef them.  */
-#if defined __BEOS__ && !defined __HAIKU__
-# include <OS.h> /* defines bool but not _Bool */
-# undef false
-# undef true
-#endif
-
 #ifdef __cplusplus
-# define _Bool bool
-# define bool bool
+# if !defined _MSC_VER
+#  define _Bool bool
+#  define bool bool
+# endif
 #else
-# if defined __BEOS__ && !defined __HAIKU__
-  /* A compiler known to have 'bool'.  */
-  /* If the compiler already has both 'bool' and '_Bool', we can assume they
-     are the same types.  */
-#  if !@HAVE__BOOL@
-typedef bool _Bool;
-#  endif
-# else
-#  if !defined __GNUC__
+# if !defined __GNUC__
    /* If @HAVE__BOOL@:
         Some HP-UX cc and AIX IBM C compiler versions have compiler bugs when
         the built-in _Bool type is used.  See
-          http://gcc.gnu.org/ml/gcc-patches/2003-12/msg02303.html
-          http://lists.gnu.org/archive/html/bug-coreutils/2005-11/msg00161.html
-          http://lists.gnu.org/archive/html/bug-coreutils/2005-10/msg00086.html
+          https://gcc.gnu.org/ml/gcc-patches/2003-12/msg02303.html
+          https://lists.gnu.org/r/bug-coreutils/2005-11/msg00161.html
+          https://lists.gnu.org/r/bug-coreutils/2005-10/msg00086.html
         Similar bugs are likely with other compilers as well; this file
         wouldn't be used if <stdbool.h> was working.
         So we override the _Bool type.
@@ -98,10 +84,10 @@ typedef bool _Bool;
           "Invalid enumerator. (badenum)" with HP-UX cc on Tru64.
         The only benefit of the enum, debuggability, is not important
         with these compilers.  So use 'signed char' and no enum.  */
-#   define _Bool signed char
-#  else
+#  define _Bool signed char
+# else
    /* With this compiler, trust the _Bool type if the compiler has it.  */
-#   if !@HAVE__BOOL@
+#  if !@HAVE__BOOL@
    /* For the sake of symbolic names in gdb, define true and false as
       enum constants, not only as macros.
       It is tempting to write
@@ -112,7 +98,6 @@ typedef bool _Bool;
       (see ISO C 99 6.3.1.1.(2)).  So add a negative value to the
       enum; this ensures that '_Bool' promotes to 'int'.  */
 typedef enum { _Bool_must_promote_to_int = -1, false = 0, true = 1 } _Bool;
-#   endif
 #  endif
 # endif
 # define bool _Bool
@@ -120,8 +105,10 @@ typedef enum { _Bool_must_promote_to_int = -1, false = 0, true = 1 } _Bool;
 
 /* The other macros must be usable in preprocessor directives.  */
 #ifdef __cplusplus
-# define false false
-# define true true
+# if !defined _MSC_VER
+#  define false false
+#  define true true
+# endif
 #else
 # define false 0
 # define true 1

@@ -1,19 +1,19 @@
-/* ignore a function return without a compiler warning
+/* ignore a function return without a compiler warning.  -*- coding: utf-8 -*-
 
-   Copyright (C) 2008-2013 Free Software Foundation, Inc.
+   Copyright (C) 2008-2022 Free Software Foundation, Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3 of the License, or
-   (at your option) any later version.
+   This file is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation; either version 2.1 of the
+   License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
+   This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* Written by Jim Meyering, Eric Blake and Pádraig Brady.  */
 
@@ -33,15 +33,19 @@
    declared with attribute warn_unused_result".  */
 
 #ifndef _GL_IGNORE_VALUE_H
-# define _GL_IGNORE_VALUE_H
+#define _GL_IGNORE_VALUE_H
 
-/* The __attribute__((__warn_unused_result__)) feature
-   is available in gcc versions 3.4 and newer,
-   while the typeof feature has been available since 2.7 at least.  */
-# if __GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4)
-#  define ignore_value(x) ((void) (x))
-# else
-#  define ignore_value(x) (({ __typeof__ (x) __x = (x); (void) __x; }))
-# endif
+/* Normally casting an expression to void discards its value, but GCC
+   versions 3.4 and newer have __attribute__ ((__warn_unused_result__))
+   which may cause unwanted diagnostics in that case.  Use __typeof__
+   and __extension__ to work around the problem, if the workaround is
+   known to be needed.
+   The workaround is not needed with clang.  */
+#if (3 < __GNUC__ + (4 <= __GNUC_MINOR__)) && !defined __clang__
+# define ignore_value(x) \
+    (__extension__ ({ __typeof__ (x) __x = (x); (void) __x; }))
+#else
+# define ignore_value(x) ((void) (x))
+#endif
 
 #endif

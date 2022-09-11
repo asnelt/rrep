@@ -1,25 +1,62 @@
+2022-09-11 22:42  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.texi: Corrected GFDL license text.
+
+2022-09-05 22:56  Arno Onken  <asnelt@asnelt.org>
+
+	* lib: Updated GNU Gnulib modules.
+	  Replaced obsolete GNU Gnulib module gettext with gettext-h.
+
+2022-09-04 15:09  Arno Onken  <asnelt@asnelt.org>
+
+	* README, bufferio.c, bufferio.h, messages.c, messages.h,
+	  pattern.c, pattern.h, rrep.c: Improved comment formatting.
+
+2022-09-03 18:50  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.info, rrep.texi, NEWS: Corrected GFDL license text.
+
+2022-08-27 15:43  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.texi: Fixed character omission.
+
+2022-08-20 23:02  Arno Onken  <asnelt@asnelt.org>
+
+	* Makefile.in: Updated file for reordered libraries.
+
+2022-08-20 21:34  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c, messages.c, pattern.c, pattern.h, rrep.c: Replaced
+	  tabs with spaces.
+
+2019-08-18 12:10  Arno Onken  <asnelt@asnelt.org>
+
+	* Makefile.am: Reordered LDADD libraries to make the compiler aware
+	  of the needed libacl references.
+	* rrep.in.1: Removed obsolete man macro and fixed spelling mistake.
+
 2013-03-19 20:14  Arno Onken  <asnelt@asnelt.org>
 
-    * lib: Updated GNU Gnulib modules.
-    * rrep.c: Changed inline to static inline functions.
+	* lib: Updated GNU Gnulib modules.
+	* rrep.c: Changed inline to static inline functions.
 
 2013-03-18 17:53  Arno Onken  <asnelt@asnelt.org>
 
-    * build-aux: Update all files in directory.
+	* build-aux: Update all files in directory.
 
 2013-03-16 21:48  Arno Onken  <asnelt@asnelt.org>
 
-    * rrep.c, pattern.c: Silence compiler warnings.
+	* rrep.c, pattern.c: Silence compiler warnings.
 
 2013-03-05 22:47  Arno Onken  <asnelt@asnelt.org>
 
-    * lib: Replaced obsolete GNU Gnulib module strdup with
-      strdup-posix.
+	* lib: Replaced obsolete GNU Gnulib module strdup with
+	  strdup-posix.
 
 2013-02-26 10:57  Arno Onken  <asnelt@asnelt.org>
 
 	* rrep.in.1, rrep.texi: Reformatted documentation.
-    * lib: Updated GNU Gnulib modules.
+	* lib: Updated GNU Gnulib modules.
 
 2011-07-31 19:39  Arno Onken  <asnelt@asnelt.org>
 
@@ -53,8 +90,8 @@
 2011-04-30 17:58  Arno Onken  <asnelt@asnelt.org>
 
 	* Makefile.am (SUBDIRS): Add po.
-	(ACLOCAL_AMFLAGS): New variable.
-	(EXTRA_DIST): New variable.
+	  (ACLOCAL_AMFLAGS): New variable.
+	  (EXTRA_DIST): New variable.
 	* configure.ac (AC_CONFIG_FILES): Add po/Makefile.in.
 	* rrep.c: Rename option --prompt to --interactive and add option
 	  for --binary.
@@ -151,4 +188,3 @@
 2011-01-29 14:52  Arno Onken  <asnelt@asnelt.org>
 
 	* ., rrep.c: Initial version.
-

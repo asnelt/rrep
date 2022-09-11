@@ -1,19 +1,19 @@
-/* Searching in a string.
-   Copyright (C) 2005-2013 Free Software Foundation, Inc.
+/* Searching in a string.  -*- coding: utf-8 -*-
+   Copyright (C) 2005-2022 Free Software Foundation, Inc.
    Written by Bruno Haible <bruno@clisp.org>, 2005.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3 of the License, or
-   (at your option) any later version.
+   This file is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Lesser General Public License as
+   published by the Free Software Foundation, either version 3 of the
+   License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
+   This file is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+   GNU Lesser General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   You should have received a copy of the GNU Lesser General Public License
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 
@@ -22,6 +22,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>  /* for NULL, in case a nonstandard string.h lacks it */
+#include <stdlib.h>
 
 #include "malloca.h"
 #include "mbuiter.h"
@@ -32,7 +33,7 @@
 #include "str-kmp.h"
 
 /* Knuth-Morris-Pratt algorithm.
-   See http://en.wikipedia.org/wiki/Knuth-Morris-Pratt_algorithm
+   See https://en.wikipedia.org/wiki/Knuth-Morris-Pratt_algorithm
    Return a boolean indicating success:
    Return true and set *RESULTP if the search was completed.
    Return false if it was aborted because not enough memory was available.  */
@@ -45,11 +46,13 @@ knuth_morris_pratt_multibyte (const char *haystack, const char *needle,
   size_t *table;
 
   /* Allocate room for needle_mbchars and the table.  */
-  char *memory = (char *) nmalloca (m, sizeof (mbchar_t) + sizeof (size_t));
+  void *memory = nmalloca (m, sizeof (mbchar_t) + sizeof (size_t));
+  void *table_memory;
   if (memory == NULL)
     return false;
-  needle_mbchars = (mbchar_t *) memory;
-  table = (size_t *) (memory + m * sizeof (mbchar_t));
+  needle_mbchars = memory;
+  table_memory = needle_mbchars + m;
+  table = table_memory;
 
   /* Fill needle_mbchars.  */
   {

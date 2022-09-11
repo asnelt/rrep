@@ -1,5 +1,5 @@
 /* bufferio.c - buffer routines for rrep.
-   Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2022 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 /* Pointer to buffer.  */
 char *buffer = NULL;
-/* Size of  buffer.  */
+/* Size of buffer.  */
 size_t buffer_size = 0;
 
 /* Pointer to buffer for tmpfile replacement.  */
@@ -35,10 +35,10 @@ char *file_buffer = NULL;
 size_t file_buffer_size = 0;
 
 
-/* Read in a buffered line from fp. The line starts at *line and has
-   length *line_len. Line delimiters are '\n' and, if binary files are not
-   ignored, '\0'. If a line could be placed at the line pointer, SUCCESS is
-   returned. Otherwise, if the end of file was reached END_REACHED is returned
+/* Read in a buffered line from fp.  The line starts at *line and has
+   length *line_len.  Line delimiters are '\n' and, if binary files are not
+   ignored, '\0'.  If a line could be placed at the line pointer, SUCCESS is
+   returned.  Otherwise, if the end of file was reached END_REACHED is returned
    or if an error occurred FAILURE is returned.  */
 int
 read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
@@ -47,7 +47,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
   static size_t search_pos = 1; /* Search position for end of line.  */
   static size_t buffer_fill = 0; /* Number of read characters in buffer.  */
   static char null_replace = '\0'; /* Character buffer for string
-				      termination.  */
+                                      termination.  */
   char *tmp;
   size_t nr; /* Number of characters read by fread.  */
   int i;
@@ -64,9 +64,9 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
       nr = fread (buffer, sizeof (char), buffer_size-1, fp);
       if (nr != buffer_size-1 && ferror (fp))
         {
-	  rrep_error (ERR_READ_FILE, file_name);
-	  fclose (fp);
-	  return FAILURE;
+          rrep_error (ERR_READ_FILE, file_name);
+          fclose (fp);
+          return FAILURE;
         }
       buffer_fill = nr;
     }
@@ -93,60 +93,60 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
   while (search_flag)
     {
       while (search_pos < buffer_fill && *(buffer+search_pos-1) != '\n'
-	     && (!(options & OPT_BINARY) || *(buffer+search_pos-1) != '\0'))
-	search_pos++;
+             && (!(options & OPT_BINARY) || *(buffer+search_pos-1) != '\0'))
+        search_pos++;
 
       if (search_pos >= buffer_fill && !feof (fp))
         {
-	  /* End of buffer reached.  */
-	  if (start > 0)
+          /* End of buffer reached.  */
+          if (start > 0)
             {
-	      /* Let line start at the beginning of buffer.  */
-	      for (i = 0; i < buffer_fill-start; i++)
-		*(buffer+i) = *(buffer+start+i);
-	      search_pos -= start;
+              /* Let line start at the beginning of buffer.  */
+              for (i = 0; i < buffer_fill-start; i++)
+                *(buffer+i) = *(buffer+start+i);
+              search_pos -= start;
 
-	      /* Fill rest of buffer.  */
-	      nr = fread (buffer+search_pos, sizeof (char),
-			  buffer_size-search_pos-1, fp);
-	      if (nr != buffer_size-search_pos-1 && ferror (fp))
+              /* Fill rest of buffer.  */
+              nr = fread (buffer+search_pos, sizeof (char),
+                          buffer_size-search_pos-1, fp);
+              if (nr != buffer_size-search_pos-1 && ferror (fp))
                 {
-		  rrep_error (ERR_READ_FILE, file_name);
-		  fclose (fp);
-		  return FAILURE;
+                  rrep_error (ERR_READ_FILE, file_name);
+                  fclose (fp);
+                  return FAILURE;
                 }
-	      buffer_fill += nr - start;
-	      start = 0;
+              buffer_fill += nr - start;
+              start = 0;
             }
-	  else
+          else
             {
-	      /* Reallocate memory.  */
-	      tmp = realloc (buffer, buffer_size+INIT_BUFFER_SIZE);
-	      if (tmp == NULL)
+              /* Reallocate memory.  */
+              tmp = realloc (buffer, buffer_size+INIT_BUFFER_SIZE);
+              if (tmp == NULL)
                 {
-		  rrep_error (ERR_REALLOC_BUFFER, file_name);
-		  fclose (fp);
-		  return FAILURE;
+                  rrep_error (ERR_REALLOC_BUFFER, file_name);
+                  fclose (fp);
+                  return FAILURE;
                 }
-	      buffer = tmp;
-	      buffer_size += INIT_BUFFER_SIZE;
+              buffer = tmp;
+              buffer_size += INIT_BUFFER_SIZE;
 
-	      /* fill allocated memory */
-	      nr = fread (buffer+search_pos, sizeof (char),
-			  INIT_BUFFER_SIZE, fp);
-	      if (nr != INIT_BUFFER_SIZE && ferror (fp))
+              /* Fill allocated memory.  */
+              nr = fread (buffer+search_pos, sizeof (char),
+                          INIT_BUFFER_SIZE, fp);
+              if (nr != INIT_BUFFER_SIZE && ferror (fp))
                 {
-		  rrep_error (ERR_READ_FILE, file_name);
-		  fclose (fp);
-		  return FAILURE;
+                  rrep_error (ERR_READ_FILE, file_name);
+                  fclose (fp);
+                  return FAILURE;
                 }
-	      buffer_fill += nr;
+              buffer_fill += nr;
             }
         }
       else
         {
-	  /* End of line found or file complete.  */
-	  search_flag = false;
+          /* End of line found or file complete.  */
+          search_flag = false;
         }
     }
 
