@@ -1,12 +1,13 @@
 # English translations for rrep package.
-# Copyright (C) 2013, 2022 Arno Onken
+# Copyright (C) 2022 Arno Onken
 # This file is distributed under the same license as the rrep package.
+# Automatically generated, 2022.
 #
 # All this catalog "translates" are quotation characters.
 # The msgids must be ASCII and therefore cannot contain real quotation
 # characters, only substitutes like grave accent (0x60), apostrophe (0x27)
 # and double quote (0x22). These substitutes look strange; see
-# http://www.cl.cam.ac.uk/~mgk25/ucs/quotes.html
+# https://www.cl.cam.ac.uk/~mgk25/ucs/quotes.html
 #
 # This catalog translates grave accent (0x60) and apostrophe (0x27) to
 # left single quotation mark (U+2018) and right single quotation mark (U+2019).
@@ -26,10 +27,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: rrep 1.3.6\n"
+"Project-Id-Version: rrep 1.3.7\n"
 "Report-Msgid-Bugs-To: asnelt@asnelt.org\n"
-"POT-Creation-Date: 2013-03-18 19:55+0100\n"
-"PO-Revision-Date: 2013-03-18 19:55+0100\n"
+"POT-Creation-Date: 2022-09-11 22:48+0100\n"
+"PO-Revision-Date: 2022-09-11 22:48+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: en@quot\n"
@@ -86,7 +87,7 @@ msgstr ""
 #: src/messages.c:68
 #, c-format
 msgid "Example: %s 'hello world' 'Hello, World!' menu.h main.c\n"
-msgstr "Example: %s ‘hello world’ 'Hello, World!' menu.h main.c\n"
+msgstr "Example: %s ‘hello world’ ‘Hello, World!’ menu.h main.c\n"
 
 #: src/messages.c:71
 #, c-format

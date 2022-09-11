@@ -1,16 +1,15 @@
-This is rrep.info, produced by makeinfo version 4.13 from rrep.texi.
+This is rrep.info, produced by makeinfo version 6.8 from rrep.texi.
 
-This file documents the `rrep' utility which replaces patterns in files.
+This file documents the 'rrep' utility which replaces patterns in files.
 
    Copyright (C) 2011, 2013, 2019, 2022 Arno Onken
 
-     Permission is granted to copy, distribute and/or modify this document
-     under the terms of the GNU Free Documentation License, Version 1.3
-     or any later version published by the Free Software Foundation;
-     with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
-     A copy of the license is included in the section entitled "GNU
-     Free Documentation License".
-
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.  A copy of the license is included in the
+     section entitled "GNU Free Documentation License".
 INFO-DIR-SECTION Text creation and manipulation
 START-INFO-DIR-ENTRY
 * rrep: (rrep).                 Replace patterns in files.
@@ -22,21 +21,21 @@ File: rrep.info,  Node: Top,  Next: Introduction,  Up: (dir)
 rrep
 ****
 
-The `rrep' utility replaces patterns in files.
+The 'rrep' utility replaces patterns in files.
 
-   This manual is for version 1.3.6 of rrep.
+   This manual is for version 1.3.7 of rrep.
 
-   This file documents the `rrep' utility which replaces patterns in
+   This file documents the 'rrep' utility which replaces patterns in
 files.
 
    Copyright (C) 2011, 2013, 2019, 2022 Arno Onken
 
-     Permission is granted to copy, distribute and/or modify this document
-     under the terms of the GNU Free Documentation License, Version 1.3
-     or any later version published by the Free Software Foundation;
-     with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
-     A copy of the license is included in the section entitled "GNU
-     Free Documentation License".
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.  A copy of the license is included in the
+     section entitled "GNU Free Documentation License".
 
 * Menu:
 
@@ -53,7 +52,7 @@ File: rrep.info,  Node: Introduction,  Next: Invoking,  Prev: Top,  Up: Top
 1 Introduction
 **************
 
-The `rrep' utility searches input files for matches to a given pattern
+The 'rrep' utility searches input files for matches to a given pattern
 and replaces those matches by a given replacement string.  The pattern
 is, by default, a basic regular expression.  The replacement string may
 contain special characters to refer to portions of the matched pattern.
@@ -64,27 +63,27 @@ if it contains the null character.
 
 File: rrep.info,  Node: Invoking,  Next: Usage,  Prev: Introduction,  Up: Top
 
-2 Invoking `rrep'
+2 Invoking 'rrep'
 *****************
 
-The synopsis of `rrep' is
+The synopsis of 'rrep' is
 
      rrep OPTIONS PATTERN REPLACEMENT INPUT_FILE_NAMES
 
 There can be zero or more OPTIONS.  PATTERN is, by default, a basic
 regular expression (BRE) that is searched in the INPUT_FILE_NAMES and
 replaced by REPLACEMENT.  REPLACEMENT may contain the special character
-`&' to refer to that portion of the pattern space which matched, and
-the special escapes `\1' through `\9' to refer to the corresponding
-matching sub-expressions in PATTERN.  PATTERN and REPLACEMENT can also
-be set by the options `-e PATTERN' and `-p REPLACEMENT'.  In that case
-all the arguments following the options are seen as input files.  If no
+'&' to refer to that portion of the pattern space which matched, and the
+special escapes '\1' through '\9' to refer to the corresponding matching
+sub-expressions in PATTERN.  PATTERN and REPLACEMENT can also be set by
+the options '-e PATTERN' and '-p REPLACEMENT'.  In that case all the
+arguments following the options are seen as input files.  If no
 INPUT_FILE_NAMES are specified, then the standard input is read.
 
 * Menu:
 
 * Command-line Options::        Short and long names, grouped by category.
-* Exit Status::                 Exit status returned by `rrep'.
+* Exit Status::                 Exit status returned by 'rrep'.
 
 
 File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
@@ -92,125 +91,121 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
 2.1 Command-line Options
 ========================
 
-`-E'
-`--extended-regexp'
+'-E'
+'--extended-regexp'
      PATTERN is interpreted as an extended regular expression (ERE).
 
-`-F'
-`--fixed-strings'
+'-F'
+'--fixed-strings'
      PATTERN and REPLACEMENT are interpreted as fixed strings, not as
      regular expressions or escape sequences.
 
-`-R'
-`-r'
-`--recursive'
+'-R'
+'-r'
+'--recursive'
      Each directory that is given on the command line is processed
-     recursively.  Files and sub-directories starting with the `.'
+     recursively.  Files and sub-directories starting with the '.'
      character are, by default, ignored.
 
-`--include=FILE_PATTERN'
+'--include=FILE_PATTERN'
      Only files are processed that match the pattern FILE_PATTERN,
      except for files that are specifically given on the command line.
-     `*', `?', and `['...`]' can be used as wildcards in FILE_PATTERN.
-     Wildcards and backslash characters can be quoted with `\'.
+     '*', '?', and '['...']'  can be used as wildcards in FILE_PATTERN.
+     Wildcards and backslash characters can be quoted with '\'.
 
-`--exclude=FILE_PATTERN'
+'--exclude=FILE_PATTERN'
      Files that match the pattern FILE_PATTERN will be skipped, except
      for files that are specifically given on the command line (using
-     wildcard matching as described under `--include').
+     wildcard matching as described under '--include').
 
-`--exclude-dir=PATTERN'
+'--exclude-dir=PATTERN'
      Directories that match PATTERN will be skipped, except for files
      that are specifically given on the command line (using wildcard
-     matching as described under `--include').
+     matching as described under '--include').
 
-`-S'
-`--suffix=SUFFIX'
+'-S'
+'--suffix=SUFFIX'
      Override default backup suffix.  This option implicitly activates
      backups.
 
-`-V'
-`--version'
-     Print the version number of `rrep'.
+'-V'
+'--version'
+     Print the version number of 'rrep'.
 
-`-a'
-`--all'
-     Files and sub-directories starting with the `.' character in
-     recursively processed directories (see `--recursive') are
-     processed as well.
+'-a'
+'--all'
+     Files and sub-directories starting with the '.' character in
+     recursively processed directories (see '--recursive') are processed
+     as well.
 
-`-b'
-     Backup before overwriting files.  The backup files are written
-     into the directory of the original file.  Equivalent to using
-     `--backup=existing'.
+'-b'
+     Backup before overwriting files.  The backup files are written into
+     the directory of the original file.  Equivalent to using
+     '--backup=existing'.
 
-`--backup'
-     Like `-b' but accepts a version control argument.  The file name
-     of the backup file is appended by a `~' character.  The backup
-     suffix is `~', unless set with `--suffix' or SIMPLE_BACKUP_SUFFIX.
-     The version control method may be selected via the `--backup'
-     option or through the VERSION_CONTROL environment variable.  Here
-     are the values:
-        * `none', `off': never make backups (even if `--backup' is
+'--backup'
+     Like '-b' but accepts a version control argument.  The file name of
+     the backup file is appended by a '~' character.  The backup suffix
+     is '~', unless set with '--suffix' or SIMPLE_BACKUP_SUFFIX.  The
+     version control method may be selected via the '--backup' option or
+     through the VERSION_CONTROL environment variable.  Here are the
+     values:
+        * 'none', 'off': never make backups (even if '--backup' is
           given)
-
-        * `numbered', `t': make numbered backups
-
-        * `existing', `nil': numbered if numbered backups exist, simple
+        * 'numbered', 't': make numbered backups
+        * 'existing', 'nil': numbered if numbered backups exist, simple
           otherwise
+        * 'simple', 'never': always make simple backups
 
-        * `simple', `never': always make simple backups
-
-`--binary'
+'--binary'
      Do not ignore binary files.  A file is regarded as binary if it
-     contains the null character `\0'.
+     contains the null character '\0'.
 
-`--dry-run'
+'--dry-run'
      The replacement is just simulated.  No file is actually modified.
 
-`-e'
-`--regex=PATTERN'
+'-e'
+'--regex=PATTERN'
      Use PATTERN for matching.  This option can be used to specify a
-     pattern beginning with `-'.
+     pattern beginning with '-'.
 
-`-h'
-`--help'
-     Display a help message that descibes the command line options and
+'-h'
+'--help'
+     Display a help message that describes the command line options and
      exit afterwards.
 
-`-i'
-`--ignore-case'
+'-i'
+'--ignore-case'
      Case distinctions in PATTERN are ignored.
 
-`--keep-times'
-     The original access and modification times of files and
-     directories are restored after processing.
+'--keep-times'
+     The original access and modification times of files and directories
+     are restored after processing.
 
-`-p'
-`--replace-with=REPLACEMENT'
+'-p'
+'--replace-with=REPLACEMENT'
      Use REPLACEMENT for substitution.
 
-`--interactive'
+'--interactive'
      Each time before a file is modified the user is prompted and can
      cancel the modification.
 
-`-q'
-`--quiet'
-`--silent'
+'-q'
+'--quiet'
+'--silent'
      All normal output messages are suppressed.
 
-`-s'
-`--no-messages'
+'-s'
+'--no-messages'
      All error messages are suppressed.
 
-`-w'
-`--word-regexp'
+'-w'
+'--word-regexp'
      Only those matches of PATTERN are replaced that match whole words.
 
-`-x'
-`--line-regexp'
+'-x'
+'--line-regexp'
      Only those matches of PATTERN are replaced that match whole lines.
-
 
 
 File: rrep.info,  Node: Exit Status,  Prev: Command-line Options,  Up: Invoking
@@ -228,62 +223,61 @@ File: rrep.info,  Node: Usage,  Next: Reporting Bugs,  Prev: Invoking,  Up: Top
 
      rrep 'hello world' 'Hello, World!' menu.h main.c
 
-This command replaces all occurences of the string `hello world' by the
-string `Hello, World!' in the files `menu.h' and `main.c'.
+This command replaces all occurences of the string 'hello world' by the
+string 'Hello, World!' in the files 'menu.h' and 'main.c'.
 
      rrep -i 'hello.*world!*' 'Hello, world!' menu.h main.c
 
-All occurences of the pattern `hello.*world!*'' like `hello world',
-`hello, world', or `hello,, world!!' (see regular expressions) are
-replaced by the string `Hello, world!' in the files `menu.h' and
-`main.c'.  The `-i' option causes `rrep' to ignore cases, so, for
-instance, `HeLLo WoRlD' will be replaced as well.
+All occurences of the pattern 'hello.*world!*'' like 'hello world',
+'hello, world', or 'hello,, world!!' (see regular expressions) are
+replaced by the string 'Hello, world!' in the files 'menu.h' and
+'main.c'.  The '-i' option causes 'rrep' to ignore cases, so, for
+instance, 'HeLLo WoRlD' will be replaced as well.
 
      rrep -i --backup '\(hello\).*\(world\)!*' '\1, \2!' menu.h main.c
 
 This command replaces all occurences of the pattern
-`\(hello\).*\(world\)!*' by `\1, \2!', where `\1' and `\2' are the
-corresponding sub-expressions `hello' and `world' in the files `menu.h'
-and `main.c'.  For instance, `hEllO wOrLd' will be replaced by `hEllO,
+'\(hello\).*\(world\)!*' by '\1, \2!', where '\1' and '\2' are the
+corresponding sub-expressions 'hello' and 'world' in the files 'menu.h'
+and 'main.c'.  For instance, 'hEllO wOrLd' will be replaced by 'hEllO,
 wOrLd!'.  Backups will be made.
 
      rrep -F -r --binary --interactive '*hello\1' '*hello\2' /home/user/hello
 
-All occurences of the string `*hello\1' are replaced by the string
-`*hello\2' in `/home/user/hello'.  Due to the `-F' option, the strings
+All occurences of the string '*hello\1' are replaced by the string
+'*hello\2' in '/home/user/hello'.  Due to the '-F' option, the strings
 are not interpreted as regular expressions or escape sequenses.  If
-`/home/user/hello' is a directory, then the `-r' option causes `rrep'
-to process all files and sub-directories in `/home/user/hello' as well.
-However, files and directories starting with the `.' character are
-ignored.  The `--binary' option causes `rrep' to the replace the string
-in binary files as well.  The `--interactive' option causes `rrep' to
+'/home/user/hello' is a directory, then the '-r' option causes 'rrep' to
+process all files and sub-directories in '/home/user/hello' as well.
+However, files and directories starting with the '.' character are
+ignored.  The '--binary' option causes 'rrep' to the replace the string
+in binary files as well.  The '--interactive' option causes 'rrep' to
 prompt the user before modifying any file.
 
      rrep -r -a 'hello' 'Hello' /home/user/.hello
 
-This command replaces all occurences of `hello' by `Hello' in
-`/home/user/hello'.  If `/home/user/hello' is a directory, then the
-`-r' option causes `rrep' to process all files and sub-directories in
-`/home/user/hello' as well.  The `-a' option causes `rrep' to process
-files and directories starting with the `.' character as well.
-However, binary files (files that contain the null character) are
-ignored.
+This command replaces all occurences of 'hello' by 'Hello' in
+'/home/user/hello'.  If '/home/user/hello' is a directory, then the '-r'
+option causes 'rrep' to process all files and sub-directories in
+'/home/user/hello' as well.  The '-a' option causes 'rrep' to process
+files and directories starting with the '.' character as well.  However,
+binary files (files that contain the null character) are ignored.
 
      rrep -e '-hello' --dry-run 'Hello' menu.h main.c
 
-This command simulates the replacement of `-hello' by `Hello' in the
-files `menu.h' and `main.c'.  The files are not actually modified due
-to the `--dry-run' option.
+This command simulates the replacement of '-hello' by 'Hello' in the
+files 'menu.h' and 'main.c'.  The files are not actually modified due to
+the '--dry-run' option.
 
      rrep -r --include=*.c 'hello world' 'Hello, world!' /home/user/hello
 
-All occurences of `hello world' are replaced by `Hello, world!' in
-`/home/user/hello'.  If `/home/user/hello' is a directory, then the
-`-r' option causes `rrep' to process all files and sub-directories in
-`/home/user/hello' as well.  However, files and directories starting
-with the `.' character and binary files are ignored.  Moreover, the
-`--include=*c' option causes `rrep' to process only files with file
-names that end with `.c'.
+All occurences of 'hello world' are replaced by 'Hello, world!' in
+'/home/user/hello'.  If '/home/user/hello' is a directory, then the '-r'
+option causes 'rrep' to process all files and sub-directories in
+'/home/user/hello' as well.  However, files and directories starting
+with the '.' character and binary files are ignored.  Moreover, the
+'--include=*.c' option causes 'rrep' to process only files with file
+names that end with '.c'.
 
 
 File: rrep.info,  Node: Reporting Bugs,  Next: Copying,  Prev: Usage,  Up: Top
@@ -291,12 +285,12 @@ File: rrep.info,  Node: Reporting Bugs,  Next: Copying,  Prev: Usage,  Up: Top
 4 Reporting Bugs
 ****************
 
-If you find a bug in `rrep', please send electronic mail to
+If you find a bug in 'rrep', please send electronic mail to
 <asnelt@asnelt.org>.  Include the version number, which you can find by
-running `rrep --version'.  Also include in your message the output that
+running 'rrep --version'.  Also include in your message the output that
 the program produced and the output you expected.
 
-   If you have other questions, comments or suggestions about `rrep',
+   If you have other questions, comments or suggestions about 'rrep',
 contact the author via electronic mail to <asnelt@asnelt.org>.  The
 author will try to help you out, although he may not have time to fix
 your problems.
@@ -319,12 +313,12 @@ grant your recipients the same rights and impose the same restrictions.
    This general method of licensing software is sometimes called "open
 source".  The GNU project prefers the term "free software" for reasons
 outlined at
-`http://www.gnu.org/philosophy/open-source-misses-the-point.html'.
+<http://www.gnu.org/philosophy/open-source-misses-the-point.html>.
 
    This manual is free documentation in the same sense.  The
-documentation license is included below.  The license for the program
-is available with the source code, or at
-`http://www.gnu.org/licenses/gpl.html'.
+documentation license is included below.  The license for the program is
+available with the source code, or at
+<http://www.gnu.org/licenses/gpl.html>.
 
 * Menu:
 
@@ -340,7 +334,7 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
 
      Copyright (C) 2000-2002, 2007-2008, 2010 Free Software Foundation,
      Inc.
-     `http://fsf.org/'
+     <http://fsf.org/>
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
@@ -365,21 +359,21 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      free program should come with manuals providing the same freedoms
      that the software does.  But this License is not limited to
      software manuals; it can be used for any textual work, regardless
-     of subject matter or whether it is published as a printed book.
-     We recommend this License principally for works whose purpose is
+     of subject matter or whether it is published as a printed book.  We
+     recommend this License principally for works whose purpose is
      instruction or reference.
 
   1. APPLICABILITY AND DEFINITIONS
 
      This License applies to any manual or other work, in any medium,
-     that contains a notice placed by the copyright holder saying it
-     can be distributed under the terms of this License.  Such a notice
+     that contains a notice placed by the copyright holder saying it can
+     be distributed under the terms of this License.  Such a notice
      grants a world-wide, royalty-free license, unlimited in duration,
      to use that work under the conditions stated herein.  The
      "Document", below, refers to any such manual or work.  Any member
-     of the public is a licensee, and is addressed as "you".  You
-     accept the license if you copy, modify or distribute the work in a
-     way requiring permission under copyright law.
+     of the public is a licensee, and is addressed as "you".  You accept
+     the license if you copy, modify or distribute the work in a way
+     requiring permission under copyright law.
 
      A "Modified Version" of the Document means any work containing the
      Document or a portion of it, either copied verbatim, or with
@@ -397,12 +391,12 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      regarding them.
 
      The "Invariant Sections" are certain Secondary Sections whose
-     titles are designated, as being those of Invariant Sections, in
-     the notice that says that the Document is released under this
-     License.  If a section does not fit the above definition of
-     Secondary then it is not allowed to be designated as Invariant.
-     The Document may contain zero Invariant Sections.  If the Document
-     does not identify any Invariant Sections then there are none.
+     titles are designated, as being those of Invariant Sections, in the
+     notice that says that the Document is released under this License.
+     If a section does not fit the above definition of Secondary then it
+     is not allowed to be designated as Invariant.  The Document may
+     contain zero Invariant Sections.  If the Document does not identify
+     any Invariant Sections then there are none.
 
      The "Cover Texts" are certain short passages of text that are
      listed, as Front-Cover Texts or Back-Cover Texts, in the notice
@@ -413,27 +407,27 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      A "Transparent" copy of the Document means a machine-readable copy,
      represented in a format whose specification is available to the
      general public, that is suitable for revising the document
-     straightforwardly with generic text editors or (for images
-     composed of pixels) generic paint programs or (for drawings) some
-     widely available drawing editor, and that is suitable for input to
-     text formatters or for automatic translation to a variety of
-     formats suitable for input to text formatters.  A copy made in an
-     otherwise Transparent file format whose markup, or absence of
-     markup, has been arranged to thwart or discourage subsequent
-     modification by readers is not Transparent.  An image format is
-     not Transparent if used for any substantial amount of text.  A
-     copy that is not "Transparent" is called "Opaque".
+     straightforwardly with generic text editors or (for images composed
+     of pixels) generic paint programs or (for drawings) some widely
+     available drawing editor, and that is suitable for input to text
+     formatters or for automatic translation to a variety of formats
+     suitable for input to text formatters.  A copy made in an otherwise
+     Transparent file format whose markup, or absence of markup, has
+     been arranged to thwart or discourage subsequent modification by
+     readers is not Transparent.  An image format is not Transparent if
+     used for any substantial amount of text.  A copy that is not
+     "Transparent" is called "Opaque".
 
      Examples of suitable formats for Transparent copies include plain
      ASCII without markup, Texinfo input format, LaTeX input format,
-     SGML or XML using a publicly available DTD, and
-     standard-conforming simple HTML, PostScript or PDF designed for
-     human modification.  Examples of transparent image formats include
-     PNG, XCF and JPG.  Opaque formats include proprietary formats that
-     can be read and edited only by proprietary word processors, SGML or
-     XML for which the DTD and/or processing tools are not generally
-     available, and the machine-generated HTML, PostScript or PDF
-     produced by some word processors for output purposes only.
+     SGML or XML using a publicly available DTD, and standard-conforming
+     simple HTML, PostScript or PDF designed for human modification.
+     Examples of transparent image formats include PNG, XCF and JPG.
+     Opaque formats include proprietary formats that can be read and
+     edited only by proprietary word processors, SGML or XML for which
+     the DTD and/or processing tools are not generally available, and
+     the machine-generated HTML, PostScript or PDF produced by some word
+     processors for output purposes only.
 
      The "Title Page" means, for a printed book, the title page itself,
      plus such following pages as are needed to hold, legibly, the
@@ -471,8 +465,8 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      may not use technical measures to obstruct or control the reading
      or further copying of the copies you make or distribute.  However,
      you may accept compensation in exchange for copies.  If you
-     distribute a large enough number of copies you must also follow
-     the conditions in section 3.
+     distribute a large enough number of copies you must also follow the
+     conditions in section 3.
 
      You may also lend copies, under the same conditions stated above,
      and you may publicly display copies.
@@ -486,12 +480,11 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      these Cover Texts: Front-Cover Texts on the front cover, and
      Back-Cover Texts on the back cover.  Both covers must also clearly
      and legibly identify you as the publisher of these copies.  The
-     front cover must present the full title with all words of the
-     title equally prominent and visible.  You may add other material
-     on the covers in addition.  Copying with changes limited to the
-     covers, as long as they preserve the title of the Document and
-     satisfy these conditions, can be treated as verbatim copying in
-     other respects.
+     front cover must present the full title with all words of the title
+     equally prominent and visible.  You may add other material on the
+     covers in addition.  Copying with changes limited to the covers, as
+     long as they preserve the title of the Document and satisfy these
+     conditions, can be treated as verbatim copying in other respects.
 
      If the required texts for either cover are too voluminous to fit
      legibly, you should put the first ones listed (as many as fit
@@ -499,40 +492,39 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      adjacent pages.
 
      If you publish or distribute Opaque copies of the Document
-     numbering more than 100, you must either include a
-     machine-readable Transparent copy along with each Opaque copy, or
-     state in or with each Opaque copy a computer-network location from
-     which the general network-using public has access to download
-     using public-standard network protocols a complete Transparent
-     copy of the Document, free of added material.  If you use the
-     latter option, you must take reasonably prudent steps, when you
-     begin distribution of Opaque copies in quantity, to ensure that
-     this Transparent copy will remain thus accessible at the stated
-     location until at least one year after the last time you
-     distribute an Opaque copy (directly or through your agents or
-     retailers) of that edition to the public.
+     numbering more than 100, you must either include a machine-readable
+     Transparent copy along with each Opaque copy, or state in or with
+     each Opaque copy a computer-network location from which the general
+     network-using public has access to download using public-standard
+     network protocols a complete Transparent copy of the Document, free
+     of added material.  If you use the latter option, you must take
+     reasonably prudent steps, when you begin distribution of Opaque
+     copies in quantity, to ensure that this Transparent copy will
+     remain thus accessible at the stated location until at least one
+     year after the last time you distribute an Opaque copy (directly or
+     through your agents or retailers) of that edition to the public.
 
      It is requested, but not required, that you contact the authors of
-     the Document well before redistributing any large number of
-     copies, to give them a chance to provide you with an updated
-     version of the Document.
+     the Document well before redistributing any large number of copies,
+     to give them a chance to provide you with an updated version of the
+     Document.
 
   4. MODIFICATIONS
 
      You may copy and distribute a Modified Version of the Document
      under the conditions of sections 2 and 3 above, provided that you
-     release the Modified Version under precisely this License, with
-     the Modified Version filling the role of the Document, thus
-     licensing distribution and modification of the Modified Version to
-     whoever possesses a copy of it.  In addition, you must do these
-     things in the Modified Version:
+     release the Modified Version under precisely this License, with the
+     Modified Version filling the role of the Document, thus licensing
+     distribution and modification of the Modified Version to whoever
+     possesses a copy of it.  In addition, you must do these things in
+     the Modified Version:
 
        A. Use in the Title Page (and on the covers, if any) a title
-          distinct from that of the Document, and from those of
-          previous versions (which should, if there were any, be listed
-          in the History section of the Document).  You may use the
-          same title as a previous version if the original publisher of
-          that version gives permission.
+          distinct from that of the Document, and from those of previous
+          versions (which should, if there were any, be listed in the
+          History section of the Document).  You may use the same title
+          as a previous version if the original publisher of that
+          version gives permission.
 
        B. List on the Title Page, as authors, one or more persons or
           entities responsible for authorship of the modifications in
@@ -562,31 +554,30 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
 
        I. Preserve the section Entitled "History", Preserve its Title,
           and add to it an item stating at least the title, year, new
-          authors, and publisher of the Modified Version as given on
-          the Title Page.  If there is no section Entitled "History" in
-          the Document, create one stating the title, year, authors,
-          and publisher of the Document as given on its Title Page,
-          then add an item describing the Modified Version as stated in
-          the previous sentence.
+          authors, and publisher of the Modified Version as given on the
+          Title Page.  If there is no section Entitled "History" in the
+          Document, create one stating the title, year, authors, and
+          publisher of the Document as given on its Title Page, then add
+          an item describing the Modified Version as stated in the
+          previous sentence.
 
        J. Preserve the network location, if any, given in the Document
           for public access to a Transparent copy of the Document, and
           likewise the network locations given in the Document for
-          previous versions it was based on.  These may be placed in
-          the "History" section.  You may omit a network location for a
-          work that was published at least four years before the
-          Document itself, or if the original publisher of the version
-          it refers to gives permission.
+          previous versions it was based on.  These may be placed in the
+          "History" section.  You may omit a network location for a work
+          that was published at least four years before the Document
+          itself, or if the original publisher of the version it refers
+          to gives permission.
 
        K. For any section Entitled "Acknowledgements" or "Dedications",
-          Preserve the Title of the section, and preserve in the
-          section all the substance and tone of each of the contributor
+          Preserve the Title of the section, and preserve in the section
+          all the substance and tone of each of the contributor
           acknowledgements and/or dedications given therein.
 
-       L. Preserve all the Invariant Sections of the Document,
-          unaltered in their text and in their titles.  Section numbers
-          or the equivalent are not considered part of the section
-          titles.
+       L. Preserve all the Invariant Sections of the Document, unaltered
+          in their text and in their titles.  Section numbers or the
+          equivalent are not considered part of the section titles.
 
        M. Delete any section Entitled "Endorsements".  Such a section
           may not be included in the Modified Version.
@@ -599,11 +590,11 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
 
      If the Modified Version includes new front-matter sections or
      appendices that qualify as Secondary Sections and contain no
-     material copied from the Document, you may at your option
-     designate some or all of these sections as invariant.  To do this,
-     add their titles to the list of Invariant Sections in the Modified
-     Version's license notice.  These titles must be distinct from any
-     other section titles.
+     material copied from the Document, you may at your option designate
+     some or all of these sections as invariant.  To do this, add their
+     titles to the list of Invariant Sections in the Modified Version's
+     license notice.  These titles must be distinct from any other
+     section titles.
 
      You may add a section Entitled "Endorsements", provided it contains
      nothing but endorsements of your Modified Version by various
@@ -612,15 +603,15 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      definition of a standard.
 
      You may add a passage of up to five words as a Front-Cover Text,
-     and a passage of up to 25 words as a Back-Cover Text, to the end
-     of the list of Cover Texts in the Modified Version.  Only one
-     passage of Front-Cover Text and one of Back-Cover Text may be
-     added by (or through arrangements made by) any one entity.  If the
-     Document already includes a cover text for the same cover,
-     previously added by you or by arrangement made by the same entity
-     you are acting on behalf of, you may not add another; but you may
-     replace the old one, on explicit permission from the previous
-     publisher that added the old one.
+     and a passage of up to 25 words as a Back-Cover Text, to the end of
+     the list of Cover Texts in the Modified Version.  Only one passage
+     of Front-Cover Text and one of Back-Cover Text may be added by (or
+     through arrangements made by) any one entity.  If the Document
+     already includes a cover text for the same cover, previously added
+     by you or by arrangement made by the same entity you are acting on
+     behalf of, you may not add another; but you may replace the old
+     one, on explicit permission from the previous publisher that added
+     the old one.
 
      The author(s) and publisher(s) of the Document do not by this
      License give permission to use their names for publicity for or to
@@ -630,8 +621,8 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
 
      You may combine the Document with other documents released under
      this License, under the terms defined in section 4 above for
-     modified versions, provided that you include in the combination
-     all of the Invariant Sections of all of the original documents,
+     modified versions, provided that you include in the combination all
+     of the Invariant Sections of all of the original documents,
      unmodified, and list them all as Invariant Sections of your
      combined work in its license notice, and that you preserve all
      their Warranty Disclaimers.
@@ -658,20 +649,20 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      documents released under this License, and replace the individual
      copies of this License in the various documents with a single copy
      that is included in the collection, provided that you follow the
-     rules of this License for verbatim copying of each of the
-     documents in all other respects.
+     rules of this License for verbatim copying of each of the documents
+     in all other respects.
 
      You may extract a single document from such a collection, and
      distribute it individually under this License, provided you insert
-     a copy of this License into the extracted document, and follow
-     this License in all other respects regarding verbatim copying of
-     that document.
+     a copy of this License into the extracted document, and follow this
+     License in all other respects regarding verbatim copying of that
+     document.
 
   7. AGGREGATION WITH INDEPENDENT WORKS
 
      A compilation of the Document or its derivatives with other
-     separate and independent documents or works, in or on a volume of
-     a storage or distribution medium, is called an "aggregate" if the
+     separate and independent documents or works, in or on a volume of a
+     storage or distribution medium, is called an "aggregate" if the
      copyright resulting from the compilation is not used to limit the
      legal rights of the compilation's users beyond what the individual
      works permit.  When the Document is included in an aggregate, this
@@ -716,8 +707,8 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
 
      However, if you cease all violation of this License, then your
      license from a particular copyright holder is reinstated (a)
-     provisionally, unless and until the copyright holder explicitly
-     and finally terminates your license, and (b) permanently, if the
+     provisionally, unless and until the copyright holder explicitly and
+     finally terminates your license, and (b) permanently, if the
      copyright holder fails to notify you of the violation by some
      reasonable means prior to 60 days after the cessation.
 
@@ -729,33 +720,33 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      after your receipt of the notice.
 
      Termination of your rights under this section does not terminate
-     the licenses of parties who have received copies or rights from
-     you under this License.  If your rights have been terminated and
-     not permanently reinstated, receipt of a copy of some or all of
-     the same material does not give you any rights to use it.
+     the licenses of parties who have received copies or rights from you
+     under this License.  If your rights have been terminated and not
+     permanently reinstated, receipt of a copy of some or all of the
+     same material does not give you any rights to use it.
 
- 10. FUTURE REVISIONS OF THIS LICENSE
+  10. FUTURE REVISIONS OF THIS LICENSE
 
      The Free Software Foundation may publish new, revised versions of
      the GNU Free Documentation License from time to time.  Such new
      versions will be similar in spirit to the present version, but may
      differ in detail to address new problems or concerns.  See
-     `http://www.gnu.org/copyleft/'.
+     <http://www.gnu.org/copyleft/>.
 
      Each version of the License is given a distinguishing version
      number.  If the Document specifies that a particular numbered
      version of this License "or any later version" applies to it, you
      have the option of following the terms and conditions either of
      that specified version or of any later version that has been
-     published (not as a draft) by the Free Software Foundation.  If
-     the Document does not specify a version number of this License,
-     you may choose any version ever published (not as a draft) by the
-     Free Software Foundation.  If the Document specifies that a proxy
-     can decide which future versions of this License can be used, that
+     published (not as a draft) by the Free Software Foundation.  If the
+     Document does not specify a version number of this License, you may
+     choose any version ever published (not as a draft) by the Free
+     Software Foundation.  If the Document specifies that a proxy can
+     decide which future versions of this License can be used, that
      proxy's public statement of acceptance of a version permanently
      authorizes you to choose that version for the Document.
 
- 11. RELICENSING
+  11. RELICENSING
 
      "Massive Multiauthor Collaboration Site" (or "MMC Site") means any
      World Wide Web server that publishes copyrightable works and also
@@ -785,7 +776,6 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      site under CC-BY-SA on the same site at any time before August 1,
      2009, provided the MMC is eligible for relicensing.
 
-
 ADDENDUM: How to use this License for your documents
 ====================================================
 
@@ -802,7 +792,7 @@ notices just after the title page:
        Free Documentation License''.
 
    If you have Invariant Sections, Front-Cover Texts and Back-Cover
-Texts, replace the "with...Texts." line with this:
+Texts, replace the "with...Texts."  line with this:
 
          with the Invariant Sections being LIST THEIR TITLES, with
          the Front-Cover Texts being LIST, and with the Back-Cover Texts
@@ -813,9 +803,9 @@ combination of the three, merge those two alternatives to suit the
 situation.
 
    If your document contains nontrivial examples of program code, we
-recommend releasing these examples in parallel under your choice of
-free software license, such as the GNU General Public License, to
-permit their use in free software.
+recommend releasing these examples in parallel under your choice of free
+software license, such as the GNU General Public License, to permit
+their use in free software.
 
 
 File: rrep.info,  Node: Index,  Prev: Copying,  Up: Top
@@ -831,7 +821,7 @@ Index
 * backup:                                Command-line Options.
                                                               (line  54)
 * binary files:                          Command-line Options.
-                                                              (line  76)
+                                                              (line  73)
 * bugs:                                  Reporting Bugs.      (line   6)
 * copying:                               Copying.             (line   6)
 * exclude directories:                   Command-line Options.
@@ -844,54 +834,59 @@ Index
 * fixed strings:                         Command-line Options.
                                                               (line  12)
 * help:                                  Command-line Options.
-                                                              (line  89)
+                                                              (line  86)
 * ignore case:                           Command-line Options.
-                                                              (line  94)
+                                                              (line  91)
 * include files:                         Command-line Options.
                                                               (line  23)
 * interactive:                           Command-line Options.
-                                                              (line 105)
+                                                              (line 102)
 * keep times:                            Command-line Options.
-                                                              (line  97)
+                                                              (line  94)
 * long backup:                           Command-line Options.
                                                               (line  59)
 * no messages:                           Command-line Options.
-                                                              (line 115)
+                                                              (line 112)
 * pattern list:                          Command-line Options.
-                                                              (line  84)
+                                                              (line  81)
 * problems:                              Reporting Bugs.      (line   6)
 * quiet:                                 Command-line Options.
-                                                              (line 111)
+                                                              (line 108)
 * recursive replacement:                 Command-line Options.
                                                               (line  18)
 * replacement string:                    Command-line Options.
-                                                              (line 102)
+                                                              (line  99)
 * replacing a pattern in multiple files: Introduction.        (line   6)
 * return status:                         Exit Status.         (line   6)
 * simulation:                            Command-line Options.
-                                                              (line  80)
+                                                              (line  77)
 * suffix:                                Command-line Options.
                                                               (line  40)
 * usage, examples:                       Usage.               (line   6)
 * version:                               Command-line Options.
                                                               (line  45)
 * whole lines:                           Command-line Options.
-                                                              (line 123)
+                                                              (line 120)
 * whole words:                           Command-line Options.
-                                                              (line 119)
+                                                              (line 116)
 
 
 
 Tag Table:
 Node: Top742
-Node: Introduction1529
-Node: Invoking2034
-Node: Command-line Options3011
-Node: Exit Status6629
-Node: Usage6797
-Node: Reporting Bugs9703
-Node: Copying10299
-Node: GNU Free Documentation License11379
-Node: Index36501
+Node: Introduction1531
+Node: Invoking2036
+Node: Command-line Options3013
+Node: Exit Status6630
+Node: Usage6798
+Node: Reporting Bugs9706
+Node: Copying10302
+Node: GNU Free Documentation License11382
+Node: Index36485
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:
