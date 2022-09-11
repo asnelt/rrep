@@ -1,3 +1,7 @@
+2022-09-11 22:42  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.texi: Corrected GFDL license text.
+
 2022-09-05 22:56  Arno Onken  <asnelt@asnelt.org>
 
 	* lib: Updated GNU Gnulib modules.
