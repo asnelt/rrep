@@ -980,19 +980,19 @@ main (int argc, char** argv)
                                          &replacement);
     }
 
-  if (included_patterns)
+  if (included_patterns != NULL)
     free_exclude (included_patterns);
-  if (excluded_patterns)
+  if (excluded_patterns != NULL)
     free_exclude (excluded_patterns);
-  if (excluded_directory_patterns)
+  if (excluded_directory_patterns != NULL)
     free_exclude (excluded_directory_patterns);
   free_replace (&replacement);
   free_pattern (&pattern);
-  if (file_buffer)
+  if (file_buffer != NULL)
     free (file_buffer);
-  if (buffer)
+  if (buffer != NULL)
     free (buffer);
-  if (file_list)
+  if (file_list != NULL)
     free (file_list);
   if (suffix_string != NULL)
     free (suffix_string);
