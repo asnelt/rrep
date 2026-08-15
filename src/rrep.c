@@ -287,7 +287,12 @@ backup_file (const char *file_name)
       return FAILURE;
     }
   /* Create backup file.  */
-  copy_file_preserving (file_name, backup_name);
+  if (qcopy_file_preserving (file_name, backup_name) != 0)
+    {
+      rrep_error (ERR_WRITE_BACKUP, file_name);
+      free (backup_name);
+      return FAILURE;
+    }
   free (backup_name);
 
   return SUCCESS;
