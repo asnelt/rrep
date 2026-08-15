@@ -571,6 +571,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
                   if (next_path == NULL)
                     {
                       rrep_error (ERR_ALLOC_PATHBUFFER, entry->d_name);
+                      closedir (d);
                       return FAILURE;
                     }
                   strcpy (next_path, relative_path);
@@ -583,6 +584,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
                   if (chdir (".."))
                     {
                       rrep_error (ERR_PROCESS_DIR, entry->d_name);
+                      closedir (d);
                       return FAILURE;
                     }
                   if (options & OPT_KEEP_TIMES && times_saved)
@@ -603,6 +605,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
             }
         }
     }
+  closedir (d);
 
   if (failure_flag)
     return FAILURE;
