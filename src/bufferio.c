@@ -1,5 +1,5 @@
 /* bufferio.c - buffer routines for rrep.
-   Copyright (C) 2011, 2022 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2022, 2026 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -65,7 +65,6 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
       if (nr != buffer_size-1 && ferror (fp))
         {
           rrep_error (ERR_READ_FILE, file_name);
-          fclose (fp);
           return FAILURE;
         }
       buffer_fill = nr;
@@ -112,7 +111,6 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
               if (nr != buffer_size-search_pos-1 && ferror (fp))
                 {
                   rrep_error (ERR_READ_FILE, file_name);
-                  fclose (fp);
                   return FAILURE;
                 }
               buffer_fill += nr - start;
@@ -125,7 +123,6 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
               if (tmp == NULL)
                 {
                   rrep_error (ERR_REALLOC_BUFFER, file_name);
-                  fclose (fp);
                   return FAILURE;
                 }
               buffer = tmp;
@@ -137,7 +134,6 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
               if (nr != INIT_BUFFER_SIZE && ferror (fp))
                 {
                   rrep_error (ERR_READ_FILE, file_name);
-                  fclose (fp);
                   return FAILURE;
                 }
               buffer_fill += nr;
