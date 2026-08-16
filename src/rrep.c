@@ -581,7 +581,8 @@ process_dir (const char *relative_path, pattern_t *pattern,
                   failure_flag |= process_dir (next_path, pattern, replacement);
                   free (next_path);
                   next_path = NULL;
-                  if (chdir (".."))
+                  /* Change back into parent directory.  */
+                  if (fchdir (dirfd (d)))
                     {
                       rrep_error (ERR_PROCESS_DIR, entry->d_name);
                       closedir (d);
