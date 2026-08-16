@@ -151,6 +151,10 @@ rrep_error (const int errcode, const char *file_name)
       fprintf (stderr, _("%s: %s: unknown escape sequence in REPLACEMENT\n"),
                program_name, file_name);
       break;
+    case ERR_DUPLICATE_OPTION:
+      fprintf (stderr, _("%s: duplicate PATTERN or REPLACEMENT option\n"),
+               program_name);
+      break;
     case ERR_SAVE_DIR:
       fprintf (stderr, _("%s: could not save current working directory: "),
                program_name);

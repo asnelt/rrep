@@ -824,6 +824,7 @@ main (int argc, char** argv)
         case 'e':
           if (pattern_string != NULL)
             {
+              rrep_error (ERR_DUPLICATE_OPTION, NULL);
               failure_flag = true;
             }
           else
@@ -846,6 +847,7 @@ main (int argc, char** argv)
         case 'p':
           if (replacement_string != NULL)
             {
+              rrep_error (ERR_DUPLICATE_OPTION, NULL);
               failure_flag = true;
             }
           else
