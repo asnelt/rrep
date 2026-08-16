@@ -182,7 +182,6 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   regmatch_t match[10]; /* Matched regular expression.  */
   bool last_empty_flag; /* Last regular expression had zero length.  */
   bool break_flag; /* Signals break of while loop.  */
-  char tmp_c; /* Buffer for a single character.  */
 
   if (out == NULL)
     {
@@ -216,15 +215,10 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
 
           if (match[0].rm_eo > 0)
             {
-              /* Save character in tmp_c.  */
-              tmp_c = *(start+match[0].rm_so);
               /* Write beginning of line before matched pattern.  */
-              *(start+match[0].rm_so) = '\0';
               if (write_string (out, start, match[0].rm_so, file_name, &pos)
                   != SUCCESS)
                 return FAILURE;
-              /* Restore character from tmp_c.  */
-              *(start+match[0].rm_so) = tmp_c;
             }
           if (last_empty_flag || match[0].rm_eo > 0)
             if (write_replacement (out, start, match, replacement, file_name,
