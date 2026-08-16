@@ -1,5 +1,5 @@
 /* messages.c - message routines for rrep.
-   Copyright (C) 2011, 2013, 2022 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2013, 2022, 2026 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -249,7 +249,7 @@ rrep_error (const int errcode, const char *file_name)
       perror (NULL);
       break;
     case ERR_KEEP_TIMES:
-      fprintf (stderr, _("%s: %s: could keep file times: "),
+      fprintf (stderr, _("%s: %s: could not keep file times: "),
                program_name, file_name);
       perror (NULL);
       break;
