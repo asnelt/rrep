@@ -117,19 +117,19 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
           else
             {
               /* Reallocate memory.  */
-              tmp = realloc (buffer, buffer_size+INIT_BUFFER_SIZE);
+              tmp = realloc (buffer, 2*buffer_size);
               if (tmp == NULL)
                 {
                   rrep_error (ERR_REALLOC_BUFFER, file_name);
                   return FAILURE;
                 }
               buffer = tmp;
-              buffer_size += INIT_BUFFER_SIZE;
+              buffer_size *= 2;
 
               /* Fill allocated memory.  */
               nr = fread (buffer+search_pos, sizeof (char),
-                          INIT_BUFFER_SIZE, fp);
-              if (nr != INIT_BUFFER_SIZE && ferror (fp))
+                          buffer_size-buffer_fill-1, fp);
+              if (nr != buffer_size-buffer_fill-1 && ferror (fp))
                 {
                   rrep_error (ERR_READ_FILE, file_name);
                   return FAILURE;

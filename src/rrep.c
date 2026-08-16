@@ -107,7 +107,7 @@ write_string (FILE *fp, const char *string, const size_t string_len,
       while (file_buffer_size-(*pos-file_buffer) < string_len)
         {
           /* Reallocate memory.  */
-          tmp = realloc (file_buffer, file_buffer_size+INIT_BUFFER_SIZE);
+          tmp = realloc (file_buffer, 2*file_buffer_size);
           if (tmp == NULL)
             {
               rrep_error (ERR_REALLOC_FILEBUFFER, file_name);
@@ -115,7 +115,7 @@ write_string (FILE *fp, const char *string, const size_t string_len,
             }
           *pos = tmp + (*pos - file_buffer);
           file_buffer = tmp;
-          file_buffer_size += INIT_BUFFER_SIZE;
+          file_buffer_size *= 2;
         }
       /* Copy string to file_buffer and increase pos.  */
       memcpy (*pos, string, string_len * sizeof (char));
