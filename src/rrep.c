@@ -483,7 +483,8 @@ process_dir (const char *relative_path, pattern_t *pattern,
 {
   DIR *d; /* Current directory.  */
   struct dirent *entry; /* Directory entry.  */
-  struct stat st; /* The stat for obtaining file times.  */
+  int entry_type; /* Type of the current directory entry.  */
+  struct stat st; /* The stat for obtaining file times and entry types.  */
   struct utimbuf times; /* File times.  */
   bool times_saved; /* Flag for time keeping.  */
   bool failure_flag;
@@ -502,7 +503,17 @@ process_dir (const char *relative_path, pattern_t *pattern,
 
   while ((entry = readdir (d)))
     {
-      if (entry->d_type == DT_REG
+      entry_type = entry->d_type;
+      /* If the file system does not report the entry type in d_type, try to
+         obtain the type from lstat.  */
+      if (entry_type == DT_UNKNOWN && lstat (entry->d_name, &st) == 0)
+        {
+          if (S_ISREG (st.st_mode))
+            entry_type = DT_REG;
+          else if (S_ISDIR (st.st_mode))
+            entry_type = DT_DIR;
+        }
+      if (entry_type == DT_REG
           && check_name (entry->d_name, included_patterns, excluded_patterns))
         {
           /* The entry is a regular file.  */
@@ -534,7 +545,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
                 }
             }
         }
-      else if (entry->d_type == DT_DIR) /* The entry is a directory.  */
+      else if (entry_type == DT_DIR) /* The entry is a directory.  */
         {
           if (options & OPT_RECURSIVE && strcmp (entry->d_name, ".")
               && strcmp (entry->d_name, "..")
