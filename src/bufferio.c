@@ -50,7 +50,6 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
                                       termination.  */
   char *tmp;
   size_t nr; /* Number of characters read by fread.  */
-  int i;
   bool search_flag;
 
   *line_len = 0;
@@ -101,8 +100,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
           if (start > 0)
             {
               /* Let line start at the beginning of buffer.  */
-              for (i = 0; i < buffer_fill-start; i++)
-                *(buffer+i) = *(buffer+start+i);
+              memmove (buffer, buffer+start, buffer_fill-start);
               search_pos -= start;
 
               /* Fill rest of buffer.  */

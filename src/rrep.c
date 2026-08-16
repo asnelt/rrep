@@ -622,7 +622,7 @@ process_file_list (char **file_list, const size_t file_counter,
   struct stat st; /* The stat for obtaining file type.  */
   struct utimbuf times; /* File times.  */
   int wd; /* File descriptor for current working directory.  */
-  int i;
+  size_t i;
   bool omit_dir_flag = false;
   bool failure_flag = false;
 
