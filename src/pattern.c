@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 #include <regex.h>
 #include "rrep.h"
 #include "messages.h"
@@ -43,8 +44,7 @@ check_whole (const char *line, const char *start, size_t len)
         return false;
 
       c = *(start-1);
-      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
-          || (c >= '0' && c <= '9') || c == '_')
+      if (isalnum ((unsigned char) c) || c == '_')
         return false;
     }
 
@@ -55,8 +55,7 @@ check_whole (const char *line, const char *start, size_t len)
       if (options & OPT_WHOLE_LINE)
         return false;
 
-      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
-          || (c >= '0' && c <= '9') || c == '_')
+      if (isalnum ((unsigned char) c) || c == '_')
         return false;
     }
 
