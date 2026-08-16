@@ -1,5 +1,5 @@
 /* messages.h - declarations for message functions for rrep.
-   Copyright (C) 2011, 2022 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2022, 2026 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -68,6 +68,9 @@ extern void print_confirmation (const char *);
 
 /* Prints directory omission.  */
 extern void print_dir_skip (const char *);
+
+/* Prints symbolic link omission.  */
+extern void print_link_skip (const char *);
 
 /* Prints the simulation message.  */
 extern void print_dry ();

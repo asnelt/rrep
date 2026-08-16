@@ -286,6 +286,15 @@ print_dir_skip (const char *file_name)
             file_name);
 }
 
+/* Prints symbolic link omission.  */
+void
+print_link_skip (const char *file_name)
+{
+  if (!(options & OPT_QUIET))
+    printf (_("%s: %s: omitting symbolic link\n"), program_name,
+            file_name);
+}
+
 /* Prints the simulation message.  */
 void
 print_dry ()

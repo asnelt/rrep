@@ -704,6 +704,10 @@ process_file_list (char **file_list, const size_t file_counter,
                 }
             }
         }
+      else if (S_ISLNK (st.st_mode))
+        {
+          print_link_skip (file_list[i]);
+        }
     }
   close (wd);
 
