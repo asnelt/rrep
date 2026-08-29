@@ -74,7 +74,7 @@ static struct option const long_options[] =
   {"help", no_argument, NULL, 'h'},
   {"ignore-case", no_argument, NULL, 'i'},
   {"keep-times", no_argument, NULL, KEEP_TIMES_OPTION},
-  {"replace-with", no_argument, NULL, 'p'},
+  {"replace-with", required_argument, NULL, 'p'},
   {"interactive", no_argument, NULL, INTERACTIVE_OPTION},
   {"quiet", no_argument, NULL, 'q'},
   {"silent", no_argument, NULL, 'q'},
