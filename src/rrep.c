@@ -297,6 +297,8 @@ int
 process_file (const char *relative_path, const char *file_name,
               pattern_t *pattern, const replace_t *replacement)
 {
+  int fd;
+  struct stat st;
   FILE *fp, *tmp;
   char *line;
   size_t line_len, file_len;
@@ -304,12 +306,42 @@ process_file (const char *relative_path, const char *file_name,
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
   size_t path_len;
+  bool write_flag; /* Flag for file write permitted.  */
   bool found_flag; /* Flag for pattern found.  */
 
-  fp = fopen (file_name, "r");
+  fd = open (file_name, O_RDWR | O_NOFOLLOW);
+  if (fd < 0)
+    {
+      /* Try opening read-only.  */
+      fd = open (file_name, O_RDONLY | O_NOFOLLOW);
+      if (fd < 0)
+        {
+          rrep_error (ERR_OPEN_READ, file_name);
+          return FAILURE;
+        }
+      write_flag = false;
+    }
+  else
+    write_flag = true;
+
+  if (fstat (fd, &st) < 0)
+    {
+      rrep_error (ERR_OPEN_READ, file_name);
+      close (fd);
+      return FAILURE;
+    }
+  /* Check whether file file_name is a regular file.  */
+  if (!S_ISREG (st.st_mode))
+    {
+      close (fd);
+      return SUCCESS;
+    }
+
+  fp = fdopen (fd, write_flag ? "r+" : "r");
   if (fp == NULL)
     {
       rrep_error (ERR_OPEN_READ, file_name);
+      close (fd);
       return FAILURE;
     }
 
@@ -348,11 +380,20 @@ process_file (const char *relative_path, const char *file_name,
 
   if (found_flag)
     {
-      if (options & OPT_DRY && !(options & OPT_QUIET))
+      if (options & OPT_DRY)
         {
-          printf ("%s\n", file_name);
+          if (!(options & OPT_QUIET))
+            printf ("%s\n", file_name);
           fclose (fp);
           return SUCCESS;
+        }
+
+      /* Writing back to file is actually required.  */
+      if (!write_flag)
+        {
+          rrep_error (ERR_OPEN_WRITE, file_name);
+          fclose (fp);
+          return FAILURE;
         }
 
       if (options & OPT_PROMPT)
@@ -375,7 +416,7 @@ process_file (const char *relative_path, const char *file_name,
 
       rewind (fp);
       tmp = tmpfile ();
-      /* Copy f to tmp or file_buffer with replaced string.  */
+      /* Copy file to tmp or file_buffer with replaced string.  */
       if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len))
         {
           fclose (fp);
@@ -384,11 +425,19 @@ process_file (const char *relative_path, const char *file_name,
           return FAILURE;
         }
 
-      /* Copy from tmp or file_buffer back to f.  */
-      fp = freopen (file_name, "w", fp);
-      if (fp == NULL)
+      /* Copy from tmp or file_buffer back to file.  */
+      if (tmp != NULL && fflush (tmp) != 0)
         {
-          rrep_error (ERR_OPEN_WRITE, file_name);
+          rrep_error (ERR_WRITE_TEMP, file_name);
+          fclose (fp);
+          fclose (tmp);
+          return FAILURE;
+        }
+      rewind(fp);
+      if (ftruncate (fd, 0) < 0)
+        {
+          rrep_error (ERR_OVERWRITE, file_name);
+          fclose (fp);
           if (tmp != NULL)
             fclose (tmp);
           return FAILURE;
@@ -427,6 +476,12 @@ process_file (const char *relative_path, const char *file_name,
             }
           fclose (tmp);
         }
+      if (fclose (fp) != 0)
+        {
+          rrep_error (ERR_OVERWRITE, file_name);
+          return FAILURE;
+        }
+      fp = NULL;
       if (!(options & OPT_QUIET))
         {
           if (relative_path != NULL)

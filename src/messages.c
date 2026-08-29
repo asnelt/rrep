@@ -38,7 +38,7 @@ print_version ()
 {
   printf ("%s\n\n", PACKAGE_STRING);
   printf (_("\
-Copyright (C) 2011, 2013, 2019, 2022 %s\n\
+Copyright (C) 2011, 2013, 2019, 2022, 2026 %s\n\
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\
 This is free software: you are free to change and redistribute it.\n\
 There is NO WARRANTY, to the extent permitted by law.\n"), AUTHORS);
@@ -239,6 +239,11 @@ rrep_error (const int errcode, const char *file_name)
       break;
     case ERR_READ_TEMP:
       fprintf (stderr, _("%s: %s: could not read temporary file: "),
+               program_name, file_name);
+      perror (NULL);
+      break;
+    case ERR_WRITE_TEMP:
+      fprintf (stderr, _("%s: %s: could not write temporary file: "),
                program_name, file_name);
       perror (NULL);
       break;
