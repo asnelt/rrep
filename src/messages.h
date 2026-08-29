@@ -35,7 +35,6 @@ enum
     ERR_ALLOC_BACKUP, /* Error for allocating backup string.  */
     ERR_REALLOC_BUFFER, /* Error for reallocating buffer.  */
     ERR_REALLOC_FILEBUFFER, /* Error for reallocating file_buffer.  */
-    ERR_MEMORY, /* Error for insufficient memory.  */
     ERR_OPEN_READ, /* Could not open a file for reading.  */
     ERR_OPEN_WRITE, /* Could not open a file for writing.  */
     ERR_OPEN_DIR, /* Could not open a directory.  */

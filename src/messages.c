@@ -212,11 +212,6 @@ rrep_error (const int errcode, const char *file_name)
                file_name);
       perror (NULL);
       break;
-    case ERR_MEMORY:
-      fprintf (stderr, _("%s: %s: not enough memory to process file: "),
-               program_name, file_name);
-      perror (NULL);
-      break;
     case ERR_OPEN_READ:
       fprintf (stderr, _("%s: %s: could not open file for reading: "),
                program_name, file_name);
