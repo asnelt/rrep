@@ -1039,7 +1039,7 @@ main (int argc, char** argv)
       if (buffer != NULL)
         free (buffer);
       free_pattern (&pattern);
-      return FAILURE;
+      return EXIT_FAILURE;
     }
 
   /* Replace pattern in file.  */
