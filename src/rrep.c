@@ -1052,6 +1052,11 @@ main (int argc, char** argv)
       /* Default input from stdin and output stdout.  */
       failure_flag |= replace_string (stdin, stdout, &pattern, &replacement,
                                       "stdin", NULL);
+      if (fflush (stdout) != 0)
+        {
+          rrep_error (ERR_WRITE_FILE, "stdout");
+          failure_flag = true;
+        }
     }
   else
     {
