@@ -1,5 +1,5 @@
 /* rrep.h - declarations for rrep, a search and replace utility.
-   Copyright (C) 2011 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2026 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,18 +20,19 @@
 #define INIT_BUFFER_SIZE (4096)
 
 /* Option flag definitions.  */
-#define OPT_ALL         0x001 /* Process all files.  */
-#define OPT_BACKUP      0x002 /* Backup files.  */
-#define OPT_BINARY      0x004 /* Process binary files as well.  */
-#define OPT_DRY         0x008 /* Do not modify any files.  */
-#define OPT_FIXED       0x010 /* PATTERN and REPLACEMENT are fixed strings.  */
-#define OPT_KEEP_TIMES  0x020 /* Keep file access and modification times.  */
-#define OPT_NO_MESSAGES 0x040 /* Do not print error messages.  */
-#define OPT_PROMPT      0x080 /* Prompt before modifying a file.  */
-#define OPT_QUIET       0x100 /* Do not print regular messages.  */
-#define OPT_RECURSIVE   0x200 /* Recurse into directories.  */
-#define OPT_WHOLE_LINE  0x400 /* Force PATTERN to match only whole lines.  */
-#define OPT_WHOLE_WORD  0x800 /* Force PATTERN to match only whole words.  */
+#define OPT_ALL         0x0001 /* Process all files.  */
+#define OPT_BACKUP      0x0002 /* Backup files.  */
+#define OPT_BINARY      0x0004 /* Process binary files as well.  */
+#define OPT_DRY         0x0008 /* Do not modify any files.  */
+#define OPT_FIXED       0x0010 /* PATTERN and REPLACEMENT are fixed strings.  */
+#define OPT_ICASE       0x0020 /* Ignore case distinctions.  */
+#define OPT_KEEP_TIMES  0x0040 /* Keep file access and modification times.  */
+#define OPT_NO_MESSAGES 0x0080 /* Do not print error messages.  */
+#define OPT_PROMPT      0x0100 /* Prompt before modifying a file.  */
+#define OPT_QUIET       0x0200 /* Do not print regular messages.  */
+#define OPT_RECURSIVE   0x0400 /* Recurse into directories.  */
+#define OPT_WHOLE_LINE  0x0800 /* Force PATTERN to match only whole lines.  */
+#define OPT_WHOLE_WORD  0x1000 /* Force PATTERN to match only whole words.  */
 
 /* Processing constants.  */
 enum

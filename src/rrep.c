@@ -907,6 +907,7 @@ main (int argc, char** argv)
           break;
 
         case 'i':
+          options |= OPT_ICASE;
           cflags |= REG_ICASE;
           break;
 

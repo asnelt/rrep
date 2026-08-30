@@ -1,5 +1,5 @@
 /* pattern.c - pattern and replacement routines for rrep.
-   Copyright (C) 2011, 2013, 2022 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2013, 2022, 2026 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -87,7 +87,10 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
       do
         {
           first += pattern->string_len;
-          first = strstr (first, pattern->string);
+          if (options & OPT_ICASE)
+            first = strcasestr (first, pattern->string);
+          else
+            first = strstr (first, pattern->string);
         }
       while (first != NULL && !check_whole (line, first, pattern->string_len));
 
