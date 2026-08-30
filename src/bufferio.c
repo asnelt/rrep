@@ -68,6 +68,9 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
           return FAILURE;
         }
       buffer_fill = nr;
+      /* File might be empty.  */
+      if (buffer_fill == 0)
+        return END_REACHED;
     }
   else if (feof (fp) && search_pos >= buffer_fill)
     {
