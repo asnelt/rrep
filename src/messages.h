@@ -40,7 +40,8 @@ enum
     ERR_OPEN_DIR, /* Could not open a directory.  */
     ERR_READ_FILE, /* Could not read from a file.  */
     ERR_READ_TEMP, /* Could not read from a temporary file.  */
-    ERR_WRITE_TEMP, /* Could not write to temporary file.  */
+    ERR_WRITE_FILE, /* Could not write to a file.  */
+    ERR_WRITE_TEMP, /* Could not write to a temporary file.  */
     ERR_WRITE_BACKUP, /* Could not write to backup file.  */
     ERR_OVERWRITE, /* Could not overwrite a file.  */
     ERR_KEEP_TIMES /* Could not keep file times.  */

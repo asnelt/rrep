@@ -237,6 +237,11 @@ rrep_error (const int errcode, const char *file_name)
                program_name, file_name);
       perror (NULL);
       break;
+    case ERR_WRITE_FILE:
+      fprintf (stderr, _("%s: %s: could not write file: "),
+               program_name, file_name);
+      perror (NULL);
+      break;
     case ERR_WRITE_TEMP:
       fprintf (stderr, _("%s: %s: could not write temporary file: "),
                program_name, file_name);

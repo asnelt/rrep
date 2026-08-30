@@ -123,7 +123,11 @@ write_string (FILE *fp, const char *string, const size_t string_len,
     }
   else
     {
-      fwrite (string, sizeof (char), string_len, fp);
+      if (fwrite (string, sizeof (char), string_len, fp) != string_len)
+        {
+          rrep_error (ERR_WRITE_FILE, file_name);
+          return FAILURE;
+        }
     }
 
   return SUCCESS;
