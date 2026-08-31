@@ -184,8 +184,8 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
   regmatch_t match[10]; /* Matched regular expression.  */
+  bool newline_flag; /* Trailing newline character found in line.  */
   bool last_empty_flag; /* Last regular expression had zero length.  */
-  bool break_flag; /* Signals break of while loop.  */
 
   if (out == NULL)
     {
@@ -208,15 +208,15 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   /* Copy in to out with replaced string.  */
   while ((rr = read_line (in, &line, &line_len, file_name)) == SUCCESS)
     {
+      /* Remove trailing newline character if it is present in line.  */
+      newline_flag = (line_len > 0 && line[line_len-1] == '\n');
+      if (newline_flag)
+        line[line_len-1] = '\0';
       start = line;
       last_empty_flag = true;
       /* Search for regular expression or pattern string.  */
       while ((errcode = match_pattern (pattern, line, start, match)) == 0)
         {
-          break_flag = (*start == '\0');
-          if (break_flag && start > line && *(start-1) == '\n')
-            break;
-
           if (match[0].rm_eo > 0)
             {
               /* Write beginning of line before matched pattern.  */
@@ -229,7 +229,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
                                    &pos) != SUCCESS)
               return FAILURE;
 
-          if (break_flag)
+          if (*start == '\0')
             break;
 
           if (match[0].rm_eo == 0)
@@ -252,6 +252,9 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
           print_regerror (errcode, pattern->compiled);
           return FAILURE;
         }
+      /* Eventually restore trailing newline character.  */
+      if (newline_flag)
+        line[line_len-1] = '\n';
       /* Flush rest of line into out or file_buffer.  */
       if (write_string (out, start, line_len-(start-line), file_name, &pos)
           != SUCCESS)
@@ -366,6 +369,9 @@ process_file (const char *relative_path, const char *file_name,
               return SUCCESS;
             }
         }
+      /* Before matching, remove trailing newline if present.  */
+      if (line_len > 0 && line[line_len-1] == '\n')
+        line[line_len-1] = '\0';
       errcode = match_pattern (pattern, line, line, match);
       if (errcode == 0)
         found_flag = true;
