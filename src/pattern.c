@@ -50,7 +50,7 @@ check_whole (const char *line, const char *start, size_t len)
 
   /* Check end.  */
   c = *(start + len);
-  if (c != '\n')
+  if (c != '\n' && c != '\0')
     {
       if (options & OPT_WHOLE_LINE)
         return false;
