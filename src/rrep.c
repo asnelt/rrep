@@ -1033,6 +1033,8 @@ main (int argc, char** argv)
   /* Parse pattern string.  */
   if (parse_pattern (pattern_string, &pattern, cflags) == FAILURE)
     {
+      if (suffix_string != NULL)
+        free (suffix_string);
       if (file_list != NULL)
         free (file_list);
       if (buffer != NULL)
