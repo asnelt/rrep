@@ -83,10 +83,10 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
           match[i].rm_eo = -1;
         }
       /* Match string.  */
-      first = start - pattern->string_len;
+      first = start - 1; /* Decrement due to increment in loop.  */
       do
         {
-          first += pattern->string_len;
+          first++;
           if (options & OPT_ICASE)
             first = strcasestr (first, pattern->string);
           else
@@ -121,10 +121,10 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
               /* Initial iteration or found PATTERN has zero length.  */
               if (first >= start && (*first == '\n' || *first == '\0'))
                   return REG_NOMATCH;
-              first++;
             }
           else
-            first += match[0].rm_eo;
+            first += match[0].rm_so;
+          first++;
           /* Set flags for regexec.  */
           if (first == line)
             eflags = 0;
