@@ -347,6 +347,8 @@ parse_replace (const char *string, replace_t *replacement)
           if (*next == '\\')
             next++;
         }
+      else if (*next == '\\')
+        next++;
       if (*next == '\0')
         break;
       next++;
