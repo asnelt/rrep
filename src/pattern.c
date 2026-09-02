@@ -216,7 +216,7 @@ parse_pattern (const char *string, pattern_t *pattern, int cflags)
 void
 free_replace (replace_t *replacement)
 {
-  int i;
+  size_t i;
 
   if (replacement->string != NULL)
     {

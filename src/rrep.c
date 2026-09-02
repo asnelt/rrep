@@ -187,6 +187,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   bool newline_flag; /* Trailing newline character found in line.  */
   bool last_empty_flag; /* Last regular expression had zero length.  */
 
+  pos = NULL;
   if (out == NULL)
     {
       /* Try to use file_buffer instead of tmpfile.  */
@@ -558,6 +559,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
   char *next_path = NULL; /* The relative_path with directory names
                              attached.  */
 
+  times_saved = false;
   failure_flag = false;
   d = opendir (".");
   if (d == NULL)
