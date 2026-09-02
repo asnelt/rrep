@@ -27,7 +27,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <regex.h>
-#include <utime.h>
 #include <locale.h>
 #include <getopt.h>
 #include "gettext.h"
@@ -551,7 +550,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
   struct dirent *entry; /* Directory entry.  */
   int entry_type; /* Type of the current directory entry.  */
   struct stat st; /* The stat for obtaining file times and entry types.  */
-  struct utimbuf times; /* File times.  */
+  struct timespec times[2]; /* File times.  */
   bool times_saved; /* Flag for time keeping.  */
   bool failure_flag;
   size_t path_len = strlen (relative_path);
@@ -595,8 +594,8 @@ process_dir (const char *relative_path, pattern_t *pattern,
                 }
               else
                 {
-                  times.actime = st.st_atime;
-                  times.modtime = st.st_mtime;
+                  times[0] = st.st_atim;
+                  times[1] = st.st_mtim;
                   times_saved = true;
                 }
             }
@@ -605,7 +604,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
           if (options & OPT_KEEP_TIMES && times_saved)
             {
               /* Restore file times.  */
-              if (utime (entry->d_name, &times) != 0)
+              if (utimensat (AT_FDCWD, entry->d_name, times, 0) != 0)
                 {
                   rrep_error (ERR_KEEP_TIMES, entry->d_name);
                   failure_flag = true;
@@ -629,8 +628,8 @@ process_dir (const char *relative_path, pattern_t *pattern,
                     }
                   else
                     {
-                      times.actime = st.st_atime;
-                      times.modtime = st.st_mtime;
+                      times[0] = st.st_atim;
+                      times[1] = st.st_mtim;
                       times_saved = true;
                     }
                 }
@@ -663,7 +662,7 @@ process_dir (const char *relative_path, pattern_t *pattern,
                   if (options & OPT_KEEP_TIMES && times_saved)
                     {
                       /* Restore file times.  */
-                      if (utime (entry->d_name, &times) != 0)
+                      if (utimensat (AT_FDCWD, entry->d_name, times, 0) != 0)
                         {
                           rrep_error (ERR_KEEP_TIMES, entry->d_name);
                           failure_flag = true;
@@ -692,7 +691,7 @@ process_file_list (char **file_list, const size_t file_counter,
                    pattern_t *pattern, const replace_t *replacement)
 {
   struct stat st; /* The stat for obtaining file type.  */
-  struct utimbuf times; /* File times.  */
+  struct timespec times[2]; /* File times.  */
   int wd; /* File descriptor for current working directory.  */
   size_t i;
   bool omit_dir_flag = false;
@@ -730,8 +729,8 @@ process_file_list (char **file_list, const size_t file_counter,
           if (options & OPT_KEEP_TIMES)
             {
               /* Save file times.  */
-              times.actime = st.st_atime;
-              times.modtime = st.st_mtime;
+              times[0] = st.st_atim;
+              times[1] = st.st_mtim;
             }
           if (!chdir (file_list[i]))
             {
@@ -746,7 +745,7 @@ process_file_list (char **file_list, const size_t file_counter,
               if (options & OPT_KEEP_TIMES)
                 {
                   /* Restore file times.  */
-                  if (utime (file_list[i], &times) != 0)
+                  if (utimensat (AT_FDCWD, file_list[i], times, 0) != 0)
                     {
                       rrep_error (ERR_KEEP_TIMES, file_list[i]);
                       failure_flag = true;
@@ -766,8 +765,8 @@ process_file_list (char **file_list, const size_t file_counter,
           if (options & OPT_KEEP_TIMES)
             {
               /* Save file times.  */
-              times.actime = st.st_atime;
-              times.modtime = st.st_mtime;
+              times[0] = st.st_atim;
+              times[1] = st.st_mtim;
             }
           /* The st is a regular file.  */
           failure_flag |= process_file (NULL, file_list[i], pattern,
@@ -775,7 +774,7 @@ process_file_list (char **file_list, const size_t file_counter,
           if (options & OPT_KEEP_TIMES)
             {
               /* Restore file times.  */
-              if (utime (file_list[i], &times) != 0)
+              if (utimensat (AT_FDCWD, file_list[i], times, 0) != 0)
                 {
                   rrep_error (ERR_KEEP_TIMES, file_list[i]);
                   failure_flag = true;
