@@ -24,12 +24,10 @@ enum
     ERR_PATTERN, /* Error in PATTERN.  */
     ERR_UNKNOWN_ESCAPE, /* Unknown escape sequence encountered.  */
     ERR_DUPLICATE_OPTION, /* Duplicate PATTERN or REPLACEMENT option.  */
-    ERR_SAVE_DIR, /* Could not save a directory.  */
     ERR_ALLOC_SUFFIX, /* Error for allocating suffix string.  */
     ERR_ALLOC_BUFFER, /* Error for allocating buffer.  */
     ERR_ALLOC_FILEBUFFER, /* Error for allocating file_buffer.  */
     ERR_ALLOC_FILELIST, /* Error for allocating file_list.  */
-    ERR_ALLOC_PATHBUFFER, /* Error for allocating next_path.  */
     ERR_ALLOC_PATTERN, /* Error for allocating pattern.  */
     ERR_ALLOC_REPLACEMENT, /* Error for allocating replacement.  */
     ERR_ALLOC_BACKUP, /* Error for allocating backup string.  */
@@ -37,7 +35,6 @@ enum
     ERR_REALLOC_FILEBUFFER, /* Error for reallocating file_buffer.  */
     ERR_OPEN_READ, /* Could not open a file for reading.  */
     ERR_OPEN_WRITE, /* Could not open a file for writing.  */
-    ERR_OPEN_DIR, /* Could not open a directory.  */
     ERR_READ_FILE, /* Could not read from a file.  */
     ERR_READ_TEMP, /* Could not read from a temporary file.  */
     ERR_WRITE_FILE, /* Could not write to a file.  */
@@ -67,9 +64,6 @@ extern void print_regerror (const int, regex_t *);
 
 /* Prints replacement confirmation.  */
 extern void print_confirmation (const char *);
-
-/* Prints directory omission.  */
-extern void print_dir_skip (const char *);
 
 /* Prints symbolic link omission.  */
 extern void print_link_skip (const char *);

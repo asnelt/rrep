@@ -155,11 +155,6 @@ rrep_error (const int errcode, const char *file_name)
       fprintf (stderr, _("%s: duplicate PATTERN or REPLACEMENT option\n"),
                program_name);
       break;
-    case ERR_SAVE_DIR:
-      fprintf (stderr, _("%s: could not save current working directory: "),
-               program_name);
-      perror (NULL);
-      break;
     case ERR_ALLOC_SUFFIX:
       fprintf (stderr, _("%s: could not allocate memory for suffix: "),
                program_name);
@@ -178,11 +173,6 @@ rrep_error (const int errcode, const char *file_name)
     case ERR_ALLOC_FILELIST:
       fprintf (stderr, _("%s: could not allocate memory for file_list: "),
                program_name);
-      perror (NULL);
-      break;
-    case ERR_ALLOC_PATHBUFFER:
-      fprintf (stderr, _("%s: %s: could not allocate memory for next_path: "),
-               program_name, file_name);
       perror (NULL);
       break;
     case ERR_ALLOC_PATTERN:
@@ -220,11 +210,6 @@ rrep_error (const int errcode, const char *file_name)
     case ERR_OPEN_WRITE:
       fprintf (stderr, _("%s: %s: could not open file for writing: "),
                program_name, file_name);
-      perror (NULL);
-      break;
-    case ERR_OPEN_DIR:
-      fprintf (stderr, _("%s: could not open directory: "),
-               program_name);
       perror (NULL);
       break;
     case ERR_READ_FILE:
@@ -284,15 +269,6 @@ void
 print_confirmation (const char *file_name)
 {
   printf (_("%s: pattern replaced\n"), file_name);
-}
-
-/* Prints directory omission.  */
-void
-print_dir_skip (const char *file_name)
-{
-  if (!(options & OPT_QUIET))
-    printf (_("%s: %s: omitting directory\n"), program_name,
-            file_name);
 }
 
 /* Prints symbolic link omission.  */

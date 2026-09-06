@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include <dirent.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <regex.h>
@@ -31,9 +31,11 @@
 #include <getopt.h>
 #include "gettext.h"
 #include "progname.h"
+#include "fts_.h"
 #include "backupfile.h"
 #include "copy-file.h"
 #include "exclude.h"
+#include "utimens.h"
 #include "rrep.h"
 #include "messages.h"
 #include "bufferio.h"
@@ -299,13 +301,31 @@ backup_file (const char *file_name)
   return SUCCESS;
 }
 
-/* Replace pattern by replacement in the file file_name.  */
+/* Restore the file times of the file descriptor fd.  */
 int
-process_file (const char *relative_path, const char *file_name,
+restore_file_times (int fd, const char *file_name, const struct timespec *times)
+{
+  if (options & OPT_KEEP_TIMES)
+    {
+      if (fdutimens (fd, NULL, times) != 0)
+        {
+          rrep_error (ERR_KEEP_TIMES, file_name);
+          return FAILURE;
+        }
+    }
+  return SUCCESS;
+}
+
+/* Replace pattern by replacement in the file file_name.  dir_fd is the
+   directory file descriptor and file is the name of the file in that
+   directory.  file_name includes the path.  */
+int
+process_file (int dir_fd, const char *file, const char *file_name,
               pattern_t *pattern, const replace_t *replacement)
 {
   int fd;
   struct stat st;
+  struct timespec times[2]; /* File times.  */
   FILE *fp, *tmp;
   char *line;
   size_t line_len, file_len;
@@ -315,12 +335,13 @@ process_file (const char *relative_path, const char *file_name,
   size_t path_len;
   bool write_flag; /* Flag for file write permitted.  */
   bool found_flag; /* Flag for pattern found.  */
+  bool failure_flag = false;
 
-  fd = open (file_name, O_RDWR | O_NOFOLLOW);
+  fd = openat (dir_fd, file, O_RDWR | O_NOFOLLOW);
   if (fd < 0)
     {
       /* Try opening read-only.  */
-      fd = open (file_name, O_RDONLY | O_NOFOLLOW);
+      fd = openat (dir_fd, file, O_RDONLY | O_NOFOLLOW);
       if (fd < 0)
         {
           rrep_error (ERR_OPEN_READ, file_name);
@@ -343,6 +364,9 @@ process_file (const char *relative_path, const char *file_name,
       close (fd);
       return SUCCESS;
     }
+  /* Save file times.  */
+  times[0] = st.st_atim;
+  times[1] = st.st_mtim;
 
   fp = fdopen (fd, write_flag ? "r+" : "r");
   if (fp == NULL)
@@ -352,7 +376,7 @@ process_file (const char *relative_path, const char *file_name,
       return FAILURE;
     }
 
-  /* Check whether file file_name contains pattern at all.  */
+  /* Check whether file contains pattern at all.  */
   found_flag = false;
   line = NULL;
   while ((!found_flag || !(options & OPT_BINARY))
@@ -365,8 +389,10 @@ process_file (const char *relative_path, const char *file_name,
           if (memchr (line, '\0', line_len) != NULL)
             {
               /* Null character found, cancel search.  */
+              if (restore_file_times (fd, file_name, times) != SUCCESS)
+                failure_flag = true;
               fclose (fp);
-              return SUCCESS;
+              return failure_flag ? FAILURE : SUCCESS;
             }
         }
       /* Before matching, remove trailing newline if present.  */
@@ -378,12 +404,14 @@ process_file (const char *relative_path, const char *file_name,
       else if (errcode != REG_NOMATCH)
         {
           print_regerror (errcode, pattern->compiled);
+          restore_file_times (fd, file_name, times);
           fclose (fp);
           return FAILURE;
         }
     }
   if (rr == FAILURE)
     {
+      restore_file_times (fd, file_name, times);
       fclose (fp);
       return FAILURE;
     }
@@ -394,14 +422,17 @@ process_file (const char *relative_path, const char *file_name,
         {
           if (!(options & OPT_QUIET))
             printf ("%s\n", file_name);
+          if (restore_file_times (fd, file_name, times) != SUCCESS)
+            failure_flag = true;
           fclose (fp);
-          return SUCCESS;
+          return failure_flag ? FAILURE : SUCCESS;
         }
 
       /* Writing back to file is actually required.  */
       if (!write_flag)
         {
           rrep_error (ERR_OPEN_WRITE, file_name);
+          restore_file_times (fd, file_name, times);
           fclose (fp);
           return FAILURE;
         }
@@ -410,8 +441,10 @@ process_file (const char *relative_path, const char *file_name,
         {
           if (prompt_user (file_name) == false)
             {
+              if (restore_file_times (fd, file_name, times) != SUCCESS)
+                failure_flag = true;
               fclose (fp);
-              return SUCCESS;
+              return failure_flag ? FAILURE : SUCCESS;
             }
         }
 
@@ -419,6 +452,7 @@ process_file (const char *relative_path, const char *file_name,
         {
           if (backup_file (file_name) != SUCCESS)
             {
+              restore_file_times (fd, file_name, times);
               fclose (fp);
               return FAILURE;
             }
@@ -429,6 +463,7 @@ process_file (const char *relative_path, const char *file_name,
       /* Copy file to tmp or file_buffer with replaced string.  */
       if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len))
         {
+          restore_file_times (fd, file_name, times);
           fclose (fp);
           if (tmp != NULL)
             fclose (tmp);
@@ -439,6 +474,7 @@ process_file (const char *relative_path, const char *file_name,
       if (tmp != NULL && fflush (tmp) != 0)
         {
           rrep_error (ERR_WRITE_TEMP, file_name);
+          restore_file_times (fd, file_name, times);
           fclose (fp);
           fclose (tmp);
           return FAILURE;
@@ -447,6 +483,7 @@ process_file (const char *relative_path, const char *file_name,
       if (ftruncate (fd, 0) < 0)
         {
           rrep_error (ERR_OVERWRITE, file_name);
+          restore_file_times (fd, file_name, times);
           fclose (fp);
           if (tmp != NULL)
             fclose (tmp);
@@ -458,6 +495,7 @@ process_file (const char *relative_path, const char *file_name,
           if (fwrite (file_buffer, sizeof (char), file_len, fp) != file_len)
             {
               rrep_error (ERR_OVERWRITE, file_name);
+              restore_file_times (fd, file_name, times);
               fclose (fp);
               return FAILURE;
             }
@@ -472,6 +510,7 @@ process_file (const char *relative_path, const char *file_name,
               if (line_len != buffer_size && ferror (tmp))
                 {
                   rrep_error (ERR_READ_TEMP, file_name);
+                  restore_file_times (fd, file_name, times);
                   fclose (fp);
                   fclose (tmp);
                   return FAILURE;
@@ -479,6 +518,7 @@ process_file (const char *relative_path, const char *file_name,
               if (fwrite (buffer, sizeof (char), line_len, fp) != line_len)
                 {
                   rrep_error (ERR_OVERWRITE, file_name);
+                  restore_file_times (fd, file_name, times);
                   fclose (fp);
                   fclose (tmp);
                   return FAILURE;
@@ -486,26 +526,33 @@ process_file (const char *relative_path, const char *file_name,
             }
           fclose (tmp);
         }
+
+      /* File modified, so flush before restoring times.  */
+      if (fflush (fp) != 0)
+        {
+          rrep_error (ERR_OVERWRITE, file_name);
+          return FAILURE;
+        }
+      if (restore_file_times (fd, file_name, times) != SUCCESS)
+        failure_flag = true;
       if (fclose (fp) != 0)
         {
           rrep_error (ERR_OVERWRITE, file_name);
           return FAILURE;
         }
       fp = NULL;
-      if (!(options & OPT_QUIET))
-        {
-          if (relative_path != NULL)
-            {
-              printf ("%s", relative_path);
-              path_len = strlen (relative_path);
-              if (path_len == 0 || relative_path[path_len-1] != '/')
-                printf ("/");
-            }
-          print_confirmation (file_name);
-        }
+      if (!failure_flag && !(options & OPT_QUIET))
+        print_confirmation (file_name);
     }
   if (fp != NULL)
-    fclose (fp);
+    {
+      if (restore_file_times (fd, file_name, times) != SUCCESS)
+        failure_flag = true;
+      fclose (fp);
+    }
+
+  if (failure_flag)
+    return FAILURE;
 
   return SUCCESS;
 }
@@ -541,143 +588,66 @@ check_name (const char *file_name, const struct exclude *included_name,
   return check_include_name (file_name, included_name, excluded_name);
 }
 
-/* Processes the current directory and all subdirectories recursively.  */
-int
-process_dir (const char *relative_path, pattern_t *pattern,
-             const replace_t *replacement)
+/* Directory times and associated file descriptor.  */
+struct dir_times
 {
-  DIR *d; /* Current directory.  */
-  struct dirent *entry; /* Directory entry.  */
-  int entry_type; /* Type of the current directory entry.  */
-  struct stat st; /* The stat for obtaining file times and entry types.  */
-  struct timespec times[2]; /* File times.  */
-  bool times_saved; /* Flag for time keeping.  */
-  bool failure_flag;
-  size_t path_len = strlen (relative_path);
-  size_t next_path_len;
-  char *next_path = NULL; /* The relative_path with directory names
-                             attached.  */
+  int fd;
+  struct timespec times[2];
+};
 
-  times_saved = false;
-  failure_flag = false;
-  d = opendir (".");
-  if (d == NULL)
+/* Save directory times in fts_pointer.  */
+static int
+save_dir_times (FTSENT *ent)
+{
+  int fd;
+  struct stat st;
+  struct dir_times *dt;
+
+  fd = openat (ent->fts_fts->fts_cwd_fd, ent->fts_accpath,
+               O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+  if (fd < 0 || fstat (fd, &st) < 0)
     {
-      rrep_error (ERR_OPEN_DIR, NULL);
+      rrep_error (ERR_KEEP_TIMES, ent->fts_path);
+      if (fd >= 0)
+        close (fd);
       return FAILURE;
     }
 
-  while ((entry = readdir (d)))
+  dt = (struct dir_times *) malloc (sizeof (struct dir_times));
+  if (dt == NULL)
     {
-      entry_type = entry->d_type;
-      /* If the file system does not report the entry type in d_type, try to
-         obtain the type from lstat.  */
-      if (entry_type == DT_UNKNOWN && lstat (entry->d_name, &st) == 0)
-        {
-          if (S_ISREG (st.st_mode))
-            entry_type = DT_REG;
-          else if (S_ISDIR (st.st_mode))
-            entry_type = DT_DIR;
-        }
-      if (entry_type == DT_REG
-          && check_name (entry->d_name, included_patterns, excluded_patterns))
-        {
-          /* The entry is a regular file.  */
-          if (options & OPT_KEEP_TIMES)
-            {
-              /* Obtain file times.  */
-              if (lstat (entry->d_name, &st) < 0)
-                {
-                  rrep_error (ERR_KEEP_TIMES, entry->d_name);
-                  failure_flag = true;
-                  times_saved = false;
-                }
-              else
-                {
-                  times[0] = st.st_atim;
-                  times[1] = st.st_mtim;
-                  times_saved = true;
-                }
-            }
-          failure_flag |= process_file (relative_path, entry->d_name, pattern,
-                                        replacement);
-          if (options & OPT_KEEP_TIMES && times_saved)
-            {
-              /* Restore file times.  */
-              if (utimensat (AT_FDCWD, entry->d_name, times, 0) != 0)
-                {
-                  rrep_error (ERR_KEEP_TIMES, entry->d_name);
-                  failure_flag = true;
-                }
-            }
-        }
-      else if (entry_type == DT_DIR) /* The entry is a directory.  */
-        {
-          if (options & OPT_RECURSIVE && strcmp (entry->d_name, ".")
-              && strcmp (entry->d_name, "..")
-              && check_name (entry->d_name, NULL, excluded_directory_patterns))
-            {
-              if (options & OPT_KEEP_TIMES)
-                {
-                  /* Obtain file times.  */
-                  if (lstat (entry->d_name, &st) < 0)
-                    {
-                      rrep_error (ERR_KEEP_TIMES, entry->d_name);
-                      failure_flag = true;
-                      times_saved = false;
-                    }
-                  else
-                    {
-                      times[0] = st.st_atim;
-                      times[1] = st.st_mtim;
-                      times_saved = true;
-                    }
-                }
-              /* Recurse into directory.  */
-              if (!chdir (entry->d_name))
-                {
-                  next_path_len = path_len + strlen (entry->d_name);
-                  next_path = (char *) malloc ((next_path_len + 2)
-                                               * sizeof (char));
-                  if (next_path == NULL)
-                    {
-                      rrep_error (ERR_ALLOC_PATHBUFFER, entry->d_name);
-                      closedir (d);
-                      return FAILURE;
-                    }
-                  strcpy (next_path, relative_path);
-                  if (path_len == 0 || relative_path[path_len-1] != '/')
-                    strcat (next_path, "/");
-                  strcat (next_path, entry->d_name);
-                  failure_flag |= process_dir (next_path, pattern, replacement);
-                  free (next_path);
-                  next_path = NULL;
-                  /* Change back into parent directory.  */
-                  if (fchdir (dirfd (d)))
-                    {
-                      rrep_error (ERR_PROCESS_DIR, entry->d_name);
-                      closedir (d);
-                      return FAILURE;
-                    }
-                  if (options & OPT_KEEP_TIMES && times_saved)
-                    {
-                      /* Restore file times.  */
-                      if (utimensat (AT_FDCWD, entry->d_name, times, 0) != 0)
-                        {
-                          rrep_error (ERR_KEEP_TIMES, entry->d_name);
-                          failure_flag = true;
-                        }
-                    }
-                }
-              else
-                {
-                  rrep_error (ERR_PROCESS_DIR, entry->d_name);
-                  failure_flag = true;
-                }
-            }
-        }
+      rrep_error (ERR_KEEP_TIMES, ent->fts_path);
+      close (fd);
+      return FAILURE;
     }
-  closedir (d);
+
+  dt->fd = fd;
+  dt->times[0] = st.st_atim;
+  dt->times[1] = st.st_mtim;
+  ent->fts_pointer = dt;
+
+  return SUCCESS;
+}
+
+/* Restore directory times from fts_pointer and free fts_pointer.  */
+static int
+restore_dir_times (FTSENT *ent)
+{
+  struct dir_times *dt;
+  bool failure_flag = false;
+
+  dt = (struct dir_times *) ent->fts_pointer;
+  if (dt == NULL)
+    return SUCCESS;
+
+  if (fdutimens (dt->fd, NULL, dt->times) != 0)
+    {
+      rrep_error (ERR_KEEP_TIMES, ent->fts_path);
+      failure_flag = true;
+    }
+  close (dt->fd);
+  free (dt);
+  ent->fts_pointer = NULL;
 
   if (failure_flag)
     return FAILURE;
@@ -685,108 +655,118 @@ process_dir (const char *relative_path, pattern_t *pattern,
   return SUCCESS;
 }
 
-/* Processes the file_counter files in file_list.  */
+/* Processes the files in file_list.  */
 int
-process_file_list (char **file_list, const size_t file_counter,
-                   pattern_t *pattern, const replace_t *replacement)
+process_file_list (char **file_list, pattern_t *pattern,
+                   const replace_t *replacement)
 {
-  struct stat st; /* The stat for obtaining file type.  */
-  struct timespec times[2]; /* File times.  */
-  int wd; /* File descriptor for current working directory.  */
-  size_t i;
-  bool omit_dir_flag = false;
+  FTS *fts;
+  FTSENT *ent;
+  bool skip_flag;
   bool failure_flag = false;
 
-  /* Save current working directory.  */
-  wd = open (".", O_RDONLY);
-  omit_dir_flag = (wd < 0);
-  if (omit_dir_flag)
+  fts = fts_open (file_list, FTS_PHYSICAL | FTS_CWDFD | FTS_VERBATIM, NULL);
+  if (fts == NULL)
     {
-      rrep_error (ERR_SAVE_DIR, NULL);
-      failure_flag = true;
+      rrep_error (ERR_PROCESS_ARG, file_list[0]);
+      return FAILURE;
     }
 
-  /* Process file list.  */
-  for (i = 0; i < file_counter; i++)
+  while ((ent = fts_read (fts)) != NULL)
     {
-      if (lstat (file_list[i], &st) < 0)
+      switch (ent->fts_info)
         {
-          rrep_error (ERR_PROCESS_ARG, file_list[i]);
-          failure_flag = true;
-          continue;
-        }
+        case FTS_D: /* Directory visited in preorder.  */
+          if (ent->fts_level == FTS_ROOTLEVEL)
+            skip_flag = !check_include_name (ent->fts_path, NULL,
+                                             excluded_directory_patterns);
+          else
+            skip_flag = (!(options & OPT_RECURSIVE)
+                         || !check_name (ent->fts_name, NULL,
+                                         excluded_directory_patterns));
+          if (skip_flag)
+            {
+              fts_set (fts, ent, FTS_SKIP);
+              break;
+            }
+          if (options & OPT_KEEP_TIMES && save_dir_times (ent) != SUCCESS)
+            failure_flag = true;
+          break;
 
-      if (S_ISDIR (st.st_mode)) /* The st is a directory.  */
-        {
-          if (omit_dir_flag)
+        case FTS_DC: /* Directory that causes a cycle.  */
+          errno = ELOOP;
+          rrep_error (ERR_PROCESS_DIR, ent->fts_path);
+          failure_flag = true;
+          break;
+
+        case FTS_DNR: /* Directory cannot be read.  */
+          errno = ent->fts_errno;
+          rrep_error (ERR_PROCESS_DIR, ent->fts_path);
+          restore_dir_times (ent);
+          failure_flag = true;
+          break;
+
+        case FTS_DP: /* Directory visited in postorder.  */
+          if (restore_dir_times (ent) != SUCCESS)
+            failure_flag = true;
+          break;
+
+        case FTS_F: /* Regular file.  */
+          if (ent->fts_level == FTS_ROOTLEVEL)
             {
-              print_dir_skip (file_list[i]);
-              continue;
-            }
-          if (!check_include_name (file_list[i], NULL,
-                                   excluded_directory_patterns))
-            continue;
-          if (options & OPT_KEEP_TIMES)
-            {
-              /* Save file times.  */
-              times[0] = st.st_atim;
-              times[1] = st.st_mtim;
-            }
-          if (!chdir (file_list[i]))
-            {
-              failure_flag |= process_dir (file_list[i], pattern, replacement);
-              /* Return to working directory.  */
-              if (fchdir (wd))
-                {
-                  rrep_error (ERR_PROCESS_DIR, file_list[i]);
-                  close (wd);
-                  return FAILURE;
-                }
-              if (options & OPT_KEEP_TIMES)
-                {
-                  /* Restore file times.  */
-                  if (utimensat (AT_FDCWD, file_list[i], times, 0) != 0)
-                    {
-                      rrep_error (ERR_KEEP_TIMES, file_list[i]);
-                      failure_flag = true;
-                    }
-                }
+              if (!check_include_name (ent->fts_path, included_patterns,
+                                       excluded_patterns))
+                break;
             }
           else
             {
-              rrep_error (ERR_PROCESS_DIR, file_list[i]);
-              failure_flag = true;
+              if (!check_name (ent->fts_name, included_patterns,
+                               excluded_patterns))
+                break;
             }
-        }
-      else if (S_ISREG (st.st_mode) && check_include_name (file_list[i],
-                                                           included_patterns,
-                                                           excluded_patterns))
-        {
-          if (options & OPT_KEEP_TIMES)
+          failure_flag |= process_file (fts->fts_cwd_fd, ent->fts_accpath,
+                                        ent->fts_path, pattern, replacement);
+          break;
+
+        case FTS_SL: /* Symbolic link.  */
+        case FTS_SLNONE: /* Symbolic link with nonexistent target.  */
+          if (ent->fts_level == FTS_ROOTLEVEL)
             {
-              /* Save file times.  */
-              times[0] = st.st_atim;
-              times[1] = st.st_mtim;
+              if (!check_include_name (ent->fts_path, included_patterns,
+                                       excluded_patterns))
+                break;
             }
-          /* The st is a regular file.  */
-          failure_flag |= process_file (NULL, file_list[i], pattern,
-                                        replacement);
-          if (options & OPT_KEEP_TIMES)
+          else
             {
-              /* Restore file times.  */
-              if (utimensat (AT_FDCWD, file_list[i], times, 0) != 0)
-                {
-                  rrep_error (ERR_KEEP_TIMES, file_list[i]);
-                  failure_flag = true;
-                }
+              if (!check_name (ent->fts_name, included_patterns,
+                               excluded_patterns))
+                break;
             }
-        }
-      else if (S_ISLNK (st.st_mode))
-        {
-          print_link_skip (file_list[i]);
+          print_link_skip (ent->fts_path);
+          break;
+
+        case FTS_ERR: /* Error return.  */
+        case FTS_NS: /* No stat information available.  */
+          errno = ent->fts_errno;
+          rrep_error (ERR_PROCESS_ARG, ent->fts_path);
+          restore_dir_times (ent);
+          failure_flag = true;
+          break;
+
+        default:
+          break;
         }
     }
-  close (wd);
+  if (errno != 0)
+    {
+      rrep_error (ERR_PROCESS_ARG, file_list[0]);
+      failure_flag = true;
+    }
+  if (fts_close (fts) != 0)
+    {
+      rrep_error (ERR_PROCESS_ARG, file_list[0]);
+      failure_flag = true;
+    }
 
   if (failure_flag)
     return FAILURE;
@@ -987,7 +967,7 @@ main (int argc, char** argv)
     backup_method = no_backups;
 
   /* Allocate memory for file list.  */
-  file_list = (char **) malloc ((argc-optind) * sizeof (char *));
+  file_list = (char **) malloc ((argc-optind+1) * sizeof (char *));
   if (file_list == NULL)
     {
       rrep_error (ERR_ALLOC_FILELIST, NULL);
@@ -1007,6 +987,7 @@ main (int argc, char** argv)
           file_counter++;
         }
     }
+  file_list[file_counter] = NULL;
 
   if (pattern_string == NULL || replacement_string == NULL)
     {
@@ -1071,8 +1052,7 @@ main (int argc, char** argv)
   else
     {
       print_dry ();
-      failure_flag |= process_file_list (file_list, file_counter, &pattern,
-                                         &replacement);
+      failure_flag |= process_file_list (file_list, &pattern, &replacement);
     }
 
   if (included_patterns != NULL)
