@@ -73,6 +73,8 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
   const char *first; /* Start of first occurrence of pattern->string.  */
   int errcode; /* Return value of regexec.  */
   int eflags; /* Flags for regexec.  */
+  regoff_t so, eo; /* Search range offsets for regexec.  */
+  regoff_t eolo; /* End of line offset.  */
 
   if (options & OPT_FIXED)
     {
@@ -83,16 +85,17 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
           match[i].rm_eo = -1;
         }
       /* Match string.  */
-      first = start - 1; /* Decrement due to increment in loop.  */
-      do
+      first = start;
+      while (true)
         {
-          first++;
           if (options & OPT_ICASE)
             first = strcasestr (first, pattern->string);
           else
             first = strstr (first, pattern->string);
+          if (first == NULL || check_whole (line, first, pattern->string_len))
+            break;
+          first++;
         }
-      while (first != NULL && !check_whole (line, first, pattern->string_len));
 
       if (first == NULL)
         {
@@ -112,37 +115,44 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
   else
     {
       /* Match regular expression.  */
-      match[0].rm_eo = 0;
-      first = start - 1; /* Decrement due to increment in loop.  */
-      do
+      eolo = strlen (start);
+      so = 0;
+      eo = eolo;
+      while (true)
         {
-          if (match[0].rm_eo == 0)
-            {
-              /* Initial iteration or found PATTERN has zero length.  */
-              if (first >= start && (*first == '\n' || *first == '\0'))
-                  return REG_NOMATCH;
-            }
-          else
-            first += match[0].rm_so;
-          first++;
           /* Set flags for regexec.  */
-          if (first == line)
-            eflags = 0;
-          else
-            eflags = REG_NOTBOL;
-          errcode = regexec (pattern->compiled, first, 10, match, eflags);
-        }
-      while (errcode == 0
-             && !check_whole (line, first+match[0].rm_so,
-                              match[0].rm_eo-match[0].rm_so));
-      /* Correct offsets.  */
-      for (i = 0; i < 10; i++)
-        {
-          if (match[i].rm_eo > -1)
+          eflags = REG_STARTEND;
+          if (start + so != line)
+            eflags |= REG_NOTBOL;
+          if (eo < eolo)
+            eflags |= REG_NOTEOL;
+
+          match[0].rm_so = so;
+          match[0].rm_eo = eo;
+          errcode = regexec (pattern->compiled, start, 10, match, eflags);
+          if (errcode != 0 && errcode != REG_NOMATCH)
+            return errcode;
+
+          if (errcode == 0 && (match[0].rm_so == so || eo == eolo))
             {
-              match[i].rm_so += first - start;
-              match[i].rm_eo += first - start;
+              so = match[0].rm_so;
+              if (check_whole (line, start+so, match[0].rm_eo-so))
+                return 0;
+              if (so < match[0].rm_eo)
+                {
+                  /* Check for shorter match.  */
+                  eo = match[0].rm_eo - 1;
+                  continue;
+                }
             }
+          else if (eo == eolo)
+            return REG_NOMATCH;
+
+          if (so == eolo)
+            return REG_NOMATCH;
+
+          so++;
+          eo = eolo;
         }
 
       return errcode;
