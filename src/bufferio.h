@@ -1,5 +1,5 @@
 /* bufferio.h - declarations for buffer functions for rrep.
-   Copyright (C) 2011, 2022 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2022, 2026 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ extern size_t buffer_size;
 extern char *file_buffer;
 /* Size of file_buffer.  */
 extern size_t file_buffer_size;
-
 
 /* Read in a buffered line from fp.  The line starts at *line and has
    length *line_len.  Line delimiters are '\n' and, if binary files are not

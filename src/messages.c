@@ -17,11 +17,11 @@
    02110-1301, USA.  */
 
 #include <config.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
 #include <errno.h>
 #include <regex.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "gettext.h"
 #include "progname.h"
 #include "propername.h"

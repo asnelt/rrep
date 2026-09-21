@@ -17,11 +17,11 @@
    02110-1301, USA.  */
 
 #include <config.h>
+#include <regex.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include <regex.h>
 #include "rrep.h"
 #include "messages.h"
 
@@ -34,7 +34,6 @@ size_t buffer_size = 0;
 char *file_buffer = NULL;
 /* Size of file_buffer.  */
 size_t file_buffer_size = 0;
-
 
 /* Read in a buffered line from fp.  The line starts at *line and has
    length *line_len.  Line delimiters are '\n' and, if binary files are not
@@ -61,8 +60,8 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
       search_pos = 1;
       buffer_fill = 0;
       /* Fill complete buffer.  */
-      nr = fread (buffer, sizeof (char), buffer_size-1, fp);
-      if (nr != buffer_size-1 && ferror (fp))
+      nr = fread (buffer, sizeof (char), buffer_size - 1, fp);
+      if (nr != buffer_size - 1 && ferror (fp))
         {
           rrep_error (ERR_READ_FILE, file_name);
           return FAILURE;
@@ -94,8 +93,9 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
   search_flag = true;
   while (search_flag)
     {
-      while (search_pos < buffer_fill && *(buffer+search_pos-1) != '\n'
-             && (!(options & OPT_BINARY) || *(buffer+search_pos-1) != '\0'))
+      while (search_pos < buffer_fill && *(buffer + search_pos - 1) != '\n'
+             && (!(options & OPT_BINARY)
+                 || *(buffer + search_pos - 1) != '\0'))
         search_pos++;
 
       if (search_pos >= buffer_fill && !feof (fp))
@@ -104,13 +104,13 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
           if (start > 0)
             {
               /* Let line start at the beginning of buffer.  */
-              memmove (buffer, buffer+start, buffer_fill-start);
+              memmove (buffer, buffer + start, buffer_fill - start);
               search_pos -= start;
 
               /* Fill rest of buffer.  */
-              nr = fread (buffer+search_pos, sizeof (char),
-                          buffer_size-search_pos-1, fp);
-              if (nr != buffer_size-search_pos-1 && ferror (fp))
+              nr = fread (buffer + search_pos, sizeof (char),
+                          buffer_size - search_pos - 1, fp);
+              if (nr != buffer_size - search_pos - 1 && ferror (fp))
                 {
                   rrep_error (ERR_READ_FILE, file_name);
                   return FAILURE;
@@ -121,7 +121,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
           else
             {
               /* Reallocate memory.  */
-              tmp = realloc (buffer, 2*buffer_size);
+              tmp = realloc (buffer, 2 * buffer_size);
               if (tmp == NULL)
                 {
                   rrep_error (ERR_REALLOC_BUFFER, file_name);
@@ -131,9 +131,9 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
               buffer_size *= 2;
 
               /* Fill allocated memory.  */
-              nr = fread (buffer+search_pos, sizeof (char),
-                          buffer_size-buffer_fill-1, fp);
-              if (nr != buffer_size-buffer_fill-1 && ferror (fp))
+              nr = fread (buffer + search_pos, sizeof (char),
+                          buffer_size - buffer_fill - 1, fp);
+              if (nr != buffer_size - buffer_fill - 1 && ferror (fp))
                 {
                   rrep_error (ERR_READ_FILE, file_name);
                   return FAILURE;
@@ -152,8 +152,8 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
   *line = buffer+start;
   /* Temporarily replace character after line to generate a terminated
      string.  */
-  null_replace = *(buffer+search_pos);
-  *(buffer+search_pos) = '\0';
+  null_replace = *(buffer + search_pos);
+  *(buffer + search_pos) = '\0';
   /* Set line length.  */
   *line_len = search_pos - start;
 

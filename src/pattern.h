@@ -1,6 +1,6 @@
 /* pattern.h - declarations for pattern and replacement functions for
    rrep.
-   Copyright (C) 2011, 2022 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2022, 2026 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -36,11 +36,15 @@ typedef struct
   size_t nsub; /* Number of subpatterns in replacement.  */
 } replace_t;
 
+/* Determines the byte length of the multibyte character at position pos and
+   advances the state at ps.  Falls back to length 1 if an error occurs.  */
+extern size_t count_bytes (const char *, mbstate_t *);
+
 /* Matches regular expression or string in start.  Returns 0 if a match was
    found, REG_NOMATCH if no match was found or regerror error value if a
    regerror occurred.  Match offsets are stored in match.  */
 extern int match_pattern (pattern_t *, const char *, const char *,
-                          regmatch_t *);
+                          regmatch_t *, mbstate_t, mbstate_t, size_t);
 
 /* Frees the memory that was allocated for the fields of pattern.  */
 extern void free_pattern (pattern_t *);

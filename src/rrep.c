@@ -17,24 +17,25 @@
    02110-1301, USA.  */
 
 #include <config.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <getopt.h>
+#include <limits.h>
+#include <locale.h>
+#include <regex.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
-#include <stdbool.h>
 #include <string.h>
-#include <unistd.h>
-#include <errno.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <regex.h>
-#include <locale.h>
-#include <getopt.h>
-#include "gettext.h"
-#include "progname.h"
-#include "fts_.h"
+#include <unistd.h>
+#include <wchar.h>
 #include "backupfile.h"
 #include "copy-file.h"
+#include "gettext.h"
+#include "progname.h"
 #include "exclude.h"
+#include "fts_.h"
 #include "utimens.h"
 #include "rrep.h"
 #include "messages.h"
@@ -105,10 +106,10 @@ write_string (FILE *fp, const char *string, const size_t string_len,
   if (fp == NULL)
     {
       /* Check if remaining file_buffer space is sufficient.  */
-      while (file_buffer_size-(*pos-file_buffer) < string_len)
+      while (file_buffer_size - (*pos - file_buffer) < string_len)
         {
           /* Reallocate memory.  */
-          tmp = realloc (file_buffer, 2*file_buffer_size);
+          tmp = realloc (file_buffer, 2 * file_buffer_size);
           if (tmp == NULL)
             {
               rrep_error (ERR_REALLOC_FILEBUFFER, file_name);
@@ -162,8 +163,8 @@ write_replacement (FILE *fp, const char *start, const regmatch_t *match,
               write_string (fp, start + match[replacement->sub[i]].rm_so,
                             match[replacement->sub[i]].rm_eo
                             - match[replacement->sub[i]].rm_so, file_name, pos);
-          failure_flag |= write_string (fp, replacement->part[i+1],
-                                        replacement->part_len[i+1], file_name,
+          failure_flag |= write_string (fp, replacement->part[i + 1],
+                                        replacement->part_len[i + 1], file_name,
                                         pos);
         }
     }
@@ -180,11 +181,13 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
                 const replace_t *replacement, const char *file_name,
                 size_t *file_len)
 {
-  size_t line_len;
+  size_t line_len, start_len, before_len, adv_len;
   char *line, *start, *pos;
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
   regmatch_t match[10]; /* Matched regular expression.  */
+  mbstate_t start_state; /* Multibyte state at start.  */
+  mbstate_t before_state; /* Multibyte state before start.  */
   bool newline_flag; /* Trailing newline character found in line.  */
   bool last_empty_flag; /* Last regular expression had zero length.  */
 
@@ -211,13 +214,18 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   while ((rr = read_line (in, &line, &line_len, file_name)) == SUCCESS)
     {
       /* Remove trailing newline character if it is present in line.  */
-      newline_flag = (line_len > 0 && line[line_len-1] == '\n');
+      newline_flag = (line_len > 0 && line[line_len - 1] == '\n');
       if (newline_flag)
-        line[line_len-1] = '\0';
+        line[line_len - 1] = '\0';
       start = line;
       last_empty_flag = true;
+      memset (&start_state, 0, sizeof (start_state));
+      before_state = start_state;
+      start_len = 0;
       /* Search for regular expression or pattern string.  */
-      while ((errcode = match_pattern (pattern, line, start, match)) == 0)
+      while ((errcode = match_pattern (pattern, line, start, match,
+                                       start_state, before_state, before_len))
+             == 0)
         {
           if (match[0].rm_eo > 0)
             {
@@ -237,15 +245,29 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
           if (match[0].rm_eo == 0)
             {
               /* Found string has zero length.  */
-              if (write_string (out, start, 1, file_name, &pos) != SUCCESS)
+              before_len = start_len;
+              before_state = start_state;
+              start_len = count_bytes (start, &start_state);
+              if (write_string (out, start, start_len, file_name, &pos)
+                  != SUCCESS)
                 return FAILURE;
 
-              start++;
+              start += start_len;
               last_empty_flag = true;
             }
           else
             {
-              start = start + match[0].rm_eo;
+              adv_len = 0;
+              do
+                {
+                  before_len = start_len;
+                  before_state = start_state;
+                  start_len = count_bytes (start, &start_state);
+                  adv_len += start_len;
+                }
+              while (adv_len < match[0].rm_eo);
+
+              start += adv_len;
               last_empty_flag = false;
             }
         }
@@ -256,9 +278,9 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
         }
       /* Eventually restore trailing newline character.  */
       if (newline_flag)
-        line[line_len-1] = '\n';
+        line[line_len - 1] = '\n';
       /* Flush rest of line into out or file_buffer.  */
-      if (write_string (out, start, line_len-(start-line), file_name, &pos)
+      if (write_string (out, start, line_len - (start - line), file_name, &pos)
           != SUCCESS)
         return FAILURE;
     }
@@ -330,6 +352,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
   char *line;
   size_t line_len, file_len;
   regmatch_t match[10]; /* Matched regular expression.  */
+  mbstate_t start_state; /* Multibyte state at start.  */
+  mbstate_t before_state; /* Multibyte state before start.  */
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
   size_t path_len;
@@ -396,9 +420,12 @@ process_file (int dir_fd, const char *file, const char *file_name,
             }
         }
       /* Before matching, remove trailing newline if present.  */
-      if (line_len > 0 && line[line_len-1] == '\n')
-        line[line_len-1] = '\0';
-      errcode = match_pattern (pattern, line, line, match);
+      if (line_len > 0 && line[line_len - 1] == '\n')
+        line[line_len - 1] = '\0';
+      memset (&start_state, 0, sizeof (start_state));
+      before_state = start_state;
+      errcode = match_pattern (pattern, line, line, match, start_state,
+                               before_state, 0);
       if (errcode == 0)
         found_flag = true;
       else if (errcode != REG_NOMATCH)
@@ -791,9 +818,9 @@ main (int argc, char** argv)
   bool failure_flag = false;
   bool exit_flag = false;
 
+setlocale (LC_ALL, "");
 #if ENABLE_NLS
   /* Initialization of gettext.  */
-  setlocale (LC_ALL, "");
   bindtextdomain (PACKAGE, LOCALEDIR);
   textdomain (PACKAGE);
 #endif
@@ -967,7 +994,7 @@ main (int argc, char** argv)
     backup_method = no_backups;
 
   /* Allocate memory for file list.  */
-  file_list = (char **) malloc ((argc-optind+1) * sizeof (char *));
+  file_list = (char **) malloc ((argc - optind + 1) * sizeof (char *));
   if (file_list == NULL)
     {
       rrep_error (ERR_ALLOC_FILELIST, NULL);

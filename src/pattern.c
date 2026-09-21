@@ -17,21 +17,62 @@
    02110-1301, USA.  */
 
 #include <config.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
 #include <ctype.h>
 #include <regex.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
+#include <wctype.h>
 #include "rrep.h"
 #include "messages.h"
 #include "pattern.h"
 
+/* Determines the byte length of the multibyte character at position pos and
+   advances the state at ps.  Falls back to length 1 if an error occurs.  */
+size_t
+count_bytes (const char *pos, mbstate_t *ps)
+{
+  size_t len;
+
+  if (MB_CUR_MAX == 1)
+    return 1;
+
+  len = mbrlen (pos, MB_CUR_MAX, ps);
+  if (len == 0 || len == (size_t) -1 || len == (size_t) -2)
+    /* Fallback in case of null, invalid or incomplete character.  */
+    return 1;
+
+  return len;
+}
+
+/* Checks if the character at position pos is part of a word.  */
+static bool
+check_word_part (const char *pos, mbstate_t *ps)
+{
+  wchar_t wc;
+  size_t len;
+
+  if (MB_CUR_MAX == 1)
+    return isalnum ((unsigned char) *pos) || *pos == '_';
+
+  len = mbrtowc (&wc, pos, MB_CUR_MAX, ps);
+
+  if (len == 0 || len == (size_t) -1 || len == (size_t) -2)
+    /* Fallback in case of null, invalid or incomplete character.  */
+    return isalnum ((unsigned char) *pos) || *pos == '_';
+
+  return iswalnum ((wint_t) wc) || wc == L'_';
+}
+
 /* Checks the whole word and whole line options.  */
 bool
-check_whole (const char *line, const char *start, size_t len)
+check_whole (const char *line, const char *start, size_t len,
+             mbstate_t start_state, mbstate_t before_state, size_t before_len)
 {
   char c;
+  size_t adv_len;
 
   /* Check whether any of these options was selected.  */
   if (!(options & OPT_WHOLE_WORD) && !(options & OPT_WHOLE_LINE))
@@ -43,8 +84,7 @@ check_whole (const char *line, const char *start, size_t len)
       if (options & OPT_WHOLE_LINE)
         return false;
 
-      c = *(start-1);
-      if (isalnum ((unsigned char) c) || c == '_')
+      if (check_word_part (start - before_len, &before_state))
         return false;
     }
 
@@ -55,7 +95,11 @@ check_whole (const char *line, const char *start, size_t len)
       if (options & OPT_WHOLE_LINE)
         return false;
 
-      if (isalnum ((unsigned char) c) || c == '_')
+      /* Advance state.  */
+      adv_len = 0;
+      while (adv_len < len)
+        adv_len += count_bytes (start + adv_len, &start_state);
+      if (check_word_part (start + len, &start_state))
         return false;
     }
 
@@ -67,7 +111,8 @@ check_whole (const char *line, const char *start, size_t len)
    regerror occurred.  Match offsets are stored in match.  */
 int
 match_pattern (pattern_t *pattern, const char *line, const char *start,
-               regmatch_t *match)
+               regmatch_t *match, mbstate_t first_state,
+               mbstate_t before_state, size_t before_len)
 {
   int i;
   const char *first; /* Start of first occurrence of pattern->string.  */
@@ -76,6 +121,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
   regoff_t so, eo; /* Search range offsets for regexec.  */
   regoff_t eolo; /* End of line offset.  */
 
+  first = start;
   if (options & OPT_FIXED)
     {
       /* Prepare match.  */
@@ -85,16 +131,19 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
           match[i].rm_eo = -1;
         }
       /* Match string.  */
-      first = start;
       while (true)
         {
           if (options & OPT_ICASE)
-            first = strcasestr (first, pattern->string);
+            first = mbscasestr (first, pattern->string);
           else
-            first = strstr (first, pattern->string);
-          if (first == NULL || check_whole (line, first, pattern->string_len))
+            first = mbsstr (first, pattern->string);
+          if (first == NULL || check_whole (line, first, pattern->string_len,
+                                            first_state, before_state,
+                                            before_len))
             break;
-          first++;
+          before_state = first_state;
+          before_len = count_bytes (first, &first_state);
+          first += before_len;
         }
 
       if (first == NULL)
@@ -135,8 +184,16 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
 
           if (errcode == 0 && (match[0].rm_so == so || eo == eolo))
             {
-              so = match[0].rm_so;
-              if (check_whole (line, start+so, match[0].rm_eo-so))
+              while (so < match[0].rm_so)
+                {
+                  before_state = first_state;
+                  before_len = count_bytes (start + so, &first_state);
+                  so += before_len;
+                }
+
+              first = start + so;
+              if (check_whole (line, first, match[0].rm_eo - so, first_state,
+                               before_state, before_len))
                 return 0;
               if (so < match[0].rm_eo)
                 {
@@ -151,7 +208,10 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
           if (so == eolo)
             return REG_NOMATCH;
 
-          so++;
+          before_state = first_state;
+          before_len = count_bytes (first, &first_state);;
+          so += before_len;
+          first = start + so;
           eo = eolo;
         }
 
@@ -240,7 +300,7 @@ free_replace (replace_t *replacement)
     }
   if (replacement->part != NULL)
     {
-      for (i=0; i < replacement->nsub+1; i++)
+      for (i = 0; i < replacement->nsub + 1; i++)
         {
           if (replacement->part[i] != NULL)
             {
@@ -292,12 +352,13 @@ parse_replace (const char *string, replace_t *replacement)
         nsub++;
       else if (*next == '\\')
         {
-          if (*(next+1) >= '1' && *(next+1) <= '9')
+          if (*(next + 1) >= '1' && *(next + 1) <= '9')
             nsub++;
-          else if (*(next+1) != '&' && *(next+1) != 'n' && *(next+1) != '\\')
+          else if (*(next + 1) != '&' && *(next + 1) != 'n'
+                   && *(next + 1) != '\\')
             {
               escape_substring[0] = '\\';
-              escape_substring[1] = *(next+1);
+              escape_substring[1] = *(next + 1);
               escape_substring[2] = '\0';
               rrep_error (ERR_UNKNOWN_ESCAPE, escape_substring);
               free_replace (replacement);
@@ -310,16 +371,16 @@ parse_replace (const char *string, replace_t *replacement)
 
   /* Allocate memory for string and index arrays.  */
   replacement->nsub = nsub;
-  replacement->part = (char **) malloc ((nsub+1) * sizeof (char *));
+  replacement->part = (char **) malloc ((nsub + 1) * sizeof (char *));
   if (replacement->part == NULL)
     {
       rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
       free_replace (replacement);
       return FAILURE;
     }
-  for (i = 0; i < nsub+1; i++)
+  for (i = 0; i < nsub + 1; i++)
     replacement->part[i] = NULL;
-  replacement->part_len = (size_t *) malloc ((nsub+1) * sizeof (size_t));
+  replacement->part_len = (size_t *) malloc ((nsub + 1) * sizeof (size_t));
   if (replacement->part_len == NULL)
     {
       rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
@@ -342,7 +403,7 @@ parse_replace (const char *string, replace_t *replacement)
     {
       len++;
       if (*next == '\0' || *next == '&'
-          || (*next == '\\' && *(next+1) >= '1' && *(next+1) <= '9'))
+          || (*next == '\\' && *(next + 1) >= '1' && *(next + 1) <= '9'))
         {
           replacement->part[i] = (char *) malloc (len * sizeof (char));
           if (replacement->part[i] == NULL)
@@ -351,7 +412,7 @@ parse_replace (const char *string, replace_t *replacement)
               free_replace (replacement);
               return FAILURE;
             }
-          replacement->part_len[i] = len-1;
+          replacement->part_len[i] = len - 1;
           len = 0;
           i++;
           if (*next == '\\')
@@ -384,19 +445,19 @@ parse_replace (const char *string, replace_t *replacement)
         }
       else if (*next == '\\')
         {
-          if (*(next+1) >= '1' && *(next+1) <= '9')
+          if (*(next + 1) >= '1' && *(next + 1) <= '9')
             {
               replacement->part[i][j] = '\0';
-              replacement->sub[i] = *(next+1)-'0';
+              replacement->sub[i] = *(next + 1) - '0';
               i++;
               j = 0;
             }
           else
             {
-              if (*(next+1) == 'n')
+              if (*(next + 1) == 'n')
                 replacement->part[i][j] = '\n';
               else
-                replacement->part[i][j] = *(next+1);
+                replacement->part[i][j] = *(next + 1);
               j++;
             }
           next++;
