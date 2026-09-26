@@ -11,7 +11,7 @@
 @copying
 This file documents the @command{rrep} utility which replaces patterns in files.
 
-Copyright @copyright{} 2011, 2013, 2019, 2022 Arno Onken
+Copyright @copyright{} 2011, 2013, 2019, 2022, 2026 Arno Onken
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -245,6 +245,11 @@ All normal output messages are suppressed.
 @cindex no messages
 All error messages are suppressed.
 
+@item -v
+@itemx --verbose
+@cindex verbose
+Print changed lines together with the corresponding original lines.
+
 @item -w
 @itemx --word-regexp
 @cindex whole words
@@ -335,12 +340,12 @@ starting with the @samp{.} character as well.
 However, binary files (files that contain the null character) are ignored.
 
 @example
-rrep -e '-hello' --dry-run 'Hello' menu.h main.c
+rrep -e '-hello' --dry-run --verbose 'Hello' menu.h main.c
 @end example
 
 @noindent
 This command simulates the replacement of @samp{-hello} by @samp{Hello} in the
-files @samp{menu.h} and @samp{main.c}.
+files @samp{menu.h} and @samp{main.c} and prints the changed lines.
 The files are not actually modified due to the @samp{--dry-run} option.
 
 @example

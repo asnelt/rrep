@@ -31,6 +31,7 @@ enum
     ERR_ALLOC_PATTERN, /* Error for allocating pattern.  */
     ERR_ALLOC_REPLACEMENT, /* Error for allocating replacement.  */
     ERR_ALLOC_BACKUP, /* Error for allocating backup string.  */
+    ERR_ALLOC_VERBOSE, /* Error for allocating verbose buffer.  */
     ERR_REALLOC_BUFFER, /* Error for reallocating buffer.  */
     ERR_REALLOC_FILEBUFFER, /* Error for reallocating file_buffer.  */
     ERR_OPEN_READ, /* Could not open a file for reading.  */
@@ -64,6 +65,13 @@ extern void print_regerror (const int, regex_t *);
 
 /* Prints replacement confirmation.  */
 extern void print_confirmation (const char *);
+
+/* Prints a header for a changed file.  */
+extern void print_file_header (const char *);
+
+/* Prints replacement details for a line.  */
+extern void print_line_replacement (const size_t, const char *, size_t,
+                                    const char *, size_t);
 
 /* Prints symbolic link omission.  */
 extern void print_link_skip (const char *);

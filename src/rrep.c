@@ -42,7 +42,7 @@
 #include "bufferio.h"
 #include "pattern.h"
 
-static char const short_options[] = "EFRrS:Vabe:hip:qswx";
+static char const short_options[] = "EFRrS:Vabe:hip:qsvwx";
 
 /* Long options that have no equivalent short option.  */
 enum
@@ -53,7 +53,7 @@ enum
   BINARY_OPTION,
   DRY_RUN_OPTION,
   KEEP_TIMES_OPTION,
-  INTERACTIVE_OPTION
+  INTERACTIVE_OPTION,
 };
 
 /* Long options equivalences.  */
@@ -81,6 +81,7 @@ static struct option const long_options[] =
   {"quiet", no_argument, NULL, 'q'},
   {"silent", no_argument, NULL, 'q'},
   {"no-messages", no_argument, NULL, 's'},
+  {"verbose", no_argument, NULL, 'v'},
   {"word-regexp", no_argument, NULL, 'w'},
   {"line-regexp", no_argument, NULL, 'x'},
   {NULL, 0, NULL, 0}
@@ -132,6 +133,12 @@ write_string (FILE *fp, const char *string, const size_t string_len,
         }
     }
 
+  if (options & OPT_VERBOSE && !(options & OPT_QUIET))
+    {
+      if (append_verbose (string, string_len, file_name) != SUCCESS)
+        return FAILURE;
+    }
+
   return SUCCESS;
 }
 
@@ -181,7 +188,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
                 const replace_t *replacement, const char *file_name,
                 size_t *file_len)
 {
-  size_t line_len, start_len, before_len, adv_len;
+  size_t line_num, line_len, start_len, before_len, adv_len;
   char *line, *start, *pos;
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
@@ -190,6 +197,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   mbstate_t before_state; /* Multibyte state before start.  */
   bool newline_flag; /* Trailing newline character found in line.  */
   bool last_empty_flag; /* Last regular expression had zero length.  */
+  bool header_flag; /* Verbose header printed.  */
 
   pos = NULL;
   if (out == NULL)
@@ -209,10 +217,14 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
       pos = file_buffer;
     }
 
+  line_num = 0;
+  header_flag = false;
   line = NULL;
   /* Copy in to out with replaced string.  */
   while ((rr = read_line (in, &line, &line_len, file_name)) == SUCCESS)
     {
+      line_num++;
+      verbose_buffer_fill = 0;
       /* Remove trailing newline character if it is present in line.  */
       newline_flag = (line_len > 0 && line[line_len - 1] == '\n');
       if (newline_flag)
@@ -283,6 +295,18 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
       if (write_string (out, start, line_len - (start - line), file_name, &pos)
           != SUCCESS)
         return FAILURE;
+      if (options & OPT_VERBOSE && !(options & OPT_QUIET) && out != stdout
+          && (verbose_buffer_fill != line_len
+              || memcmp (verbose_buffer, line, line_len)))
+        {
+          if (!header_flag)
+            {
+              print_file_header (file_name);
+              header_flag = true;
+            }
+          print_line_replacement (line_num, line, line_len, verbose_buffer,
+                                  verbose_buffer_fill);
+        }
     }
   /* Set file_len if we are using file_buffer.  */
   if (out == NULL && file_len != NULL)
@@ -448,7 +472,25 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (options & OPT_DRY)
         {
           if (!(options & OPT_QUIET))
-            printf ("%s\n", file_name);
+            {
+              if (options & OPT_VERBOSE)
+                {
+                  /* Simulate replacement on tmp only.  */
+                  rewind (fp);
+                  tmp = tmpfile ();
+                  if (replace_string (fp, tmp, pattern, replacement, file_name,
+                                      &file_len) != SUCCESS)
+                    {
+                      restore_file_times (fd, file_name, times);
+                      fclose (fp);
+                      if (tmp != NULL)
+                        fclose (tmp);
+                      return FAILURE;
+                    }
+                }
+              else
+                printf ("%s\n", file_name);
+            }
           if (restore_file_times (fd, file_name, times) != SUCCESS)
             failure_flag = true;
           fclose (fp);
@@ -488,7 +530,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
       rewind (fp);
       tmp = tmpfile ();
       /* Copy file to tmp or file_buffer with replaced string.  */
-      if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len))
+      if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len)
+          != SUCCESS)
         {
           restore_file_times (fd, file_name, times);
           fclose (fp);
@@ -818,7 +861,7 @@ main (int argc, char** argv)
   bool failure_flag = false;
   bool exit_flag = false;
 
-setlocale (LC_ALL, "");
+  setlocale (LC_ALL, "");
 #if ENABLE_NLS
   /* Initialization of gettext.  */
   bindtextdomain (PACKAGE, LOCALEDIR);
@@ -949,6 +992,10 @@ setlocale (LC_ALL, "");
 
         case 's':
           options |= OPT_NO_MESSAGES;
+          break;
+
+        case 'v':
+          options |= OPT_VERBOSE;
           break;
 
         case 'w':
@@ -1090,6 +1137,8 @@ setlocale (LC_ALL, "");
     free_exclude (excluded_directory_patterns);
   free_replace (&replacement);
   free_pattern (&pattern);
+  if (verbose_buffer != NULL)
+    free (verbose_buffer);
   if (file_buffer != NULL)
     free (file_buffer);
   if (buffer != NULL)

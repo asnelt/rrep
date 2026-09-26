@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "gettext.h"
 #include "progname.h"
 #include "propername.h"
@@ -31,6 +32,12 @@
 
 #define _(string) gettext (string)
 #define AUTHORS proper_name ("Arno Onken")
+
+#define ANSI_RESET "\033[0m"
+#define ANSI_BOLD "\033[1m"
+#define ANSI_RED "\033[31m"
+#define ANSI_GREEN "\033[32m"
+#define ANSI_CYAN "\033[36m"
 
 /* Prints version information.  */
 void
@@ -95,6 +102,7 @@ Options:\n\
       --interactive              prompt before modifying a file\n\
   -q, --quiet, --silent          suppress all normal messages\n\
   -s, --no-messages              suppress error messages\n\
+  -v, --verbose                  print changed lines\n\
   -w, --word-regexp              force PATTERN to match only whole words\n\
   -x, --line-regexp              force PATTERN to match only whole lines\n"));
   printf ("\n");
@@ -191,6 +199,12 @@ rrep_error (const int errcode, const char *file_name)
                file_name);
       perror (NULL);
       break;
+    case ERR_ALLOC_VERBOSE:
+      fprintf (stderr, _("\
+%s: %s: could not allocate memory for verbose buffer: "), program_name,
+               file_name);
+      perror (NULL);
+      break;
     case ERR_REALLOC_BUFFER:
       fprintf (stderr, _("%s: %s: could not reallocate memory for buffer: "),
                program_name, file_name);
@@ -271,6 +285,77 @@ print_confirmation (const char *file_name)
   printf (_("%s: pattern replaced\n"), file_name);
 }
 
+/* Prints a header for a changed file.  */
+extern void print_file_header (const char *file_name)
+{
+  bool color_flag;
+ 
+  color_flag = isatty (fileno (stdout));
+  printf ("%s--- %s\n+++ %s%s\n", color_flag ? ANSI_BOLD : "", file_name,
+          file_name, color_flag ? ANSI_RESET : "");
+}
+
+/* Prints replacement details for a line.  */
+extern void print_line_replacement (const size_t line_num,
+                                    const char *old_line, size_t old_len,
+                                    const char *new_line, size_t new_len)
+{
+  bool color_flag;
+  size_t i, line_counter;
+  size_t next_start; /* Start offset of next line to print.  */
+
+  color_flag = isatty (fileno (stdout));
+
+  /* Do not print line delimiters.  */
+  if (old_len > 0
+      && (old_line[old_len - 1] == '\n' || old_line[old_len - 1] == '\0'))
+    old_len--;
+  if (new_len > 0
+      && (new_line[new_len - 1] == '\n' || new_line[new_len - 1] == '\0'))
+    new_len--;
+
+  /* Count and print number of new lines.  */
+  line_counter = 1;
+  for (i = 0; i < new_len; i++)
+    if (new_line[i] == '\n')
+      line_counter++;
+  if (color_flag)
+    fputs (ANSI_CYAN, stdout);
+  if (line_counter > 1)
+    printf ("@@ -%lu +%lu,%lu @@", (unsigned long) line_num,
+            (unsigned long) line_num, (unsigned long) line_counter);
+  else
+    printf ("@@ -%lu +%lu @@", (unsigned long) line_num,
+            (unsigned long) line_num);
+  if (color_flag)
+    fputs (ANSI_RESET, stdout);
+  putchar ('\n');
+
+  /* Print removed line.  */
+  if (color_flag)
+    fputs (ANSI_RED, stdout);
+  putchar ('-');
+  fwrite (old_line, sizeof (char), old_len, stdout);
+  if (color_flag)
+    fputs (ANSI_RESET, stdout);
+  putchar ('\n');
+
+  /* Print added lines.  */
+  next_start = 0;
+  for (i = 0; i <= new_len; i++)
+    if (i == new_len || new_line[i] == '\n')
+      {
+        if (color_flag)
+          fputs (ANSI_GREEN, stdout);
+        putchar ('+');
+        fwrite (new_line + next_start, sizeof (char), i - next_start, stdout);
+        if (color_flag)
+          fputs (ANSI_RESET, stdout);
+        putchar ('\n');
+        next_start = i + 1;
+      }
+}
+
 /* Prints symbolic link omission.  */
 void
 print_link_skip (const char *file_name)
@@ -287,7 +372,8 @@ print_dry ()
   if (options & OPT_DRY && !(options & OPT_QUIET))
     {
       printf (_("Simulation mode: no files are modified.\n"));
-      printf (_("PATTERN found in the following files:\n"));
+      if (!(options & OPT_VERBOSE))
+        printf (_("PATTERN found in the following files:\n"));
     }
 }
 

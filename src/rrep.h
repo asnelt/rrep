@@ -31,8 +31,9 @@
 #define OPT_PROMPT      0x0100 /* Prompt before modifying a file.  */
 #define OPT_QUIET       0x0200 /* Do not print regular messages.  */
 #define OPT_RECURSIVE   0x0400 /* Recurse into directories.  */
-#define OPT_WHOLE_LINE  0x0800 /* Force PATTERN to match only whole lines.  */
-#define OPT_WHOLE_WORD  0x1000 /* Force PATTERN to match only whole words.  */
+#define OPT_VERBOSE     0x0800 /* Print additional replacement details.  */
+#define OPT_WHOLE_LINE  0x1000 /* Force PATTERN to match only whole lines.  */
+#define OPT_WHOLE_WORD  0x2000 /* Force PATTERN to match only whole words.  */
 
 /* Processing constants.  */
 enum

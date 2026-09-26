@@ -35,7 +35,14 @@ char *file_buffer = NULL;
 /* Size of file_buffer.  */
 size_t file_buffer_size = 0;
 
-/* Read in a buffered line from fp.  The line starts at *line and has
+/* Pointer to buffer for verbose line.  */
+char *verbose_buffer = NULL;
+/* Size of verbose_buffer.  */
+size_t verbose_buffer_size = 0;
+/* Number of characters in verbose_buffer.  */
+size_t verbose_buffer_fill = 0;
+
+/* Reads in a buffered line from fp.  The line starts at *line and has
    length *line_len.  Line delimiters are '\n' and, if binary files are not
    ignored, '\0'.  If a line could be placed at the line pointer, SUCCESS is
    returned.  Otherwise, if the end of file was reached END_REACHED is returned
@@ -156,6 +163,37 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
   *(buffer + search_pos) = '\0';
   /* Set line length.  */
   *line_len = search_pos - start;
+
+  return SUCCESS;
+}
+
+/* Appends a string to the current string in the verbose_buffer.  If needed, the
+   size of the verbose_buffer is reallocated.  */
+int
+append_verbose (const char *string, const size_t string_len,
+                const char *file_name)
+{
+  char *tmp;
+  size_t new_size;
+
+  if (verbose_buffer_size - verbose_buffer_fill < string_len)
+    {
+      /* Reallocate memory.  */
+      new_size = (verbose_buffer_size == 0) ? INIT_BUFFER_SIZE
+        : verbose_buffer_size;
+      while (new_size - verbose_buffer_fill < string_len)
+        new_size *= 2;
+      tmp = realloc (verbose_buffer, new_size);
+      if (tmp == NULL)
+        {
+          rrep_error (ERR_ALLOC_VERBOSE, file_name);
+          return FAILURE;
+        }
+      verbose_buffer = tmp;
+      verbose_buffer_size = new_size;
+    }
+  memcpy (verbose_buffer + verbose_buffer_fill, string, string_len);
+  verbose_buffer_fill += string_len;
 
   return SUCCESS;
 }
