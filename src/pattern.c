@@ -116,6 +116,9 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
 {
   int i;
   const char *first; /* Start of first occurrence of pattern->string.  */
+  const char *pos; /* Current search position for pattern->string.  */
+  const char *string_end; /* End position of pattern-string.  */
+  size_t string_len;
   int errcode; /* Return value of regexec.  */
   int eflags; /* Flags for regexec.  */
   regoff_t so, eo; /* Search range offsets for regexec.  */
@@ -131,34 +134,46 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
           match[i].rm_eo = -1;
         }
       /* Match string.  */
+      pos = first;
       while (true)
         {
           if (options & OPT_ICASE)
-            first = mbscasestr (first, pattern->string);
+            first = mbscasestr (pos, pattern->string);
           else
-            first = mbsstr (first, pattern->string);
-          if (first == NULL || check_whole (line, first, pattern->string_len,
-                                            first_state, before_state,
-                                            before_len))
-            break;
+            first = mbsstr (pos, pattern->string);
+          if (first == NULL)
+            {
+              /* String not found.  */
+              match[0].rm_so = -1;
+              match[0].rm_eo = -1;
+              return REG_NOMATCH;
+            }
+          /* Advance pos to first.  */
+          while (pos < first)
+            {
+              before_state = first_state;
+              before_len = count_bytes (pos, &first_state);
+              pos += before_len;
+            }
+          string_len = pattern->string_len;
+          if (options & OPT_ICASE)
+            {
+              string_end = mbspcasecmp (first, pattern->string);
+              if (string_end != NULL)
+                string_len = string_end - first;
+            }
+          if (check_whole (line, first, string_len, first_state, before_state,
+                           before_len))
+            {
+              /* Set offsets in match[0].  */
+              match[0].rm_so = first - start;
+              match[0].rm_eo = match[0].rm_so + string_len;
+              return 0;
+            }
+          /* Continue after next multibyte character.  */
           before_state = first_state;
-          before_len = count_bytes (first, &first_state);
-          first += before_len;
-        }
-
-      if (first == NULL)
-        {
-          /* String not found.  */
-          match[0].rm_so = -1;
-          match[0].rm_eo = -1;
-          return REG_NOMATCH;
-        }
-      else
-        {
-          /* Set offsets in match[0].  */
-          match[0].rm_so = first - start;
-          match[0].rm_eo = match[0].rm_so + pattern->string_len;
-          return 0;
+          before_len = count_bytes (pos, &first_state);
+          pos += before_len;
         }
     }
   else

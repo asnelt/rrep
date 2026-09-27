@@ -234,6 +234,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
       memset (&start_state, 0, sizeof (start_state));
       before_state = start_state;
       start_len = 0;
+      before_len = 0;
       /* Search for regular expression or pattern string.  */
       while ((errcode = match_pattern (pattern, line, start, match,
                                        start_state, before_state, before_len))
@@ -274,7 +275,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
                 {
                   before_len = start_len;
                   before_state = start_state;
-                  start_len = count_bytes (start, &start_state);
+                  start_len = count_bytes (start + adv_len, &start_state);
                   adv_len += start_len;
                 }
               while (adv_len < match[0].rm_eo);
