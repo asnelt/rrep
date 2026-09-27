@@ -123,13 +123,17 @@ If no @var{input_file_names} are specified, then the standard input is read.
 @var{pattern} and @var{replacement} are interpreted as fixed strings, not as
 regular expressions or escape sequences.
 
-@item -R
-@itemx -r
+@item -r
 @itemx --recursive
 @cindex recursive replacement
 Each directory that is given on the command line is processed recursively.
 Files and sub-directories starting with the @samp{.} character are, by default,
-ignored.
+ignored, as are symlinks.
+
+@item -R
+@itemx --dereference-recursive
+@cindex recursive replacement with symlink following
+Like recursive replacement, but all symlinks are followed.
 
 @item --include=@var{FILE_PATTERN}
 @cindex include files
@@ -296,6 +300,15 @@ The @samp{-i} option causes @command{rrep} to ignore cases, so, for instance,
 @samp{HeLLo WoRlD} will be replaced as well.
 
 @example
+rrep -e '-hello' --dry-run --verbose 'Hello' menu.h main.c
+@end example
+
+@noindent
+This command simulates the replacement of @samp{-hello} by @samp{Hello} in the
+files @samp{menu.h} and @samp{main.c} and prints the changed lines.
+The files are not actually modified due to the @samp{--dry-run} option.
+
+@example
 rrep -i --backup '\(hello\).*\(world\)!*' '\1, \2!' menu.h main.c
 @end example
 
@@ -338,15 +351,6 @@ If @samp{/home/user/hello} is a directory, then the @samp{-r} option causes
 The @samp{-a} option causes @command{rrep} to process files and directories
 starting with the @samp{.} character as well.
 However, binary files (files that contain the null character) are ignored.
-
-@example
-rrep -e '-hello' --dry-run --verbose 'Hello' menu.h main.c
-@end example
-
-@noindent
-This command simulates the replacement of @samp{-hello} by @samp{Hello} in the
-files @samp{menu.h} and @samp{main.c} and prints the changed lines.
-The files are not actually modified due to the @samp{--dry-run} option.
 
 @example
 rrep -r --include=*.c 'hello world' 'Hello, world!' /home/user/hello

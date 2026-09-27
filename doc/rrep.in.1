@@ -34,11 +34,14 @@ and
 are interpreted as fixed strings, not as regular expressions or escape
 sequences.
 .TP
-.BR \-R ", " \-r ", " \-\^\-recursive
+.BR " \-r ", " \-\^\-recursive
 Each directory that is given on the command line is processed recursively.
 Files and sub-directories starting with the
 .B .
 character are, by default, ignored.
+.TP
+.BR \-R ", " \-\^\-dereference\-recursive
+Likewise, but all symlinks are followed.
 .TP
 .BI \-\^\-include= FILE_PATTERN
 Only files are processed that match the pattern

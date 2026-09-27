@@ -42,7 +42,7 @@
 #include "bufferio.h"
 #include "pattern.h"
 
-static char const short_options[] = "EFRrS:Vabe:hip:qsvwx";
+static char const short_options[] = "EFrRS:Vabe:hip:qsvwx";
 
 /* Long options that have no equivalent short option.  */
 enum
@@ -61,8 +61,8 @@ static struct option const long_options[] =
 {
   {"extended-regexp", no_argument, NULL, 'E'},
   {"fixed-strings", no_argument, NULL, 'F'},
-  {"recursive", no_argument, NULL, 'R'},
   {"recursive", no_argument, NULL, 'r'},
+  {"dereference-recursive", no_argument, NULL, 'R'},
   {"include", required_argument, NULL, INCLUDE_OPTION},
   {"exclude", required_argument, NULL, EXCLUDE_OPTION},
   {"exclude-dir", required_argument, NULL, EXCLUDE_DIR_OPTION},
@@ -731,11 +731,14 @@ process_file_list (char **file_list, pattern_t *pattern,
                    const replace_t *replacement)
 {
   FTS *fts;
+  int fts_flags;
   FTSENT *ent;
   bool skip_flag;
   bool failure_flag = false;
 
-  fts = fts_open (file_list, FTS_PHYSICAL | FTS_CWDFD | FTS_VERBATIM, NULL);
+  fts_flags = FTS_CWDFD | FTS_VERBATIM;
+  fts_flags |= options & OPT_DEREF ? FTS_LOGICAL : FTS_PHYSICAL;
+  fts = fts_open (file_list, fts_flags, NULL);
   if (fts == NULL)
     {
       rrep_error (ERR_PROCESS_ARG, file_list[0]);
@@ -896,9 +899,12 @@ main (int argc, char** argv)
           options |= OPT_FIXED;
           break;
 
-        case 'R':
         case 'r':
           options |= OPT_RECURSIVE;
+          break;
+
+        case 'R':
+          options |= OPT_DEREF;
           break;
 
         case INCLUDE_OPTION:

@@ -80,7 +80,8 @@ Options:\n\
   -E, --extended-regexp          PATTERN is an extended regular expression\
  (ERE)\n\
   -F, --fixed-strings            PATTERN and REPLACEMENT are fixed strings\n\
-  -R, -r, --recursive            process directories recursively\n\
+  -r, --recursive                process directories recursively\n\
+  -R, --dereference-recursive    likewise, but follow all symlinks\n\
       --include=FILE_PATTERN     process only files that match FILE_PATTERN\n\
       --exclude=FILE_PATTERN     files that match FILE_PATTERN will be\
  skipped\n\
