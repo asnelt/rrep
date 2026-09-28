@@ -72,7 +72,7 @@ static struct option const long_options[] =
   {"backup", optional_argument, NULL, 'b'},
   {"binary", no_argument, NULL, BINARY_OPTION},
   {"dry-run", no_argument, NULL, DRY_RUN_OPTION},
-  {"regex", required_argument, NULL, 'e'},
+  {"regexp", required_argument, NULL, 'e'},
   {"help", no_argument, NULL, 'h'},
   {"ignore-case", no_argument, NULL, 'i'},
   {"keep-times", no_argument, NULL, KEEP_TIMES_OPTION},

@@ -207,7 +207,7 @@ The replacement is just simulated.
 No file is actually modified.
 
 @item -e
-@itemx --regex=@var{PATTERN}
+@itemx --regexp=@var{PATTERN}
 @cindex pattern list
 Use @var{PATTERN} for matching.
 This option can be used to specify a pattern beginning with @samp{-}.

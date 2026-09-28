@@ -95,7 +95,7 @@ Options:\n\
  argument\n\
       --binary                   do not ignore binary files\n\
       --dry-run                  simulation mode\n\
-  -e, --regex=PATTERN            use PATTERN for matching\n\
+  -e, --regexp=PATTERN           use PATTERN for matching\n\
   -h, --help                     display this help and exit\n\
   -i, --ignore-case              ignore case distinctions\n\
       --keep-times               keep access and modification times\n\
