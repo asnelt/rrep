@@ -381,16 +381,22 @@ process_file (int dir_fd, const char *file, const char *file_name,
   mbstate_t before_state; /* Multibyte state before start.  */
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
-  size_t path_len;
+  int openat_flags;
   bool write_flag; /* Flag for file write permitted.  */
   bool found_flag; /* Flag for pattern found.  */
   bool failure_flag = false;
 
-  fd = openat (dir_fd, file, O_RDWR | O_NOFOLLOW);
+  openat_flags = O_RDWR;
+  if (!(options & OPT_DEREF))
+    openat_flags |= O_NOFOLLOW;
+  fd = openat (dir_fd, file, openat_flags);
   if (fd < 0)
     {
       /* Try opening read-only.  */
-      fd = openat (dir_fd, file, O_RDONLY | O_NOFOLLOW);
+      openat_flags = O_RDONLY;
+      if (!(options & OPT_DEREF))
+        openat_flags |= O_NOFOLLOW;
+      fd = openat (dir_fd, file, openat_flags);
       if (fd < 0)
         {
           rrep_error (ERR_OPEN_READ, file_name);
@@ -673,9 +679,12 @@ save_dir_times (FTSENT *ent)
   int fd;
   struct stat st;
   struct dir_times *dt;
+  int openat_flags;
 
-  fd = openat (ent->fts_fts->fts_cwd_fd, ent->fts_accpath,
-               O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+  openat_flags = O_RDONLY | O_DIRECTORY;
+  if (!(options & OPT_DEREF))
+    openat_flags |= O_NOFOLLOW;
+  fd = openat (ent->fts_fts->fts_cwd_fd, ent->fts_accpath, openat_flags);
   if (fd < 0 || fstat (fd, &st) < 0)
     {
       rrep_error (ERR_KEEP_TIMES, ent->fts_path);
@@ -906,6 +915,7 @@ main (int argc, char** argv)
 
         case 'R':
           options |= OPT_DEREF;
+          options |= OPT_RECURSIVE;
           break;
 
         case INCLUDE_OPTION:
