@@ -41,8 +41,12 @@ count_bytes (const char *pos, mbstate_t *ps)
 
   len = mbrlen (pos, MB_CUR_MAX, ps);
   if (len == 0 || len == (size_t) -1 || len == (size_t) -2)
-    /* Fallback in case of null, invalid or incomplete character.  */
-    return 1;
+    {
+      /* Fallback in case of null, invalid or incomplete character.  */
+      if (len != 0)
+        memset (ps, 0, sizeof (*ps));
+      return 1;
+    }
 
   return len;
 }
@@ -60,8 +64,12 @@ check_word_part (const char *pos, mbstate_t *ps)
   len = mbrtowc (&wc, pos, MB_CUR_MAX, ps);
 
   if (len == 0 || len == (size_t) -1 || len == (size_t) -2)
-    /* Fallback in case of null, invalid or incomplete character.  */
-    return isalnum ((unsigned char) *pos) || *pos == '_';
+    {
+      /* Fallback in case of null, invalid or incomplete character.  */
+      if (len != 0)
+        memset (ps, 0, sizeof (*ps));
+      return isalnum ((unsigned char) *pos) || *pos == '_';
+    }
 
   return iswalnum ((wint_t) wc) || wc == L'_';
 }

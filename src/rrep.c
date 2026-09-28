@@ -258,9 +258,9 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
           if (match[0].rm_eo == 0)
             {
               /* Found string has zero length.  */
-              before_len = start_len;
               before_state = start_state;
               start_len = count_bytes (start, &start_state);
+              before_len = start_len;
               if (write_string (out, start, start_len, file_name, &pos)
                   != SUCCESS)
                 return FAILURE;
@@ -273,13 +273,13 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
               adv_len = 0;
               do
                 {
-                  before_len = start_len;
                   before_state = start_state;
                   start_len = count_bytes (start + adv_len, &start_state);
                   adv_len += start_len;
                 }
-              while (adv_len < match[0].rm_eo);
+              while (adv_len < (size_t) match[0].rm_eo);
 
+              before_len = start_len;
               start += adv_len;
               last_empty_flag = false;
             }
