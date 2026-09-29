@@ -151,9 +151,9 @@ as described under @samp{--include}).
 
 @item --exclude-dir=@var{PATTERN}
 @cindex exclude directories
-Directories that match @var{PATTERN} will be skipped, except for files that are
-specifically given on the command line (using wildcard matching as described
-under @samp{--include}).
+Directories that match @var{PATTERN} will be skipped, except for directories
+that are specifically given on the command line (using wildcard matching as
+described under @samp{--include}).
 
 @item -S
 @itemx --suffix=@var{SUFFIX}

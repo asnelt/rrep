@@ -21,6 +21,7 @@ enum
   {
     ERR_PROCESS_ARG, /* Could not process an argument.  */
     ERR_PROCESS_DIR, /* Could not process a directory.  */
+    ERR_DIR_NO_RECURSION, /* Directory as argument without recursion.  */
     ERR_PATTERN, /* Error in PATTERN.  */
     ERR_UNKNOWN_ESCAPE, /* Unknown escape sequence encountered.  */
     ERR_DUPLICATE_OPTION, /* Duplicate PATTERN or REPLACEMENT option.  */

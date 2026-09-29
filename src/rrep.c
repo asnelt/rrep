@@ -743,7 +743,6 @@ process_file_list (char **file_list, pattern_t *pattern,
   FTS *fts;
   int fts_flags;
   FTSENT *ent;
-  bool skip_flag;
   bool failure_flag = false;
 
   fts_flags = FTS_CWDFD | FTS_VERBATIM;
@@ -760,14 +759,17 @@ process_file_list (char **file_list, pattern_t *pattern,
       switch (ent->fts_info)
         {
         case FTS_D: /* Directory visited in preorder.  */
-          if (ent->fts_level == FTS_ROOTLEVEL)
-            skip_flag = !check_include_name (ent->fts_path, NULL,
-                                             excluded_directory_patterns);
-          else
-            skip_flag = (!(options & OPT_RECURSIVE)
-                         || !check_name (ent->fts_name, NULL,
-                                         excluded_directory_patterns));
-          if (skip_flag)
+          if (ent->fts_level == FTS_ROOTLEVEL && !(options & OPT_RECURSIVE))
+            {
+              rrep_error (ERR_DIR_NO_RECURSION, ent->fts_path);
+              fts_set (fts, ent, FTS_SKIP);
+              failure_flag = true;
+              break;
+            }
+          if (ent->fts_level > FTS_ROOTLEVEL
+              && (!(options & OPT_RECURSIVE)
+                  || !check_name (ent->fts_name, NULL,
+                                  excluded_directory_patterns)))
             {
               fts_set (fts, ent, FTS_SKIP);
               break;
@@ -795,36 +797,20 @@ process_file_list (char **file_list, pattern_t *pattern,
           break;
 
         case FTS_F: /* Regular file.  */
-          if (ent->fts_level == FTS_ROOTLEVEL)
-            {
-              if (!check_include_name (ent->fts_path, included_patterns,
-                                       excluded_patterns))
-                break;
-            }
-          else
-            {
-              if (!check_name (ent->fts_name, included_patterns,
-                               excluded_patterns))
-                break;
-            }
+          if (ent->fts_level > FTS_ROOTLEVEL
+              && !check_name (ent->fts_name, included_patterns,
+                              excluded_patterns))
+            break;
           failure_flag |= process_file (fts->fts_cwd_fd, ent->fts_accpath,
                                         ent->fts_path, pattern, replacement);
           break;
 
         case FTS_SL: /* Symbolic link.  */
         case FTS_SLNONE: /* Symbolic link with nonexistent target.  */
-          if (ent->fts_level == FTS_ROOTLEVEL)
-            {
-              if (!check_include_name (ent->fts_path, included_patterns,
-                                       excluded_patterns))
-                break;
-            }
-          else
-            {
-              if (!check_name (ent->fts_name, included_patterns,
-                               excluded_patterns))
-                break;
-            }
+          if (ent->fts_level > FTS_ROOTLEVEL
+              && !check_name (ent->fts_name, included_patterns,
+                              excluded_patterns))
+            break;
           print_link_skip (ent->fts_path);
           break;
 
