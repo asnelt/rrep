@@ -422,6 +422,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
   /* Save file times.  */
   times[0] = st.st_atim;
   times[1] = st.st_mtim;
+  if (options & OPT_KEEP_TIMES && O_NOATIME != 0)
+    fcntl (fd, F_SETFL, fcntl (fd, F_GETFL) | O_NOATIME);
 
   fp = fdopen (fd, write_flag ? "r+" : "r");
   if (fp == NULL)
@@ -444,10 +446,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
           if (memchr (line, '\0', line_len) != NULL)
             {
               /* Null character found, cancel search.  */
-              if (restore_file_times (fd, file_name, times) != SUCCESS)
-                failure_flag = true;
               fclose (fp);
-              return failure_flag ? FAILURE : SUCCESS;
+              return SUCCESS;
             }
         }
       /* Before matching, remove trailing newline if present.  */
@@ -462,14 +462,12 @@ process_file (int dir_fd, const char *file, const char *file_name,
       else if (errcode != REG_NOMATCH)
         {
           print_regerror (errcode, pattern->compiled);
-          restore_file_times (fd, file_name, times);
           fclose (fp);
           return FAILURE;
         }
     }
   if (rr == FAILURE)
     {
-      restore_file_times (fd, file_name, times);
       fclose (fp);
       return FAILURE;
     }
@@ -488,27 +486,25 @@ process_file (int dir_fd, const char *file, const char *file_name,
                   if (replace_string (fp, tmp, pattern, replacement, file_name,
                                       &file_len) != SUCCESS)
                     {
-                      restore_file_times (fd, file_name, times);
                       fclose (fp);
                       if (tmp != NULL)
                         fclose (tmp);
                       return FAILURE;
                     }
+                  if (tmp != NULL)
+                    fclose (tmp);
                 }
               else
                 printf ("%s\n", file_name);
             }
-          if (restore_file_times (fd, file_name, times) != SUCCESS)
-            failure_flag = true;
           fclose (fp);
-          return failure_flag ? FAILURE : SUCCESS;
+          return SUCCESS;
         }
 
       /* Writing back to file is actually required.  */
       if (!write_flag)
         {
           rrep_error (ERR_OPEN_WRITE, file_name);
-          restore_file_times (fd, file_name, times);
           fclose (fp);
           return FAILURE;
         }
@@ -517,10 +513,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
         {
           if (prompt_user (file_name) == false)
             {
-              if (restore_file_times (fd, file_name, times) != SUCCESS)
-                failure_flag = true;
               fclose (fp);
-              return failure_flag ? FAILURE : SUCCESS;
+              return SUCCESS;
             }
         }
 
@@ -528,7 +522,6 @@ process_file (int dir_fd, const char *file, const char *file_name,
         {
           if (backup_file (file_name) != SUCCESS)
             {
-              restore_file_times (fd, file_name, times);
               fclose (fp);
               return FAILURE;
             }
@@ -540,7 +533,6 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len)
           != SUCCESS)
         {
-          restore_file_times (fd, file_name, times);
           fclose (fp);
           if (tmp != NULL)
             fclose (tmp);
@@ -551,7 +543,6 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (tmp != NULL && fflush (tmp) != 0)
         {
           rrep_error (ERR_WRITE_TEMP, file_name);
-          restore_file_times (fd, file_name, times);
           fclose (fp);
           fclose (tmp);
           return FAILURE;
@@ -608,6 +599,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (fflush (fp) != 0)
         {
           rrep_error (ERR_OVERWRITE, file_name);
+          restore_file_times (fd, file_name, times);
+          fclose (fp);
           return FAILURE;
         }
       if (restore_file_times (fd, file_name, times) != SUCCESS)
@@ -622,11 +615,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
         print_confirmation (file_name);
     }
   if (fp != NULL)
-    {
-      if (restore_file_times (fd, file_name, times) != SUCCESS)
-        failure_flag = true;
-      fclose (fp);
-    }
+    fclose (fp);
 
   if (failure_flag)
     return FAILURE;
@@ -714,13 +703,22 @@ static int
 restore_dir_times (FTSENT *ent)
 {
   struct dir_times *dt;
+  struct stat st;
+  bool modified_flag, accessed_flag;
   bool failure_flag = false;
 
   dt = (struct dir_times *) ent->fts_pointer;
   if (dt == NULL)
     return SUCCESS;
 
-  if (fdutimens (dt->fd, NULL, dt->times) != 0)
+  modified_flag = (fstat (dt->fd, &st) != 0
+                   || st.st_mtim.tv_sec != dt->times[1].tv_sec
+                   || st.st_mtim.tv_nsec != dt->times[1].tv_nsec);
+  accessed_flag = (modified_flag
+                  || st.st_atim.tv_sec != dt->times[0].tv_sec
+                  || st.st_atim.tv_nsec != dt->times[0].tv_nsec);
+  if (accessed_flag && fdutimens (dt->fd, NULL, dt->times) != 0
+      && (modified_flag || (errno != EPERM && errno != EACCES)))
     {
       rrep_error (ERR_KEEP_TIMES, ent->fts_path);
       failure_flag = true;
