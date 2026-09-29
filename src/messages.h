@@ -49,13 +49,13 @@ enum
 /* Prints version information.  */
 extern void print_version ();
 
-/* Prints usage information.  */
-extern void print_usage ();
+/* Prints usage information to fp.  */
+extern void print_usage (FILE *);
 
 /* Prints the help.  */
 extern void print_help ();
 
-/* Prints the program invocation.  */
+/* Prints the program invocation to stderr.  */
 extern void print_invocation ();
 
 /* Prints an error message.  */

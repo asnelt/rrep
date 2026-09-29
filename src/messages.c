@@ -52,11 +52,11 @@ There is NO WARRANTY, to the extent permitted by law.\n"), AUTHORS);
   printf ("\n");
 }
 
-/* Prints usage information.  */
+/* Prints usage information to fp.  */
 void
-print_usage ()
+print_usage (FILE *fp)
 {
-  printf (_("Usage: %s [OPTION]... PATTERN REPLACEMENT [FILE]...\n"),
+  fprintf (fp, _("Usage: %s [OPTION]... PATTERN REPLACEMENT [FILE]...\n"),
           program_name);
 }
 
@@ -64,7 +64,7 @@ print_usage ()
 void
 print_help ()
 {
-  print_usage ();
+  print_usage (stdout);
   printf (_("\
 Replace PATTERN by REPLACEMENT in each FILE or standard input.\n"));
   printf (_("\
@@ -125,12 +125,12 @@ the VERSION_CONTROL environment variable.  Here are the values:\n\
   printf (_("Report bugs to: %s\n"), PACKAGE_BUGREPORT);
 }
 
-/* Prints the program invocation.  */
+/* Prints the program invocation to stderr.  */
 void
 print_invocation ()
 {
-  print_usage ();
-  printf (_("Try `%s --help' for more information.\n"), program_name);
+  print_usage (stderr);
+  fprintf (stderr, _("Try `%s --help' for more information.\n"), program_name);
 }
 
 /* Prints an error message.  */
@@ -273,8 +273,14 @@ rrep_error (const int errcode, const char *file_name)
 void
 print_regerror (const int errcode, regex_t *compiled)
 {
-  size_t len = regerror (errcode, compiled, NULL, 0);
-  char *message = malloc (len);
+  size_t len;
+  char *message;
+
+  if (options & OPT_NO_MESSAGES)
+    return;
+
+  len = regerror (errcode, compiled, NULL, 0);
+  message = malloc (len);
   if (message != NULL)
     {
       regerror (errcode, compiled, message, len);
@@ -389,6 +395,7 @@ prompt_user (const char *file_name)
   /* TRANSLATORS: this is a user prompt.  In English the user can answer with y
      for 'yes' or n for 'no'.  [y/n] should be translated as well.  */
   printf (_("Pattern found in %s.  Replace pattern [y/n]? "), file_name);
+  fflush (stdout);
 
   return yesno ();
 }

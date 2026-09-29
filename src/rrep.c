@@ -509,24 +509,6 @@ process_file (int dir_fd, const char *file, const char *file_name,
           return FAILURE;
         }
 
-      if (options & OPT_PROMPT)
-        {
-          if (prompt_user (file_name) == false)
-            {
-              fclose (fp);
-              return SUCCESS;
-            }
-        }
-
-      if (options & OPT_BACKUP)
-        {
-          if (backup_file (file_name) != SUCCESS)
-            {
-              fclose (fp);
-              return FAILURE;
-            }
-        }
-
       rewind (fp);
       tmp = tmpfile ();
       /* Copy file to tmp or file_buffer with replaced string.  */
@@ -547,6 +529,29 @@ process_file (int dir_fd, const char *file, const char *file_name,
           fclose (tmp);
           return FAILURE;
         }
+
+      if (options & OPT_PROMPT)
+        {
+          if (prompt_user (file_name) == false)
+            {
+              fclose (fp);
+              if (tmp != NULL)
+                fclose (tmp);
+              return SUCCESS;
+            }
+        }
+
+      if (options & OPT_BACKUP)
+        {
+          if (backup_file (file_name) != SUCCESS)
+            {
+              fclose (fp);
+              if (tmp != NULL)
+                fclose (tmp);
+              return FAILURE;
+            }
+        }
+
       rewind(fp);
       if (ftruncate (fd, 0) < 0)
         {
@@ -1116,6 +1121,7 @@ main (int argc, char** argv)
   if (file_counter == 0 || (file_counter == 1 && !strcmp (file_list[0], "-")))
     {
       /* Default input from stdin and output stdout.  */
+      options |= OPT_BINARY;
       failure_flag |= replace_string (stdin, stdout, &pattern, &replacement,
                                       "stdin", NULL);
       if (fflush (stdout) != 0)
