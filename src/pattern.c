@@ -131,6 +131,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
   int eflags; /* Flags for regexec.  */
   regoff_t so, eo; /* Search range offsets for regexec.  */
   regoff_t eolo; /* End of line offset.  */
+  regoff_t lso; /* Line start offset.  */
 
   first = start;
   if (options & OPT_FIXED)
@@ -188,6 +189,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
     {
       /* Match regular expression.  */
       eolo = strlen (start);
+      lso = start - line;
       so = 0;
       eo = eolo;
       while (true)
@@ -199,11 +201,20 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
           if (eo < eolo)
             eflags |= REG_NOTEOL;
 
-          match[0].rm_so = so;
-          match[0].rm_eo = eo;
-          errcode = regexec (pattern->compiled, start, 10, match, eflags);
+          match[0].rm_so = lso + so;
+          match[0].rm_eo = lso + eo;
+          errcode = regexec (pattern->compiled, line, 10, match, eflags);
           if (errcode != 0 && errcode != REG_NOMATCH)
-            return errcode;
+             return errcode;
+          if (errcode == 0)
+            {
+              for (i = 0; i < 10; i++)
+                if (match[i].rm_so > -1)
+                  {
+                    match[i].rm_so -= lso;
+                    match[i].rm_eo -= lso;
+                  }
+            }
 
           if (errcode == 0 && (match[0].rm_so == so || eo == eolo))
             {
@@ -410,12 +421,15 @@ parse_replace (const char *string, replace_t *replacement)
       free_replace (replacement);
       return FAILURE;
     }
-  replacement->sub = (int *) malloc (nsub * sizeof (int));
-  if (replacement->sub == NULL)
+  if (nsub > 0)
     {
-      rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
-      free_replace (replacement);
-      return FAILURE;
+      replacement->sub = (int *) malloc (nsub * sizeof (int));
+      if (replacement->sub == NULL)
+        {
+          rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
+          free_replace (replacement);
+          return FAILURE;
+        }
     }
 
   /* Second swipe: allocate memory for substrings.  */
