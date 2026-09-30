@@ -22,6 +22,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include "gettext.h"
 #include "progname.h"
@@ -133,10 +134,19 @@ print_invocation ()
   fprintf (stderr, _("Try `%s --help' for more information.\n"), program_name);
 }
 
+/* Prints the error message of saved_errno.  */
+static void
+print_errno (int saved_errno)
+{
+  fprintf (stderr, "%s\n", strerror (saved_errno));
+}
+
 /* Prints an error message.  */
 void
 rrep_error (const int errcode, const char *file_name)
 {
+  int saved_errno = errno;
+
   if (options & OPT_NO_MESSAGES)
     return;
 
@@ -145,12 +155,12 @@ rrep_error (const int errcode, const char *file_name)
     case ERR_PROCESS_ARG:
       fprintf (stderr, _("%s: %s: could not process argument: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_PROCESS_DIR:
       fprintf (stderr, _("%s: %s: could not process directory: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_DIR_NO_RECURSION:
       fprintf (stderr, _("%s: %s: directory given without recursive option\n"),
@@ -171,100 +181,100 @@ rrep_error (const int errcode, const char *file_name)
     case ERR_ALLOC_SUFFIX:
       fprintf (stderr, _("%s: could not allocate memory for suffix: "),
                program_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_ALLOC_BUFFER:
       fprintf (stderr, _("%s: could not allocate memory for buffer: "),
                program_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_ALLOC_FILEBUFFER:
       fprintf (stderr, _("%s: %s: could not allocate memory for file_buffer: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_ALLOC_FILELIST:
       fprintf (stderr, _("%s: could not allocate memory for file_list: "),
                program_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_ALLOC_PATTERN:
       fprintf (stderr, _("%s: could not allocate memory for pattern: "),
                program_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_ALLOC_REPLACEMENT:
       fprintf (stderr, _("%s: could not allocate memory for replacement: "),
                program_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_ALLOC_BACKUP:
       fprintf (stderr, _("\
 %s: %s: could not allocate memory for backup string: "), program_name,
                file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_ALLOC_VERBOSE:
       fprintf (stderr, _("\
 %s: %s: could not allocate memory for verbose buffer: "), program_name,
                file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_REALLOC_BUFFER:
       fprintf (stderr, _("%s: %s: could not reallocate memory for buffer: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_REALLOC_FILEBUFFER:
       fprintf (stderr, _("\
 %s: %s: could not reallocate memory for file_buffer: "), program_name,
                file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_OPEN_READ:
       fprintf (stderr, _("%s: %s: could not open file for reading: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_OPEN_WRITE:
       fprintf (stderr, _("%s: %s: could not open file for writing: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_READ_FILE:
       fprintf (stderr, _("%s: %s: could not read file: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_READ_TEMP:
       fprintf (stderr, _("%s: %s: could not read temporary file: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_WRITE_FILE:
       fprintf (stderr, _("%s: %s: could not write file: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_WRITE_TEMP:
       fprintf (stderr, _("%s: %s: could not write temporary file: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_WRITE_BACKUP:
       fprintf (stderr, _("%s: %s: could not write backup file: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_OVERWRITE:
       fprintf (stderr, _("%s: %s: could not overwrite file: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     case ERR_KEEP_TIMES:
       fprintf (stderr, _("%s: %s: could not keep file times: "),
                program_name, file_name);
-      perror (NULL);
+      print_errno (saved_errno);
       break;
     }
 }
