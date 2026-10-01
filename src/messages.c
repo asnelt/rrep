@@ -271,6 +271,10 @@ rrep_error (const int errcode, const char *file_name)
                program_name, file_name);
       print_errno (saved_errno);
       break;
+    case ERR_FILE_REPLACED:
+      fprintf (stderr, _("%s: %s: file replaced during processing\n"),
+               program_name, file_name);
+      break;
     case ERR_KEEP_TIMES:
       fprintf (stderr, _("%s: %s: could not keep file times: "),
                program_name, file_name);

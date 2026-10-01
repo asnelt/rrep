@@ -370,8 +370,8 @@ int
 process_file (int dir_fd, const char *file, const char *file_name,
               pattern_t *pattern, const replace_t *replacement)
 {
-  int fd;
-  struct stat st;
+  int fd, write_fd;
+  struct stat st, write_st;
   struct timespec times[2]; /* File times.  */
   FILE *fp, *tmp;
   char *line;
@@ -382,30 +382,18 @@ process_file (int dir_fd, const char *file, const char *file_name,
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
   int openat_flags;
-  bool write_flag; /* Flag for file write permitted.  */
   bool found_flag; /* Flag for pattern found.  */
   bool failure_flag = false;
 
-  openat_flags = O_RDWR;
+  openat_flags = O_RDONLY;
   if (!(options & OPT_DEREF))
     openat_flags |= O_NOFOLLOW;
   fd = openat (dir_fd, file, openat_flags);
   if (fd < 0)
     {
-      /* Try opening read-only.  */
-      openat_flags = O_RDONLY;
-      if (!(options & OPT_DEREF))
-        openat_flags |= O_NOFOLLOW;
-      fd = openat (dir_fd, file, openat_flags);
-      if (fd < 0)
-        {
-          rrep_error (ERR_OPEN_READ, file_name);
-          return FAILURE;
-        }
-      write_flag = false;
+      rrep_error (ERR_OPEN_READ, file_name);
+      return FAILURE;
     }
-  else
-    write_flag = true;
 
   if (fstat (fd, &st) < 0)
     {
@@ -425,7 +413,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
   if (options & OPT_KEEP_TIMES && O_NOATIME != 0)
     fcntl (fd, F_SETFL, fcntl (fd, F_GETFL) | O_NOATIME);
 
-  fp = fdopen (fd, write_flag ? "r+" : "r");
+  fp = fdopen (fd, "r");
   if (fp == NULL)
     {
       rrep_error (ERR_OPEN_READ, file_name);
@@ -502,14 +490,35 @@ process_file (int dir_fd, const char *file, const char *file_name,
         }
 
       /* Writing back to file is actually required.  */
-      if (!write_flag)
+      openat_flags = O_RDWR;
+      if (!(options & OPT_DEREF))
+        openat_flags |= O_NOFOLLOW;
+      write_fd = openat (dir_fd, file, openat_flags);
+      if (write_fd < 0 || fstat (write_fd, &write_st) < 0)
         {
           rrep_error (ERR_OPEN_WRITE, file_name);
+          if (write_fd >= 0)
+            close (write_fd);
           fclose (fp);
           return FAILURE;
         }
+      if (write_st.st_dev != st.st_dev || write_st.st_ino != st.st_ino)
+        {
+          rrep_error (ERR_FILE_REPLACED, file_name);
+          close (write_fd);
+          fclose (fp);
+          return FAILURE;
+        }
+      fclose (fp);
+      fd = write_fd;
+      fp = fdopen (fd, "r+");
+      if (fp == NULL)
+        {
+          rrep_error (ERR_OPEN_WRITE, file_name);
+          close (fd);
+          return FAILURE;
+        }
 
-      rewind (fp);
       tmp = tmpfile ();
       /* Copy file to tmp or file_buffer with replaced string.  */
       if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len)

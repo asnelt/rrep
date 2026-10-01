@@ -43,6 +43,7 @@ enum
     ERR_WRITE_TEMP, /* Could not write to a temporary file.  */
     ERR_WRITE_BACKUP, /* Could not write to backup file.  */
     ERR_OVERWRITE, /* Could not overwrite a file.  */
+    ERR_FILE_REPLACED, /* File replaced during processing.  */
     ERR_KEEP_TIMES /* Could not keep file times.  */
   };
 
