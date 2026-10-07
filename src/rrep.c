@@ -104,7 +104,7 @@ write_string (FILE *fp, const char *string, const size_t string_len,
 {
   char *tmp;
 
-  if (fp == NULL)
+  if (fp == NULL && *pos != NULL)
     {
       /* Check if remaining file_buffer space is sufficient.  */
       while (file_buffer_size - (*pos - file_buffer) < string_len)
@@ -124,7 +124,7 @@ write_string (FILE *fp, const char *string, const size_t string_len,
       memcpy (*pos, string, string_len * sizeof (char));
       *pos += string_len;
     }
-  else
+  else if (fp != NULL)
     {
       if (fwrite (string, sizeof (char), string_len, fp) != string_len)
         {
@@ -186,7 +186,7 @@ write_replacement (FILE *fp, const char *start, const regmatch_t *match,
 int
 replace_string (FILE *in, FILE *out, pattern_t *pattern,
                 const replace_t *replacement, const char *file_name,
-                size_t *file_len)
+                size_t *file_len, size_t first_line_num)
 {
   size_t line_num, line_len, start_len, before_len, adv_len;
   char *line, *start, *pos;
@@ -200,7 +200,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   bool header_flag; /* Verbose header printed.  */
 
   pos = NULL;
-  if (out == NULL)
+  if (out == NULL && file_len != NULL)
     {
       /* Try to use file_buffer instead of tmpfile.  */
       if (file_buffer == NULL)
@@ -217,7 +217,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
       pos = file_buffer;
     }
 
-  line_num = 0;
+  line_num = first_line_num - 1;
   header_flag = false;
   line = NULL;
   /* Copy in to out with replaced string.  */
@@ -375,7 +375,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
   struct timespec times[2]; /* File times.  */
   FILE *fp, *tmp;
   char *line;
-  size_t line_len, file_len;
+  size_t line_len, file_len, line_num;
+  off_t lo; /* Line offset.  */
   regmatch_t match[10]; /* Matched regular expression.  */
   mbstate_t start_state; /* Multibyte state at start.  */
   mbstate_t before_state; /* Multibyte state before start.  */
@@ -424,6 +425,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
   /* Check whether file contains pattern at all.  */
   found_flag = false;
   line = NULL;
+  line_num = 0;
+  lo = 0;
   while ((!found_flag || !(options & OPT_BINARY))
          && (rr = read_line (fp, &line, &line_len, file_name))
          == SUCCESS)
@@ -438,6 +441,9 @@ process_file (int dir_fd, const char *file, const char *file_name,
               return SUCCESS;
             }
         }
+      if (found_flag)
+        continue;
+      line_num++;
       /* Before matching, remove trailing newline if present.  */
       if (line_len > 0 && line[line_len - 1] == '\n')
         line[line_len - 1] = '\0';
@@ -447,7 +453,9 @@ process_file (int dir_fd, const char *file, const char *file_name,
                                before_state, 0);
       if (errcode == 0)
         found_flag = true;
-      else if (errcode != REG_NOMATCH)
+      else if (errcode == REG_NOMATCH)
+        lo += line_len;
+      else
         {
           print_regerror (errcode, pattern->compiled);
           fclose (fp);
@@ -468,19 +476,19 @@ process_file (int dir_fd, const char *file, const char *file_name,
             {
               if (options & OPT_VERBOSE)
                 {
-                  /* Simulate replacement on tmp only.  */
-                  rewind (fp);
-                  tmp = tmpfile ();
-                  if (replace_string (fp, tmp, pattern, replacement, file_name,
-                                      &file_len) != SUCCESS)
+                  /* Simulate replacement.  */
+                  if (fseeko (fp, lo, SEEK_SET) != 0)
                     {
+                      rrep_error (ERR_READ_FILE, file_name);
                       fclose (fp);
-                      if (tmp != NULL)
-                        fclose (tmp);
                       return FAILURE;
                     }
-                  if (tmp != NULL)
-                    fclose (tmp);
+                  if (replace_string (fp, NULL, pattern, replacement, file_name,
+                                      NULL, line_num) != SUCCESS)
+                    {
+                      fclose (fp);
+                      return FAILURE;
+                    }
                 }
               else
                 printf ("%s\n", file_name);
@@ -519,10 +527,16 @@ process_file (int dir_fd, const char *file, const char *file_name,
           return FAILURE;
         }
 
+      if (fseeko (fp, lo, SEEK_SET) != 0)
+        {
+          rrep_error (ERR_READ_FILE, file_name);
+          fclose (fp);
+          return FAILURE;
+        }
       tmp = tmpfile ();
       /* Copy file to tmp or file_buffer with replaced string.  */
-      if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len)
-          != SUCCESS)
+      if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len,
+                          line_num) != SUCCESS)
         {
           fclose (fp);
           if (tmp != NULL)
@@ -561,8 +575,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
             }
         }
 
-      rewind(fp);
-      if (ftruncate (fd, 0) < 0)
+      if (fseeko (fp, lo, SEEK_SET) != 0 || ftruncate (fd, lo) < 0)
         {
           rrep_error (ERR_OVERWRITE, file_name);
           restore_file_times (fd, file_name, times);
@@ -1132,7 +1145,7 @@ main (int argc, char** argv)
       /* Default input from stdin and output stdout.  */
       options |= OPT_BINARY;
       failure_flag |= replace_string (stdin, stdout, &pattern, &replacement,
-                                      "stdin", NULL);
+                                      "stdin", NULL, 1);
       if (fflush (stdout) != 0)
         {
           rrep_error (ERR_WRITE_FILE, "stdout");
