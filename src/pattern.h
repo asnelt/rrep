@@ -60,3 +60,6 @@ extern void free_replace (replace_t *);
    escape sequences which are replaced in this function.  Moreover, the string
    is split into substrings.  The result is stored in replacement.  */
 extern int parse_replace (const char *, replace_t *);
+
+/* Checks the validity of references to pattern in replacement.  */
+extern int check_replace (const pattern_t *, const replace_t *);

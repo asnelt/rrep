@@ -1126,8 +1126,9 @@ main (int argc, char** argv)
       return EXIT_FAILURE;
     }
 
-  /* Parse replacement string.  */
-  if (parse_replace (replacement_string, &replacement) == FAILURE)
+  /* Parse replacement string and check reference validity.  */
+  if (parse_replace (replacement_string, &replacement) == FAILURE
+      || check_replace (&pattern, &replacement) == FAILURE)
     {
       if (suffix_string != NULL)
         free (suffix_string);
@@ -1135,6 +1136,7 @@ main (int argc, char** argv)
         free (file_list);
       if (buffer != NULL)
         free (buffer);
+      free_replace (&replacement);
       free_pattern (&pattern);
       return EXIT_FAILURE;
     }

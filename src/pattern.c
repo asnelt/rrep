@@ -205,7 +205,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
           match[0].rm_eo = lso + eo;
           errcode = regexec (pattern->compiled, line, 10, match, eflags);
           if (errcode != 0 && errcode != REG_NOMATCH)
-             return errcode;
+            return errcode;
           if (errcode == 0)
             {
               for (i = 0; i < 10; i++)
@@ -507,6 +507,29 @@ parse_replace (const char *string, replace_t *replacement)
 
       next++;
     }
+
+  return SUCCESS;
+}
+
+/* Checks the validity of references to pattern in replacement.  */
+int
+check_replace (const pattern_t *pattern, const replace_t *replacement)
+{
+  char escape_substring[3]; /* Substring for reference error message.  */
+  size_t i;
+
+  if (options & OPT_FIXED)
+    return SUCCESS;
+
+  for (i = 0; i < replacement->nsub; i++)
+    if ((size_t) replacement->sub[i] > pattern->compiled->re_nsub)
+      {
+        escape_substring[0] = '\\';
+        escape_substring[1] = '0' + replacement->sub[i];
+        escape_substring[2] = '\0';
+        rrep_error (ERR_INVALID_REFERENCE, escape_substring);
+        return FAILURE;
+      }
 
   return SUCCESS;
 }

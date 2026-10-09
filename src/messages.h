@@ -24,6 +24,7 @@ enum
     ERR_DIR_NO_RECURSION, /* Directory as argument without recursion.  */
     ERR_PATTERN, /* Error in PATTERN.  */
     ERR_UNKNOWN_ESCAPE, /* Unknown escape sequence encountered.  */
+    ERR_INVALID_REFERENCE, /* Invalid reference in REPLACEMENT.  */
     ERR_DUPLICATE_OPTION, /* Duplicate PATTERN or REPLACEMENT option.  */
     ERR_ALLOC_SUFFIX, /* Error for allocating suffix string.  */
     ERR_ALLOC_BUFFER, /* Error for allocating buffer.  */

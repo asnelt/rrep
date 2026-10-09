@@ -174,6 +174,10 @@ rrep_error (const int errcode, const char *file_name)
       fprintf (stderr, _("%s: %s: unknown escape sequence in REPLACEMENT\n"),
                program_name, file_name);
       break;
+    case ERR_INVALID_REFERENCE:
+      fprintf (stderr, _("%s: %s: invalid reference in REPLACEMENT\n"),
+               program_name, file_name);
+      break;
     case ERR_DUPLICATE_OPTION:
       fprintf (stderr, _("%s: duplicate PATTERN or REPLACEMENT option\n"),
                program_name);
