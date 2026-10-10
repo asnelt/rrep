@@ -74,35 +74,28 @@ check_word_part (const char *pos, mbstate_t *ps)
   return iswalnum ((wint_t) wc) || wc == L'_';
 }
 
-/* Checks the whole word and whole line options.  */
-bool
-check_whole (const char *line, const char *start, size_t len,
-             mbstate_t start_state, mbstate_t before_state, size_t before_len)
+/* Check if the character at position start is the beginning of a word.  */
+static bool
+check_word_start (const char *line, const char *start, mbstate_t before_state,
+                  size_t before_len)
+{
+  if (start == line)
+    return true;
+
+  return !check_word_part (start - before_len, &before_state);
+}
+
+/* Check if the character at the position len bytes after start is the end of a
+   word.  */
+static bool
+check_word_end (const char *start, size_t len, mbstate_t start_state)
 {
   char c;
   size_t adv_len;
 
-  /* Check whether any of these options was selected.  */
-  if (!(options & OPT_WHOLE_WORD) && !(options & OPT_WHOLE_LINE))
-    return true;
-
-  /* Check beginning.  */
-  if (start > line)
-    {
-      if (options & OPT_WHOLE_LINE)
-        return false;
-
-      if (check_word_part (start - before_len, &before_state))
-        return false;
-    }
-
-  /* Check end.  */
   c = *(start + len);
   if (c != '\n' && c != '\0')
     {
-      if (options & OPT_WHOLE_LINE)
-        return false;
-
       /* Advance state.  */
       adv_len = 0;
       while (adv_len < len)
@@ -112,6 +105,85 @@ check_whole (const char *line, const char *start, size_t len,
     }
 
   return true;
+}
+
+/* Checks the whole word option.  */
+static bool
+check_whole_word (const char *line, const char *start, size_t len,
+                  mbstate_t start_state, mbstate_t before_state,
+                  size_t before_len)
+{
+  if (!(options & OPT_WHOLE_WORD))
+    return true;
+
+  return check_word_start (line, start, before_state, before_len)
+    && check_word_end (start, len, start_state);
+}
+
+/* Finds the offset after start between so and eo of the last multibyte
+   character that is not part of a word, or returns -1 if there is no word
+   gap.  */
+static regoff_t
+find_last_word_gap (const char *start, regoff_t so, regoff_t eo,
+                    mbstate_t so_state)
+{
+  mbstate_t dummy_state;
+  regoff_t i;
+  regoff_t lgo = -1; /* Last gap character offset.  */
+
+  for (i = so; i < eo; i += count_bytes (start + i, &so_state))
+    {
+      dummy_state = so_state;
+      if (!check_word_part (start + i, &dummy_state))
+        lgo = i;
+    }
+
+  return lgo;
+}
+
+/* Matches a whole line against regular expression or string.  Returns 0 if a
+   match was found, REG_NOMATCH if no match was found or regerror error value if
+   a regerror occurred.  Match offsets are stored in match.  */
+static int
+match_line (pattern_t *pattern, const char *line, regmatch_t *match)
+{
+  int i;
+  int errcode; /* Return value of regexec.  */
+  const char *string_end; /* End position of pattern->string.  */
+  regoff_t eolo; /* End of line offset.  */
+
+  eolo = strlen (line);
+  if (options & OPT_FIXED)
+    {
+      for (i = 1; i < 10; i++)
+        {
+          match[i].rm_so = -1;
+          match[i].rm_eo = -1;
+        }
+      if (options & OPT_ICASE)
+        {
+          string_end = mbspcasecmp (line, pattern->string);
+          if (string_end == NULL || *string_end != '\0')
+            return REG_NOMATCH;
+        }
+      else if (strcmp (line, pattern->string) != 0)
+        return REG_NOMATCH;
+    }
+  else
+    {
+      /* Check if match offsets are beginning and end of line.  */
+      match[0].rm_so = 0;
+      match[0].rm_eo = eolo;
+      errcode = regexec (pattern->compiled, line, 10, match, REG_STARTEND);
+      if (errcode != 0)
+        return errcode;
+      if (match[0].rm_so != 0 || match[0].rm_eo != eolo)
+        return REG_NOMATCH;
+    }
+  match[0].rm_so = 0;
+  match[0].rm_eo = eolo;
+
+  return 0;
 }
 
 /* Matches regular expression or string in start.  Returns 0 if a match was
@@ -132,6 +204,14 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
   regoff_t so, eo; /* Search range offsets for regexec.  */
   regoff_t eolo; /* End of line offset.  */
   regoff_t lso; /* Line start offset.  */
+
+  /* Check if a whole line match was requested.  */
+  if (options & OPT_WHOLE_LINE)
+    {
+      if (start != line)
+        return REG_NOMATCH;
+      return match_line (pattern, line, match);
+    }
 
   first = start;
   if (options & OPT_FIXED)
@@ -171,8 +251,8 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
               if (string_end != NULL)
                 string_len = string_end - first;
             }
-          if (check_whole (line, first, string_len, first_state, before_state,
-                           before_len))
+          if (check_whole_word (line, first, string_len, first_state,
+                                before_state, before_len))
             {
               /* Set offsets in match[0].  */
               match[0].rm_so = first - start;
@@ -226,14 +306,19 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
                 }
 
               first = start + so;
-              if (check_whole (line, first, match[0].rm_eo - so, first_state,
-                               before_state, before_len))
+              if (!(options & OPT_WHOLE_WORD))
                 return 0;
-              if (so < match[0].rm_eo)
+              /* Check whole word in two steps.  */
+              if (check_word_start (line, first, before_state, before_len))
                 {
-                  /* Check for shorter match.  */
-                  eo = match[0].rm_eo - 1;
-                  continue;
+                  if (check_word_end (first, match[0].rm_eo - so,
+                                      first_state))
+                    return 0;
+                  /* Check if a shorter match is possible.  */
+                  eo = find_last_word_gap (start, so, match[0].rm_eo,
+                                           first_state);
+                  if (eo >= 0)
+                    continue;
                 }
             }
           else if (eo == eolo)
