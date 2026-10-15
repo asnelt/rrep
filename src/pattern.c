@@ -149,24 +149,17 @@ match_line (pattern_t *pattern, const char *line, regmatch_t *match)
 {
   int i;
   int errcode; /* Return value of regexec.  */
-  const char *string_end; /* End position of pattern->string.  */
   regoff_t eolo; /* End of line offset.  */
 
   eolo = strlen (line);
-  if (options & OPT_FIXED)
+  if (pattern->compiled == NULL)
     {
       for (i = 1; i < 10; i++)
         {
           match[i].rm_so = -1;
           match[i].rm_eo = -1;
         }
-      if (options & OPT_ICASE)
-        {
-          string_end = mbspcasecmp (line, pattern->string);
-          if (string_end == NULL || *string_end != '\0')
-            return REG_NOMATCH;
-        }
-      else if (strcmp (line, pattern->string) != 0)
+      if (strcmp (line, pattern->string) != 0)
         return REG_NOMATCH;
     }
   else
@@ -197,7 +190,6 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
   int i;
   const char *first; /* Start of first occurrence of pattern->string.  */
   const char *pos; /* Current search position for pattern->string.  */
-  const char *string_end; /* End position of pattern-string.  */
   size_t string_len;
   int errcode; /* Return value of regexec.  */
   int eflags; /* Flags for regexec.  */
@@ -217,7 +209,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
     }
 
   first = start;
-  if (options & OPT_FIXED)
+  if (pattern->compiled == NULL)
     {
       /* Prepare match.  */
       for (i = 1; i < 10; i++)
@@ -229,10 +221,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
       pos = first;
       while (true)
         {
-          if (options & OPT_ICASE)
-            first = mbscasestr (pos, pattern->string);
-          else
-            first = mbsstr (pos, pattern->string);
+          first = mbsstr (pos, pattern->string);
           if (first == NULL)
             {
               /* String not found.  */
@@ -248,12 +237,6 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
               pos += before_len;
             }
           string_len = pattern->string_len;
-          if (options & OPT_ICASE)
-            {
-              string_end = mbspcasecmp (first, pattern->string);
-              if (string_end != NULL)
-                string_len = string_end - first;
-            }
           if (check_whole_word (line, first, string_len, first_state,
                                 before_state, before_len))
             {
@@ -390,6 +373,10 @@ int
 parse_pattern (const char *string, pattern_t *pattern, int cflags)
 {
   int errcode; /* Error code for regcomp.  */
+  mbstate_t state;
+  size_t len;
+  char *pos;
+  char *fixed_string = NULL; /* Fixed string with escaped characters.  */
 
   pattern->string_len = strlen (string);
   if (pattern->string_len < 1)
@@ -408,17 +395,48 @@ parse_pattern (const char *string, pattern_t *pattern, int cflags)
   strcpy (pattern->string, string);
 
   if (options & OPT_FIXED)
-    return SUCCESS;
+    {
+      if (!(options & OPT_ICASE))
+        return SUCCESS;
+      /* Allocate memory for fixed_string and add escapes.  */
+      fixed_string = (char *) malloc ((2 * strlen (string) + 1)
+                                      * sizeof (char));
+      if (fixed_string == NULL)
+        {
+          rrep_error (ERR_ALLOC_PATTERN, NULL);
+          free_pattern (pattern);
+          return FAILURE;
+        }
+      memset (&state, 0, sizeof (state));
+      pos = fixed_string;
+      while (*string != '\0')
+        {
+          len = count_bytes (string, &state);
+          if (len == 1 && strchr (".[\\*^$", *string) != NULL)
+            {
+              *pos = '\\';
+              pos++;
+            }
+          memcpy (pos, string, len);
+          pos += len;
+          string += len;
+        }
+      *pos = '\0';
+      string = fixed_string;
+      cflags = REG_ICASE;
+    }
 
   pattern->compiled = (regex_t *) malloc (sizeof (regex_t));
   if (pattern->compiled == NULL)
     {
       rrep_error (ERR_ALLOC_PATTERN, NULL);
+      free (fixed_string);
       free_pattern (pattern);
       return FAILURE;
     }
   /* Compile regular expression.  */
   errcode = regcomp (pattern->compiled, string, cflags);
+  free (fixed_string);
   if (errcode != 0)
     {
       print_regerror (errcode, pattern->compiled);
