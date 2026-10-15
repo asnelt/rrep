@@ -204,6 +204,9 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
   regoff_t so, eo; /* Search range offsets for regexec.  */
   regoff_t eolo; /* End of line offset.  */
   regoff_t lso; /* Line start offset.  */
+  regoff_t co; /* Character offset.  */
+  regoff_t bco; /* Before character offset.  */
+  mbstate_t co_state; /* State at character offset.  */
 
   /* Check if a whole line match was requested.  */
   if (options & OPT_WHOLE_LINE)
@@ -306,6 +309,31 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
                 }
 
               first = start + so;
+              if (MB_CUR_MAX > 1)
+                {
+                  if (so != match[0].rm_so)
+                    {
+                      /* Start of match not aligned with first byte of multibyte
+                         character.  */
+                      eo = eolo;
+                      continue;
+                    }
+                  co = so;
+                  bco = co;
+                  co_state = first_state;
+                  while (co < match[0].rm_eo)
+                    {
+                      bco = co;
+                      co += count_bytes (start + co, &co_state);
+                    }
+                  if (co != match[0].rm_eo)
+                    {
+                      /* End of match not aligned with last byte of multibyte
+                         character.  */
+                      eo = bco;
+                      continue;
+                    }
+                }
               if (!(options & OPT_WHOLE_WORD))
                 return 0;
               /* Check whole word in two steps.  */

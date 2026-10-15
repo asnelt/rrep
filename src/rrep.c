@@ -278,6 +278,14 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
                   adv_len += start_len;
                 }
               while (adv_len < (size_t) match[0].rm_eo);
+              if (adv_len > (size_t) match[0].rm_eo)
+                {
+                  /* Write bytes of partial multibyte character.  */
+                  if (write_string (out, start + match[0].rm_eo,
+                                    adv_len - match[0].rm_eo, file_name, &pos)
+                      != SUCCESS)
+                    return FAILURE;
+                }
 
               before_len = start_len;
               start += adv_len;
