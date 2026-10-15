@@ -228,7 +228,10 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
       /* Remove trailing newline character if it is present in line.  */
       newline_flag = (line_len > 0 && line[line_len - 1] == '\n');
       if (newline_flag)
-        line[line_len - 1] = '\0';
+        {
+          line_len--;
+          line[line_len] = '\0';
+        }
       start = line;
       last_empty_flag = true;
       memset (&start_state, 0, sizeof (start_state));
@@ -236,7 +239,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
       start_len = 0;
       before_len = 0;
       /* Search for regular expression or pattern string.  */
-      while ((errcode = match_pattern (pattern, line, start, match,
+      while ((errcode = match_pattern (pattern, line, line_len, start, match,
                                        start_state, before_state, before_len))
              == 0)
         {
@@ -299,7 +302,10 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
         }
       /* Eventually restore trailing newline character.  */
       if (newline_flag)
-        line[line_len - 1] = '\n';
+        {
+          line[line_len] = '\n';
+          line_len++;
+        }
       /* Flush rest of line into out or file_buffer.  */
       if (write_string (out, start, line_len - (start - line), file_name, &pos)
           != SUCCESS)
@@ -457,8 +463,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
         line[line_len - 1] = '\0';
       memset (&start_state, 0, sizeof (start_state));
       before_state = start_state;
-      errcode = match_pattern (pattern, line, line, match, start_state,
-                               before_state, 0);
+      errcode = match_pattern (pattern, line, strlen (line), line, match,
+                               start_state, before_state, 0);
       if (errcode == 0)
         found_flag = true;
       else if (errcode == REG_NOMATCH)

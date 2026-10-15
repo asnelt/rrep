@@ -43,7 +43,7 @@ extern size_t count_bytes (const char *, mbstate_t *);
 /* Matches regular expression or string in start.  Returns 0 if a match was
    found, REG_NOMATCH if no match was found or regerror error value if a
    regerror occurred.  Match offsets are stored in match.  */
-extern int match_pattern (pattern_t *, const char *, const char *,
+extern int match_pattern (pattern_t *, const char *, size_t, const char *,
                           regmatch_t *, mbstate_t, mbstate_t, size_t);
 
 /* Frees the memory that was allocated for the fields of pattern.  */

@@ -145,13 +145,14 @@ find_last_word_gap (const char *start, regoff_t so, regoff_t eo,
    match was found, REG_NOMATCH if no match was found or regerror error value if
    a regerror occurred.  Match offsets are stored in match.  */
 static int
-match_line (pattern_t *pattern, const char *line, regmatch_t *match)
+match_line (pattern_t *pattern, const char *line, size_t line_len,
+            regmatch_t *match)
 {
   int i;
   int errcode; /* Return value of regexec.  */
   regoff_t eolo; /* End of line offset.  */
 
-  eolo = strlen (line);
+  eolo = line_len;
   if (pattern->compiled == NULL)
     {
       for (i = 1; i < 10; i++)
@@ -183,8 +184,8 @@ match_line (pattern_t *pattern, const char *line, regmatch_t *match)
    found, REG_NOMATCH if no match was found or regerror error value if a
    regerror occurred.  Match offsets are stored in match.  */
 int
-match_pattern (pattern_t *pattern, const char *line, const char *start,
-               regmatch_t *match, mbstate_t first_state,
+match_pattern (pattern_t *pattern, const char *line, size_t line_len,
+               const char *start, regmatch_t *match, mbstate_t first_state,
                mbstate_t before_state, size_t before_len)
 {
   int i;
@@ -205,7 +206,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
     {
       if (start != line)
         return REG_NOMATCH;
-      return match_line (pattern, line, match);
+      return match_line (pattern, line, line_len, match);
     }
 
   first = start;
@@ -254,7 +255,7 @@ match_pattern (pattern_t *pattern, const char *line, const char *start,
   else
     {
       /* Match regular expression.  */
-      eolo = strlen (start);
+      eolo = line_len - (start - line);
       lso = start - line;
       so = 0;
       eo = eolo;
