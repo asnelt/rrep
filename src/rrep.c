@@ -195,7 +195,8 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   regmatch_t match[10]; /* Matched regular expression.  */
   mbstate_t start_state; /* Multibyte state at start.  */
   mbstate_t before_state; /* Multibyte state before start.  */
-  bool newline_flag; /* Trailing newline character found in line.  */
+  char delimiter; /* Line delimiter.  */
+  bool delimiter_flag; /* Trailing line delimiter found in line.  */
   bool last_empty_flag; /* Last regular expression had zero length.  */
   bool header_flag; /* Verbose header printed.  */
 
@@ -225,11 +226,13 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
     {
       line_num++;
       verbose_buffer_fill = 0;
-      /* Remove trailing newline character if it is present in line.  */
-      newline_flag = (line_len > 0 && line[line_len - 1] == '\n');
-      if (newline_flag)
+      /* Remove trailing line delimiter if it is present in line.  */
+      delimiter_flag = (line_len > 0 && (line[line_len - 1] == '\n'
+                                         || line[line_len - 1] == '\0'));
+      if (delimiter_flag)
         {
           line_len--;
+          delimiter = line[line_len];
           line[line_len] = '\0';
         }
       start = line;
@@ -300,10 +303,10 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
           print_regerror (errcode, pattern->compiled);
           return FAILURE;
         }
-      /* Eventually restore trailing newline character.  */
-      if (newline_flag)
+      /* Eventually restore trailing line delimiter.  */
+      if (delimiter_flag)
         {
-          line[line_len] = '\n';
+          line[line_len] = delimiter;
           line_len++;
         }
       /* Flush rest of line into out or file_buffer.  */
