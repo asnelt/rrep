@@ -196,7 +196,7 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
   int eflags; /* Flags for regexec.  */
   regoff_t so, eo; /* Search range offsets for regexec.  */
   regoff_t eolo; /* End of line offset.  */
-  regoff_t lso; /* Line start offset.  */
+  regoff_t sso; /* Search start offset.  */
   regoff_t co; /* Character offset.  */
   regoff_t bco; /* Before character offset.  */
   mbstate_t co_state; /* State at character offset.  */
@@ -256,7 +256,6 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
     {
       /* Match regular expression.  */
       eolo = line_len - (start - line);
-      lso = start - line;
       so = 0;
       eo = eolo;
       while (true)
@@ -268,9 +267,10 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
           if (eo < eolo)
             eflags |= REG_NOTEOL;
 
-          match[0].rm_so = lso + so;
-          match[0].rm_eo = lso + eo;
-          errcode = regexec (pattern->compiled, line, 10, match, eflags);
+          sso = so - (regoff_t) before_len;
+          match[0].rm_so = so - sso;
+          match[0].rm_eo = eo - sso;
+          errcode = regexec (pattern->compiled, start + sso, 10, match, eflags);
           if (errcode != 0 && errcode != REG_NOMATCH)
             return errcode;
           if (errcode == 0)
@@ -278,8 +278,8 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
               for (i = 0; i < 10; i++)
                 if (match[i].rm_so > -1)
                   {
-                    match[i].rm_so -= lso;
-                    match[i].rm_eo -= lso;
+                    match[i].rm_so += sso;
+                    match[i].rm_eo += sso;
                   }
             }
 
@@ -331,6 +331,19 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
                                            first_state);
                   if (eo >= 0)
                     continue;
+                }
+              else
+                {
+                  /* Continue after word.  */
+                  co_state = first_state;
+                  while (so < eolo && check_word_part (start + so, &co_state))
+                    {
+                      before_state = first_state;
+                      before_len = count_bytes (start + so, &first_state);
+                      so += before_len;
+                      co_state = first_state;
+                    }
+                  first = start + so;
                 }
             }
           else if (eo == eolo)
