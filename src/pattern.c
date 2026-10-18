@@ -454,6 +454,8 @@ parse_pattern (const char *string, pattern_t *pattern, int cflags)
   if (errcode != 0)
     {
       print_regerror (errcode, pattern->compiled);
+      free (pattern->compiled);
+      pattern->compiled = NULL;
       free_pattern (pattern);
       return FAILURE;
     }

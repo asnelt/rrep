@@ -91,6 +91,16 @@ static struct exclude *included_patterns = NULL;
 static struct exclude *excluded_patterns = NULL;
 static struct exclude *excluded_directory_patterns = NULL;
 
+/* Node of a linked list of directory times and associated file descriptor.  */
+struct dir_times
+{
+  int fd;
+  struct timespec times[2];
+  struct dir_times *next;
+};
+
+static struct dir_times *saved_dir_times = NULL;
+
 enum backup_type backup_method = no_backups;
 
 /* Option flags set by arguments.  */
@@ -337,7 +347,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
   return SUCCESS;
 }
 
-/* Make a backup of the file.  */
+/* Makes a backup of the file.  */
 int
 backup_file (const char *file_name)
 {
@@ -365,7 +375,7 @@ backup_file (const char *file_name)
   return SUCCESS;
 }
 
-/* Restore the file times of the file descriptor fd.  */
+/* Restores the file times of the file descriptor fd.  */
 int
 restore_file_times (int fd, const char *file_name, const struct timespec *times)
 {
@@ -380,7 +390,7 @@ restore_file_times (int fd, const char *file_name, const struct timespec *times)
   return SUCCESS;
 }
 
-/* Replace pattern by replacement in the file file_name.  dir_fd is the
+/* Replaces pattern by replacement in the file file_name.  dir_fd is the
    directory file descriptor and file is the name of the file in that
    directory.  file_name includes the path.  */
 int
@@ -715,14 +725,7 @@ check_name (const char *file_name, const struct exclude *included_name,
   return check_include_name (file_name, included_name, excluded_name);
 }
 
-/* Directory times and associated file descriptor.  */
-struct dir_times
-{
-  int fd;
-  struct timespec times[2];
-};
-
-/* Save directory times in fts_pointer.  */
+/* Saves directory times in fts_pointer.  */
 static int
 save_dir_times (FTSENT *ent)
 {
@@ -756,16 +759,19 @@ save_dir_times (FTSENT *ent)
   dt->fd = fd;
   dt->times[0] = st.st_atim;
   dt->times[1] = st.st_mtim;
+  dt->next = saved_dir_times;
+  saved_dir_times = dt;
   ent->fts_pointer = dt;
 
   return SUCCESS;
 }
 
-/* Restore directory times from fts_pointer and free fts_pointer.  */
+/* Restores directory times from fts_pointer and free fts_pointer.  */
 static int
 restore_dir_times (FTSENT *ent)
 {
   struct dir_times *dt;
+  struct dir_times **dtp;
   struct stat st;
   bool modified_flag, accessed_flag;
   bool failure_flag = false;
@@ -787,6 +793,15 @@ restore_dir_times (FTSENT *ent)
       failure_flag = true;
     }
   close (dt->fd);
+  /* Remove node from linked list.  */
+  for (dtp = &saved_dir_times; *dtp != NULL; dtp = &(*dtp)->next)
+    {
+      if (*dtp == dt)
+        {
+          *dtp = dt->next;
+          break;
+        }
+    }
   free (dt);
   ent->fts_pointer = NULL;
 
@@ -804,6 +819,7 @@ process_file_list (char **file_list, pattern_t *pattern,
   FTS *fts;
   int fts_flags;
   FTSENT *ent;
+  struct dir_times *dt;
   bool failure_flag = false;
 
   fts_flags = FTS_CWDFD | FTS_VERBATIM;
@@ -898,10 +914,39 @@ process_file_list (char **file_list, pattern_t *pattern,
       failure_flag = true;
     }
 
+  while (saved_dir_times != NULL)
+    {
+      dt = saved_dir_times;
+      saved_dir_times = dt->next;
+      close (dt->fd);
+      free (dt);
+    }
+
   if (failure_flag)
     return FAILURE;
 
   return SUCCESS;
+}
+
+/* Frees included_patterns and excluded_patterns.  */
+static void
+free_included_excluded_patterns (void)
+{
+  if (included_patterns != NULL)
+    {
+      free_exclude (included_patterns);
+      included_patterns = NULL;
+    }
+  if (excluded_patterns != NULL)
+    {
+      free_exclude (excluded_patterns);
+      excluded_patterns = NULL;
+    }
+  if (excluded_directory_patterns != NULL)
+    {
+      free_exclude (excluded_directory_patterns);
+      excluded_directory_patterns = NULL;
+    }
 }
 
 /* Parses command line arguments and processes file list.  */
@@ -1080,11 +1125,15 @@ main (int argc, char** argv)
   if (failure_flag)
     {
       print_invocation ();
+      free_included_excluded_patterns ();
       return EXIT_FAILURE;
     }
 
   if (exit_flag)
-    return EXIT_SUCCESS;
+    {
+      free_included_excluded_patterns ();
+      return EXIT_SUCCESS;
+    }
 
   if (suffix_string)
     {
@@ -1094,6 +1143,7 @@ main (int argc, char** argv)
       if (suffix_string == NULL)
         {
           rrep_error (ERR_ALLOC_SUFFIX, NULL);
+          free_included_excluded_patterns ();
           return EXIT_FAILURE;
         }
       simple_backup_suffix = suffix_string;
@@ -1109,6 +1159,7 @@ main (int argc, char** argv)
   if (file_list == NULL)
     {
       rrep_error (ERR_ALLOC_FILELIST, NULL);
+      free_included_excluded_patterns ();
       return EXIT_FAILURE;
     }
   /* Parse remaining arguments.  */
@@ -1130,6 +1181,7 @@ main (int argc, char** argv)
   if (pattern_string == NULL || replacement_string == NULL)
     {
       print_invocation ();
+      free_included_excluded_patterns ();
       if (suffix_string != NULL)
         free (suffix_string);
       if (file_list != NULL)
@@ -1142,6 +1194,7 @@ main (int argc, char** argv)
   if (buffer == NULL)
     {
       rrep_error (ERR_ALLOC_BUFFER, NULL);
+      free_included_excluded_patterns ();
       if (suffix_string != NULL)
         free (suffix_string);
       if (file_list != NULL)
@@ -1153,6 +1206,7 @@ main (int argc, char** argv)
   /* Parse pattern string.  */
   if (parse_pattern (pattern_string, &pattern, cflags) == FAILURE)
     {
+      free_included_excluded_patterns ();
       if (suffix_string != NULL)
         free (suffix_string);
       if (file_list != NULL)
@@ -1166,14 +1220,15 @@ main (int argc, char** argv)
   if (parse_replace (replacement_string, &replacement) == FAILURE
       || check_replace (&pattern, &replacement) == FAILURE)
     {
+      free_included_excluded_patterns ();
+      free_replace (&replacement);
+      free_pattern (&pattern);
       if (suffix_string != NULL)
         free (suffix_string);
       if (file_list != NULL)
         free (file_list);
       if (buffer != NULL)
         free (buffer);
-      free_replace (&replacement);
-      free_pattern (&pattern);
       return EXIT_FAILURE;
     }
 
@@ -1196,12 +1251,7 @@ main (int argc, char** argv)
       failure_flag |= process_file_list (file_list, &pattern, &replacement);
     }
 
-  if (included_patterns != NULL)
-    free_exclude (included_patterns);
-  if (excluded_patterns != NULL)
-    free_exclude (excluded_patterns);
-  if (excluded_directory_patterns != NULL)
-    free_exclude (excluded_directory_patterns);
+  free_included_excluded_patterns ();
   free_replace (&replacement);
   free_pattern (&pattern);
   if (verbose_buffer != NULL)
