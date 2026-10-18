@@ -536,6 +536,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
         }
       fclose (fp);
       fd = write_fd;
+      if (options & OPT_KEEP_TIMES && O_NOATIME != 0)
+        fcntl (fd, F_SETFL, fcntl (fd, F_GETFL) | O_NOATIME);
       fp = fdopen (fd, "r+");
       if (fp == NULL)
         {
@@ -555,6 +557,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len,
                           line_num) != SUCCESS)
         {
+          restore_file_times (fd, file_name, times);
           fclose (fp);
           if (tmp != NULL)
             fclose (tmp);
@@ -565,6 +568,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (tmp != NULL && fflush (tmp) != 0)
         {
           rrep_error (ERR_WRITE_TEMP, file_name);
+          restore_file_times (fd, file_name, times);
           fclose (fp);
           fclose (tmp);
           return FAILURE;
@@ -574,9 +578,13 @@ process_file (int dir_fd, const char *file, const char *file_name,
         {
           if (prompt_user (file_name) == false)
             {
+              if (restore_file_times (fd, file_name, times) != SUCCESS)
+                failure_flag = true;
               fclose (fp);
               if (tmp != NULL)
                 fclose (tmp);
+              if (failure_flag)
+                return FAILURE;
               return SUCCESS;
             }
         }
@@ -585,6 +593,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
         {
           if (backup_file (file_name) != SUCCESS)
             {
+              restore_file_times (fd, file_name, times);
               fclose (fp);
               if (tmp != NULL)
                 fclose (tmp);
@@ -718,6 +727,8 @@ save_dir_times (FTSENT *ent)
   if (!(options & OPT_DEREF))
     openat_flags |= O_NOFOLLOW;
   fd = openat (ent->fts_fts->fts_cwd_fd, ent->fts_accpath, openat_flags);
+  if (fd < 0 && errno == EACCES)
+    return SUCCESS;
   if (fd < 0 || fstat (fd, &st) < 0)
     {
       rrep_error (ERR_KEEP_TIMES, ent->fts_path);
