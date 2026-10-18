@@ -353,7 +353,7 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
             return REG_NOMATCH;
 
           before_state = first_state;
-          before_len = count_bytes (first, &first_state);;
+          before_len = count_bytes (first, &first_state);
           so += before_len;
           first = start + so;
           eo = eolo;

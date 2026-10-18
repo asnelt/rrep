@@ -315,7 +315,8 @@ print_confirmation (const char *file_name)
 }
 
 /* Prints a header for a changed file.  */
-extern void print_file_header (const char *file_name)
+void
+print_file_header (const char *file_name)
 {
   bool color_flag;
  
@@ -325,9 +326,9 @@ extern void print_file_header (const char *file_name)
 }
 
 /* Prints replacement details for a line.  */
-extern void print_line_replacement (const size_t line_num,
-                                    const char *old_line, size_t old_len,
-                                    const char *new_line, size_t new_len)
+void
+print_line_replacement (const size_t line_num, const char *old_line,
+                        size_t old_len, const char *new_line, size_t new_len)
 {
   bool color_flag;
   size_t i, line_counter;
