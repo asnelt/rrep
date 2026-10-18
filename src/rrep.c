@@ -401,6 +401,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
   int errcode; /* Return value of regexec.  */
   int openat_flags;
   bool found_flag; /* Flag for pattern found.  */
+  bool delimiter_flag; /* Trailing line delimiter found in line.  */
   bool failure_flag = false;
 
   openat_flags = O_RDONLY;
@@ -461,17 +462,24 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (found_flag)
         continue;
       line_num++;
-      /* Before matching, remove trailing newline if present.  */
-      if (line_len > 0 && line[line_len - 1] == '\n')
-        line[line_len - 1] = '\0';
+      /* Before matching, remove trailing delimiter if present.  */
+      delimiter_flag = line_len > 0 && (line[line_len - 1] == '\n'
+                                        || line[line_len - 1] == '\0');
+      if (delimiter_flag)
+        {
+          line_len--;
+          line[line_len] = '\0';
+        }
       memset (&start_state, 0, sizeof (start_state));
       before_state = start_state;
-      errcode = match_pattern (pattern, line, strlen (line), line, match,
+      errcode = match_pattern (pattern, line, line_len, line, match,
                                start_state, before_state, 0);
       if (errcode == 0)
         found_flag = true;
       else if (errcode == REG_NOMATCH)
         lo += line_len;
+        if (delimiter_flag)
+          lo++;
       else
         {
           print_regerror (errcode, pattern->compiled);
