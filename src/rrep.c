@@ -487,9 +487,11 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (errcode == 0)
         found_flag = true;
       else if (errcode == REG_NOMATCH)
-        lo += line_len;
-        if (delimiter_flag)
-          lo++;
+        {
+          lo += line_len;
+          if (delimiter_flag)
+            lo++;
+        }
       else
         {
           print_regerror (errcode, pattern->compiled);
