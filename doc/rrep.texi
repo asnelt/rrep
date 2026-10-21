@@ -402,12 +402,12 @@ rights and impose the same restrictions.
 
 This general method of licensing software is sometimes called @dfn{open source}.
 The GNU project prefers the term ``free software'' for reasons outlined at
-@url{http://www.gnu.org/philosophy/open-source-misses-the-point.html}.
+@url{https://www.gnu.org/philosophy/open-source-misses-the-point.html}.
 
 This manual is free documentation in the same sense.
 The documentation license is included below.
 The license for the program is available with the source code, or at
-@url{http://www.gnu.org/licenses/gpl.html}.
+@url{https://www.gnu.org/licenses/gpl.html}.
 
 @menu
 * GNU Free Documentation License::  

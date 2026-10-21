@@ -12,9 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* Pointer to buffer.  */
 extern char *buffer;
@@ -40,7 +38,7 @@ extern size_t verbose_buffer_fill;
    or if an error occurred FAILURE is returned.  */
 extern int read_line (FILE *, char **, size_t *, const char *);
 
-/* Appends a string to the current string in the verbose_buffer.  If needed, the
-   size of the verbose_buffer is reallocated.  */
+/* Appends a string to the current string in the verbose_buffer.  If needed,
+   the size of the verbose_buffer is reallocated.  */
 extern int append_verbose (const char *, const size_t, const char *);
 

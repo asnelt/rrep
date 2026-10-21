@@ -12,9 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* Initial size of the buffer for reading lines.  */
 #define INIT_BUFFER_SIZE (4096)
@@ -25,7 +23,7 @@
 #define OPT_BINARY      0x0004 /* Process binary files as well.  */
 #define OPT_DEREF       0x0008 /* Follow all symlinks.  */
 #define OPT_DRY         0x0010 /* Do not modify any files.  */
-#define OPT_FIXED       0x0020 /* PATTERN and REPLACEMENT are fixed strings.  */
+#define OPT_FIXED       0x0020 /* Fixed strings PATTERN and REPLACEMENT.  */
 #define OPT_ICASE       0x0040 /* Ignore case distinctions.  */
 #define OPT_KEEP_TIMES  0x0080 /* Keep file access and modification times.  */
 #define OPT_NO_MESSAGES 0x0100 /* Do not print error messages.  */
@@ -38,11 +36,11 @@
 
 /* Processing constants.  */
 enum
-  {
-    SUCCESS = 0,
-    FAILURE = 1,
-    END_REACHED = 2
-  };
+{
+  SUCCESS = 0,
+  FAILURE = 1,
+  END_REACHED = 2
+};
 
 /* Option flags are set in main.  */
 extern int options;

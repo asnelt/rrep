@@ -12,9 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <ctype.h>
@@ -142,8 +140,8 @@ find_last_word_gap (const char *start, regoff_t so, regoff_t eo,
 }
 
 /* Matches a whole line against regular expression or string.  Returns 0 if a
-   match was found, REG_NOMATCH if no match was found or regerror error value if
-   a regerror occurred.  Match offsets are stored in match.  */
+   match was found, REG_NOMATCH if no match was found or regerror error value
+   if a regerror occurred.  Match offsets are stored in match.  */
 static int
 match_line (pattern_t *pattern, const char *line, size_t line_len,
             regmatch_t *match)
@@ -270,7 +268,8 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
           sso = so - (regoff_t) before_len;
           match[0].rm_so = so - sso;
           match[0].rm_eo = eo - sso;
-          errcode = regexec (pattern->compiled, start + sso, 10, match, eflags);
+          errcode = regexec (pattern->compiled, start + sso, 10, match,
+                             eflags);
           if (errcode != 0 && errcode != REG_NOMATCH)
             return errcode;
           if (errcode == 0)
@@ -297,8 +296,8 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
                 {
                   if (so != match[0].rm_so)
                     {
-                      /* Start of match not aligned with first byte of multibyte
-                         character.  */
+                      /* Start of match not aligned with first byte of
+                         multibyte character.  */
                       eo = eolo;
                       continue;
                     }
@@ -400,7 +399,8 @@ parse_pattern (const char *string, pattern_t *pattern, int cflags)
     }
 
   /* Copy original string into replacement.  */
-  pattern->string = (char *) malloc ((pattern->string_len + 1) * sizeof (char));
+  pattern->string = (char *) malloc ((pattern->string_len + 1)
+                                     * sizeof (char));
   if (pattern->string == NULL)
     {
       rrep_error (ERR_ALLOC_PATTERN, NULL);

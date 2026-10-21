@@ -12,9 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <errno.h>
@@ -42,12 +40,13 @@
 
 /* Prints version information.  */
 void
-print_version ()
+print_version (void)
 {
   printf ("%s\n\n", PACKAGE_STRING);
   printf (_("\
 Copyright (C) 2011, 2013, 2019, 2022, 2026 %s\n\
-License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n\
+License GPLv3+: GNU GPL version 3 or later \
+<https://gnu.org/licenses/gpl.html>\n\
 This is free software: you are free to change and redistribute it.\n\
 There is NO WARRANTY, to the extent permitted by law.\n"), AUTHORS);
   printf ("\n");
@@ -58,12 +57,12 @@ void
 print_usage (FILE *fp)
 {
   fprintf (fp, _("Usage: %s [OPTION]... PATTERN REPLACEMENT [FILE]...\n"),
-          program_name);
+           program_name);
 }
 
 /* Prints the help.  */
 void
-print_help ()
+print_help (void)
 {
   print_usage (stdout);
   printf (_("\
@@ -110,8 +109,8 @@ Options:\n\
   printf ("\n");
   printf (_("\
 With no FILE, or when FILE is -, read standard input and write to standard\n\
-output.  Exit status is %d if any error occurs, %d otherwise.\n"), EXIT_FAILURE,
-          EXIT_SUCCESS);
+output.  Exit status is %d if any error occurs, %d otherwise.\n"),
+          EXIT_FAILURE, EXIT_SUCCESS);
   printf ("\n");
   printf (_("\
 The backup suffix is ~, unless set with --suffix or SIMPLE_BACKUP_SUFFIX.\n\
@@ -128,7 +127,7 @@ the VERSION_CONTROL environment variable.  Here are the values:\n\
 
 /* Prints the program invocation to stderr.  */
 void
-print_invocation ()
+print_invocation (void)
 {
   print_usage (stderr);
   fprintf (stderr, _("Try `%s --help' for more information.\n"), program_name);
@@ -193,7 +192,8 @@ rrep_error (const int errcode, const char *file_name)
       print_errno (saved_errno);
       break;
     case ERR_ALLOC_FILEBUFFER:
-      fprintf (stderr, _("%s: %s: could not allocate memory for file_buffer: "),
+      fprintf (stderr,
+               _("%s: %s: could not allocate memory for file_buffer: "),
                program_name, file_name);
       print_errno (saved_errno);
       break;
@@ -319,7 +319,7 @@ void
 print_file_header (const char *file_name)
 {
   bool color_flag;
- 
+
   color_flag = isatty (fileno (stdout));
   printf ("%s--- %s\n+++ %s%s\n", color_flag ? ANSI_BOLD : "", file_name,
           file_name, color_flag ? ANSI_RESET : "");
@@ -397,7 +397,7 @@ print_link_skip (const char *file_name)
 
 /* Prints the simulation message.  */
 void
-print_dry ()
+print_dry (void)
 {
   if (options & OPT_DRY && !(options & OPT_QUIET))
     {

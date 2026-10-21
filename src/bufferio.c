@@ -12,9 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <regex.h>
@@ -91,7 +89,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
   else
     {
       /* Restore character after newline and set start to it.  */
-      *(buffer+search_pos) = null_replace;
+      *(buffer + search_pos) = null_replace;
       start = search_pos;
       search_pos++;
     }
@@ -156,7 +154,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
     }
 
   /* Set pointer to line.  */
-  *line = buffer+start;
+  *line = buffer + start;
   /* Temporarily replace character after line to generate a terminated
      string.  */
   null_replace = *(buffer + search_pos);
@@ -167,8 +165,8 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
   return SUCCESS;
 }
 
-/* Appends a string to the current string in the verbose_buffer.  If needed, the
-   size of the verbose_buffer is reallocated.  */
+/* Appends a string to the current string in the verbose_buffer.  If needed,
+   the size of the verbose_buffer is reallocated.  */
 int
 append_verbose (const char *string, const size_t string_len,
                 const char *file_name)

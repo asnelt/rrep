@@ -12,9 +12,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <errno.h>
@@ -179,10 +177,11 @@ write_replacement (FILE *fp, const char *start, const regmatch_t *match,
             failure_flag |=
               write_string (fp, start + match[replacement->sub[i]].rm_so,
                             match[replacement->sub[i]].rm_eo
-                            - match[replacement->sub[i]].rm_so, file_name, pos);
+                            - match[replacement->sub[i]].rm_so, file_name,
+                            pos);
           failure_flag |= write_string (fp, replacement->part[i + 1],
-                                        replacement->part_len[i + 1], file_name,
-                                        pos);
+                                        replacement->part_len[i + 1],
+                                        file_name, pos);
         }
     }
 
@@ -377,7 +376,8 @@ backup_file (const char *file_name)
 
 /* Restores the file times of the file descriptor fd.  */
 int
-restore_file_times (int fd, const char *file_name, const struct timespec *times)
+restore_file_times (int fd, const char *file_name,
+                    const struct timespec *times)
 {
   if (options & OPT_KEEP_TIMES)
     {
@@ -520,8 +520,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
                       fclose (fp);
                       return FAILURE;
                     }
-                  if (replace_string (fp, NULL, pattern, replacement, file_name,
-                                      NULL, line_num) != SUCCESS)
+                  if (replace_string (fp, NULL, pattern, replacement,
+                                      file_name, NULL, line_num) != SUCCESS)
                     {
                       fclose (fp);
                       return FAILURE;
@@ -768,7 +768,7 @@ save_dir_times (FTSENT *ent)
   return SUCCESS;
 }
 
-/* Restores directory times from fts_pointer and free fts_pointer.  */
+/* Restores directory times from fts_pointer and frees fts_pointer.  */
 static int
 restore_dir_times (FTSENT *ent)
 {
@@ -786,8 +786,8 @@ restore_dir_times (FTSENT *ent)
                    || st.st_mtim.tv_sec != dt->times[1].tv_sec
                    || st.st_mtim.tv_nsec != dt->times[1].tv_nsec);
   accessed_flag = (modified_flag
-                  || st.st_atim.tv_sec != dt->times[0].tv_sec
-                  || st.st_atim.tv_nsec != dt->times[0].tv_nsec);
+                   || st.st_atim.tv_sec != dt->times[0].tv_sec
+                   || st.st_atim.tv_nsec != dt->times[0].tv_nsec);
   if (accessed_flag && fdutimens (dt->fd, NULL, dt->times) != 0
       && (modified_flag || (errno != EPERM && errno != EACCES)))
     {
@@ -930,7 +930,8 @@ process_file_list (char **file_list, pattern_t *pattern,
   return SUCCESS;
 }
 
-/* Frees included_patterns and excluded_patterns.  */
+/* Frees included_patterns, excluded_patterns and
+   excluded_directory_patterns.  */
 static void
 free_included_excluded_patterns (void)
 {
@@ -953,7 +954,7 @@ free_included_excluded_patterns (void)
 
 /* Parses command line arguments and processes file list.  */
 int
-main (int argc, char** argv)
+main (int argc, char **argv)
 {
   const char *pattern_string = NULL; /* Regular expression to search for.  */
   const char *replacement_string = NULL; /* Replacement string.  */
