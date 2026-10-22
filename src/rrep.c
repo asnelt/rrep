@@ -28,9 +28,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <wchar.h>
+#include "acl.h"
 #include "backupfile.h"
-#include "copy-file.h"
+#include "full-write.h"
 #include "gettext.h"
+#include "ignore-value.h"
 #include "progname.h"
 #include "exclude.h"
 #include "fts_.h"
@@ -348,24 +350,74 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
 
 /* Makes a backup of the file.  */
 int
-backup_file (const char *file_name)
+backup_file (int dir_fd, int fd, const char *file, const char *file_name,
+             const struct stat *st)
 {
+  int backup_fd;
   char *backup_name;
+  off_t ro; /* Read offset.  */
+  ssize_t len; /* Number of characters read.  */
+  struct timespec times[2];
+  bool failure_flag = false;
 
   if (backup_method == no_backups)
     return SUCCESS;
 
   /* Generate string for backup file name.  */
-  backup_name = find_backup_file_name (AT_FDCWD, file_name, backup_method);
+  backup_name = find_backup_file_name (dir_fd, file, backup_method);
   if (backup_name == NULL)
     {
       rrep_error (ERR_ALLOC_BACKUP, file_name);
       return FAILURE;
     }
-  /* Create backup file.  */
-  if (qcopy_file_preserving (file_name, backup_name) != 0)
+  /* Remove any old backup.  */
+  if (unlinkat (dir_fd, backup_name, 0) != 0 && errno != ENOENT)
     {
       rrep_error (ERR_WRITE_BACKUP, file_name);
+      free (backup_name);
+      return FAILURE;
+    }
+  /* Create backup file.  */
+  backup_fd = openat (dir_fd, backup_name,
+                      O_CREAT | O_WRONLY | O_EXCL | O_NOFOLLOW, 0600);
+  if (backup_fd < 0)
+    {
+      rrep_error (ERR_WRITE_BACKUP, file_name);
+      free (backup_name);
+      return FAILURE;
+    }
+
+  ro = 0;
+  while ((len = pread (fd, buffer, buffer_size, ro)) > 0)
+    {
+      if (full_write (backup_fd, buffer, len) != len)
+        break;
+      ro += len;
+    }
+  if (len != 0)
+    failure_flag = true;
+
+  /* Copy access control list and times.  */
+  if (!failure_flag)
+    {
+      ignore_value (fchown (backup_fd, st->st_uid, st->st_gid));
+      if (qcopy_acl (file_name, fd, backup_name, backup_fd,
+                     st->st_mode & 07777) != 0)
+        failure_flag = true;
+    }
+  if (!failure_flag)
+    {
+      times[0] = st->st_atim;
+      times[1] = st->st_mtim;
+      ignore_value (fdutimens (backup_fd, NULL, times));
+    }
+  if (close (backup_fd) != 0)
+    failure_flag = true;
+
+  if (failure_flag)
+    {
+      rrep_error (ERR_WRITE_BACKUP, file_name);
+      unlinkat (dir_fd, backup_name, 0);
       free (backup_name);
       return FAILURE;
     }
@@ -611,7 +663,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
 
       if (options & OPT_BACKUP)
         {
-          if (backup_file (file_name) != SUCCESS)
+          if (backup_file (dir_fd, fd, file, file_name, &st) != SUCCESS)
             {
               restore_file_times (fd, file_name, times);
               fclose (fp);
