@@ -447,7 +447,8 @@ restore_file_times (int fd, const char *file_name,
    directory.  file_name includes the path.  */
 int
 process_file (int dir_fd, const char *file, const char *file_name,
-              pattern_t *pattern, const replace_t *replacement)
+              pattern_t *pattern, const replace_t *replacement,
+              bool follow_flag)
 {
   int fd, write_fd;
   struct stat st, write_st;
@@ -467,7 +468,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
   bool failure_flag = false;
 
   openat_flags = O_RDONLY;
-  if (!(options & OPT_DEREF))
+  if (!follow_flag)
     openat_flags |= O_NOFOLLOW;
   fd = openat (dir_fd, file, openat_flags);
   if (fd < 0)
@@ -588,7 +589,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
 
       /* Writing back to file is actually required.  */
       openat_flags = O_RDWR;
-      if (!(options & OPT_DEREF))
+      if (!follow_flag)
         openat_flags |= O_NOFOLLOW;
       write_fd = openat (dir_fd, file, openat_flags);
       if (write_fd < 0 || fstat (write_fd, &write_st) < 0)
@@ -789,7 +790,7 @@ save_dir_times (FTSENT *ent)
   int openat_flags;
 
   openat_flags = O_RDONLY | O_DIRECTORY;
-  if (!(options & OPT_DEREF))
+  if (!(options & OPT_DEREF) && ent->fts_level > FTS_ROOTLEVEL)
     openat_flags |= O_NOFOLLOW;
   fd = openat (ent->fts_fts->fts_cwd_fd, ent->fts_accpath, openat_flags);
   if (fd < 0 && errno == EACCES)
@@ -874,9 +875,10 @@ process_file_list (char **file_list, pattern_t *pattern,
   int fts_flags;
   FTSENT *ent;
   struct dir_times *dt;
+  bool follow_flag;
   bool failure_flag = false;
 
-  fts_flags = FTS_CWDFD | FTS_VERBATIM;
+  fts_flags = FTS_CWDFD | FTS_VERBATIM | FTS_COMFOLLOW;
   fts_flags |= options & OPT_DEREF ? FTS_LOGICAL : FTS_PHYSICAL;
   fts = fts_open (file_list, fts_flags, NULL);
   if (fts == NULL)
@@ -932,17 +934,23 @@ process_file_list (char **file_list, pattern_t *pattern,
               && !check_name (ent->fts_name, included_patterns,
                               excluded_patterns))
             break;
+          follow_flag = options & OPT_DEREF || ent->fts_level == FTS_ROOTLEVEL;
           failure_flag |= process_file (fts->fts_cwd_fd, ent->fts_accpath,
-                                        ent->fts_path, pattern, replacement);
+                                        ent->fts_path, pattern, replacement,
+                                        follow_flag);
           break;
 
         case FTS_SL: /* Symbolic link.  */
+          break;
+
         case FTS_SLNONE: /* Symbolic link with nonexistent target.  */
           if (ent->fts_level > FTS_ROOTLEVEL
               && !check_name (ent->fts_name, included_patterns,
                               excluded_patterns))
             break;
-          print_link_skip (ent->fts_path);
+          errno = ENOENT;
+          rrep_error (ERR_PROCESS_ARG, ent->fts_path);
+          failure_flag = true;
           break;
 
         case FTS_ERR: /* Error return.  */

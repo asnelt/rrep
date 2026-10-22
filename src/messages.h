@@ -74,11 +74,8 @@ extern void print_file_header (const char *);
 extern void print_line_replacement (const size_t, const char *, size_t,
                                     const char *, size_t);
 
-/* Prints symbolic link omission.  */
-extern void print_link_skip (const char *);
-
 /* Prints the simulation message.  */
 extern void print_dry (void);
 
-/* Prompt user before modification.  */
+/* Prompts user before modification.  */
 extern bool prompt_user (const char *);
