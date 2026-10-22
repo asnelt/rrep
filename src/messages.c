@@ -165,6 +165,10 @@ rrep_error (const int errcode, const char *file_name)
       fprintf (stderr, _("%s: %s: directory given without recursive option\n"),
                program_name, file_name);
       break;
+    case ERR_STDIN_WITH_FILES:
+      fprintf (stderr, _("%s: standard input given with other files\n"),
+               program_name);
+      break;
     case ERR_PATTERN:
       fprintf (stderr, _("%s: PATTERN must have at least one character\n"),
                program_name);

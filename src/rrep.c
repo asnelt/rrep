@@ -1252,6 +1252,21 @@ main (int argc, char **argv)
       return EXIT_FAILURE;
     }
 
+  if (file_counter > 1)
+    {
+      /* Check if standard input was given with other files.  */
+      for (i = 0; (size_t) i < file_counter; i++)
+        if (!strcmp (file_list[i], "-"))
+          {
+            rrep_error (ERR_STDIN_WITH_FILES, NULL);
+            free_included_excluded_patterns ();
+            if (suffix_string != NULL)
+              free (suffix_string);
+            free (file_list);
+            return EXIT_FAILURE;
+          }
+    }
+
   /* Allocate initial memory for buffer.  */
   buffer = (char *) malloc (INIT_BUFFER_SIZE * sizeof (char));
   if (buffer == NULL)
