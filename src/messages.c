@@ -69,8 +69,8 @@ print_help (void)
 Replace PATTERN by REPLACEMENT in each FILE or standard input.\n"));
   printf (_("\
 PATTERN is, by default, a basic regular expression (BRE).  REPLACEMENT may\n\
-contain the special character & to refer to that portion of the pattern space\n\
-which matched, and the special escapes \\1 through \\9 to refer to the\n\
+contain the special character & to refer to that portion of the line which\n\
+matched, and the special escapes \\1 through \\9 to refer to the\n\
 corresponding matching sub-expressions in PATTERN.\n"));
   printf (_("Example: %s 'hello world' 'Hello, World!' menu.h main.c\n"),
           program_name);
@@ -87,7 +87,7 @@ Options:\n\
  skipped\n\
       --exclude-dir=PATTERN      directories that match PATTERN will be\
  skipped\n\
-  -S, --suffix=SUFFIX            override default backup suffix\n\
+  -S, --suffix=SUFFIX            backup with suffix SUFFIX\n\
   -V, --version                  print version information and exit\n\
   -a, --all                      do not ignore files starting with .\n\
   -b                             backup before overwriting files\n\
@@ -108,14 +108,14 @@ Options:\n\
   -x, --line-regexp              force PATTERN to match only whole lines\n"));
   printf ("\n");
   printf (_("\
-With no FILE, or when FILE is -, read standard input and write to standard\n\
-output.  Exit status is %d if any error occurs, %d otherwise.\n"),
+With no FILE, or when the only FILE is -, read standard input and write to\n\
+standard output.  Exit status is %d if any error occurs, %d otherwise.\n"),
           EXIT_FAILURE, EXIT_SUCCESS);
   printf ("\n");
   printf (_("\
 The backup suffix is ~, unless set with --suffix or SIMPLE_BACKUP_SUFFIX.\n\
-The version control method may be selected via the --backup option or through\n\
-the VERSION_CONTROL environment variable.  Here are the values:\n\
+The version control method may be selected via the --backup option or\n\
+through the VERSION_CONTROL environment variable.  Here are the values:\n\
 \n\
   none, off       never make backups (even if --backup is given)\n\
   numbered, t     make numbered backups\n\
