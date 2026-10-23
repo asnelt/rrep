@@ -14,6 +14,13 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
+#ifndef MESSAGES_H
+#define MESSAGES_H
+
+#include <regex.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 /* Error codes for rrep_error.  */
 enum
 {
@@ -80,3 +87,5 @@ extern void print_dry (void);
 
 /* Prompts user before modification.  */
 extern bool prompt_user (const char *);
+
+#endif /* MESSAGES_H */

@@ -402,7 +402,7 @@ print_dry (void)
     }
 }
 
-/* Prompt user before modification.  */
+/* Prompts user before modification.  */
 bool
 prompt_user (const char *file_name)
 {

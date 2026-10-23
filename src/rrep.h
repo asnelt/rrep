@@ -14,6 +14,9 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
+#ifndef RREP_H
+#define RREP_H
+
 /* Initial size of the buffer for reading lines.  */
 #define INIT_BUFFER_SIZE (4096)
 
@@ -44,3 +47,5 @@ enum
 
 /* Option flags are set in main.  */
 extern int options;
+
+#endif /* RREP_H */

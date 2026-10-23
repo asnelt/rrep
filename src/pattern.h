@@ -15,6 +15,13 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
+#ifndef PATTERN_H
+#define PATTERN_H
+
+#include <regex.h>
+#include <stddef.h>
+#include <wchar.h>
+
 /* Data structure for PATTERN.  */
 typedef struct
 {
@@ -61,3 +68,5 @@ extern int parse_replace (const char *, replace_t *);
 
 /* Checks the validity of references to pattern in replacement.  */
 extern int check_replace (const pattern_t *, const replace_t *);
+
+#endif /* PATTERN_H */

@@ -14,6 +14,12 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
+#ifndef BUFFERIO_H
+#define BUFFERIO_H
+
+#include <stddef.h>
+#include <stdio.h>
+
 /* Pointer to buffer.  */
 extern char *buffer;
 /* Size of buffer.  */
@@ -42,3 +48,4 @@ extern int read_line (FILE *, char **, size_t *, const char *);
    the size of the verbose_buffer is reallocated.  */
 extern int append_verbose (const char *, const size_t, const char *);
 
+#endif /* BUFFERIO_H */
