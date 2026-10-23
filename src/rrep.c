@@ -630,7 +630,6 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (replace_string (fp, tmp, pattern, replacement, file_name, &file_len,
                           line_num) != SUCCESS)
         {
-          restore_file_times (fd, file_name, times);
           fclose (fp);
           if (tmp != NULL)
             fclose (tmp);
@@ -641,7 +640,6 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (tmp != NULL && fflush (tmp) != 0)
         {
           rrep_error (ERR_WRITE_TEMP, file_name);
-          restore_file_times (fd, file_name, times);
           fclose (fp);
           fclose (tmp);
           return FAILURE;
@@ -651,13 +649,9 @@ process_file (int dir_fd, const char *file, const char *file_name,
         {
           if (prompt_user (file_name) == false)
             {
-              if (restore_file_times (fd, file_name, times) != SUCCESS)
-                failure_flag = true;
               fclose (fp);
               if (tmp != NULL)
                 fclose (tmp);
-              if (failure_flag)
-                return FAILURE;
               return SUCCESS;
             }
         }
@@ -666,7 +660,6 @@ process_file (int dir_fd, const char *file, const char *file_name,
         {
           if (backup_file (dir_fd, fd, file, file_name, &st) != SUCCESS)
             {
-              restore_file_times (fd, file_name, times);
               fclose (fp);
               if (tmp != NULL)
                 fclose (tmp);
@@ -677,7 +670,6 @@ process_file (int dir_fd, const char *file, const char *file_name,
       if (fseeko (fp, lo, SEEK_SET) != 0 || ftruncate (fd, lo) < 0)
         {
           rrep_error (ERR_OVERWRITE, file_name);
-          restore_file_times (fd, file_name, times);
           fclose (fp);
           if (tmp != NULL)
             fclose (tmp);
