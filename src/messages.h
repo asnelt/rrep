@@ -75,6 +75,9 @@ extern void print_regerror (const int, regex_t *);
 /* Prints replacement confirmation.  */
 extern void print_confirmation (const char *);
 
+/* Prints a given file name.  */
+extern void print_file_name (const char *);
+
 /* Prints a header for a changed file.  */
 extern void print_file_header (const char *);
 

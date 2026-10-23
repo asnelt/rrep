@@ -318,6 +318,13 @@ print_confirmation (const char *file_name)
   printf (_("%s: pattern replaced\n"), file_name);
 }
 
+/* Prints a given file name.  */
+void
+print_file_name (const char *file_name)
+{
+  printf ("%s\n", file_name);
+}
+
 /* Prints a header for a changed file.  */
 void
 print_file_header (const char *file_name)

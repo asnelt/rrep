@@ -42,6 +42,8 @@
 #include "bufferio.h"
 #include "pattern.h"
 
+#define _(string) gettext (string)
+
 static char const short_options[] = "EFrRS:Vabe:hip:qsvwx";
 
 /* Long options that have no equivalent short option.  */
@@ -581,7 +583,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
                     }
                 }
               else
-                printf ("%s\n", file_name);
+                print_file_name (file_name);
             }
           fclose (fp);
           return SUCCESS;
@@ -1205,7 +1207,7 @@ main (int argc, char **argv)
     }
 
   if (options & OPT_BACKUP)
-    backup_method = xget_version ("backup type", version_control);
+    backup_method = xget_version (_("backup type"), version_control);
   else
     backup_method = no_backups;
 
