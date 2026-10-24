@@ -1012,7 +1012,7 @@ main (int argc, char **argv)
 {
   const char *pattern_string = NULL; /* Regular expression to search for.  */
   const char *replacement_string = NULL; /* Replacement string.  */
-  char *suffix_string = NULL; /* Suffix for backups.  */
+  const char *suffix_string = NULL; /* Suffix for backups.  */
   char *version_control = NULL; /* Version control for backups.  */
   pattern_t pattern; /* Pattern struct.  */
   replace_t replacement; /* Replacement struct.  */
@@ -1040,9 +1040,6 @@ main (int argc, char **argv)
   replacement.part_len = NULL;
   /* Set program invocation name.  */
   set_program_name (argv[0]);
-
-  /* Initialize backup suffix.  */
-  suffix_string = getenv ("SIMPLE_BACKUP_SUFFIX");
 
   /* Parse command line arguments.  */
   while ((opt = getopt_long (argc, argv, short_options, long_options, NULL))
@@ -1192,19 +1189,7 @@ main (int argc, char **argv)
       return EXIT_SUCCESS;
     }
 
-  if (suffix_string)
-    {
-      /* Make a copy of suffix_string, because getenv might overwrite the
-         memory.  */
-      suffix_string = strdup (suffix_string);
-      if (suffix_string == NULL)
-        {
-          rrep_error (ERR_ALLOC_SUFFIX, NULL);
-          free_included_excluded_patterns ();
-          return EXIT_FAILURE;
-        }
-      simple_backup_suffix = suffix_string;
-    }
+  set_simple_backup_suffix (suffix_string);
 
   if (options & OPT_BACKUP)
     backup_method = xget_version (_("backup type"), version_control);
@@ -1239,8 +1224,6 @@ main (int argc, char **argv)
     {
       print_invocation ();
       free_included_excluded_patterns ();
-      if (suffix_string != NULL)
-        free (suffix_string);
       if (file_list != NULL)
         free (file_list);
       return EXIT_FAILURE;
@@ -1254,8 +1237,6 @@ main (int argc, char **argv)
           {
             rrep_error (ERR_STDIN_WITH_FILES, NULL);
             free_included_excluded_patterns ();
-            if (suffix_string != NULL)
-              free (suffix_string);
             free (file_list);
             return EXIT_FAILURE;
           }
@@ -1267,8 +1248,6 @@ main (int argc, char **argv)
     {
       rrep_error (ERR_ALLOC_BUFFER, NULL);
       free_included_excluded_patterns ();
-      if (suffix_string != NULL)
-        free (suffix_string);
       if (file_list != NULL)
         free (file_list);
       return EXIT_FAILURE;
@@ -1279,8 +1258,6 @@ main (int argc, char **argv)
   if (parse_pattern (pattern_string, &pattern, cflags) == FAILURE)
     {
       free_included_excluded_patterns ();
-      if (suffix_string != NULL)
-        free (suffix_string);
       if (file_list != NULL)
         free (file_list);
       if (buffer != NULL)
@@ -1295,8 +1272,6 @@ main (int argc, char **argv)
       free_included_excluded_patterns ();
       free_replace (&replacement);
       free_pattern (&pattern);
-      if (suffix_string != NULL)
-        free (suffix_string);
       if (file_list != NULL)
         free (file_list);
       if (buffer != NULL)
@@ -1334,8 +1309,6 @@ main (int argc, char **argv)
     free (buffer);
   if (file_list != NULL)
     free (file_list);
-  if (suffix_string != NULL)
-    free (suffix_string);
 
   if (failure_flag)
     return EXIT_FAILURE;

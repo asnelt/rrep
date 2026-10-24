@@ -185,11 +185,6 @@ rrep_error (const int errcode, const char *file_name)
       fprintf (stderr, _("%s: duplicate PATTERN or REPLACEMENT option\n"),
                program_name);
       break;
-    case ERR_ALLOC_SUFFIX:
-      fprintf (stderr, _("%s: could not allocate memory for suffix: "),
-               program_name);
-      print_errno (saved_errno);
-      break;
     case ERR_ALLOC_BUFFER:
       fprintf (stderr, _("%s: could not allocate memory for buffer: "),
                program_name);
