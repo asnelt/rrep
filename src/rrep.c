@@ -511,8 +511,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
   line_num = 0;
   lo = 0;
   while ((!found_flag || !(options & OPT_BINARY))
-         && (rr = read_line (fp, &line, &line_len, file_name))
-         == SUCCESS)
+         && (rr = read_line (fp, &line, &line_len, file_name)) == SUCCESS)
     {
       if (!(options & OPT_BINARY))
         {
@@ -767,8 +766,7 @@ check_name (const char *file_name, const struct exclude *included_name,
   if (file_name == NULL || file_name[0] == '\0')
     return false;
   /* Check --all option.  */
-  if (file_name[0] == '.' && file_name[1] != '\0'
-      && !(options & OPT_ALL))
+  if (file_name[0] == '.' && file_name[1] != '\0' && !(options & OPT_ALL))
     return false;
 
   return check_include_name (file_name, included_name, excluded_name);
