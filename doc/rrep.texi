@@ -144,17 +144,17 @@ Like recursive replacement, but all symbolic links are followed.
 
 @item --include=@var{file_pattern}
 @cindex include files
-Only files are processed whose base name matches the pattern
-@var{file_pattern}. For conflicting @samp{--include} and @samp{--exclude}
-lists, the last matching option is used.
+Only files are processed that match the pattern @var{file_pattern}.
+For conflicting @samp{--include} and @samp{--exclude} options, the last
+matching option is used.
 @samp{*}, @samp{?}, and @samp{[}...@samp{]} can be used as wildcards in
 @var{file_pattern}.
 Wildcards and backslash characters can be quoted with @code{\}.
 
 @item --exclude=@var{file_pattern}
 @cindex exclude files
-Files whose base name matches the pattern @var{file_pattern} will be skipped,
-using wildcard matching as described under @samp{--include}.
+Files that match the pattern @var{file_pattern} will be skipped, using wildcard
+matching as described under @samp{--include}.
 
 @item --exclude-dir=@var{dir_pattern}
 @cindex exclude directories

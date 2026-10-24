@@ -162,7 +162,7 @@ rrep_error (const int errcode, const char *file_name)
       print_errno (saved_errno);
       break;
     case ERR_RECURSION:
-      fprintf (stderr, _("%s: could not traverse file hierarchy: \n"),
+      fprintf (stderr, _("%s: could not traverse file hierarchy: "),
                program_name);
       print_errno (saved_errno);
       break;

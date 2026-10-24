@@ -58,16 +58,16 @@ command line.
 Likewise, but all symbolic links are followed.
 .TP
 .BI \-\^\-include= FILE_PATTERN
-Only files are processed whose base name matches the pattern
+Only files are processed that matches the pattern
 .IR FILE_PATTERN .
-For conflicting \fB\-\^\-include\fR and \fB\-\^\-exclude\fR lists, the last
+For conflicting \fB\-\^\-include\fR and \fB\-\^\-exclude\fR options, the last
 matching option is used.
 \fB*\fR, \fB?\fR, and \fB[\fR...\fB]\fR can be used as wildcards in
 .IR FILE_PATTERN .
 Wildcards and backslash characters can be quoted with \fB\e\fR.
 .TP
 .BI \-\^\-exclude= FILE_PATTERN
-Files whose base name matches the pattern
+Files that match the pattern
 .I FILE_PATTERN
 will be skipped, using wildcard matching as described under
 \fB\-\^\-include\fR.
