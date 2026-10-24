@@ -875,7 +875,7 @@ process_file_list (char **file_list, pattern_t *pattern,
   fts = fts_open (file_list, fts_flags, NULL);
   if (fts == NULL)
     {
-      rrep_error (ERR_PROCESS_ARG, file_list[0]);
+      rrep_error (ERR_RECURSION, NULL);
       return FAILURE;
     }
 
@@ -959,12 +959,15 @@ process_file_list (char **file_list, pattern_t *pattern,
     }
   if (errno != 0)
     {
-      rrep_error (ERR_PROCESS_ARG, file_list[0]);
+      if (fts->fts_cur != NULL)
+        rrep_error (ERR_PROCESS_ARG, fts->fts_cur->fts_path);
+      else
+        rrep_error (ERR_RECURSION, NULL);
       failure_flag = true;
     }
   if (fts_close (fts) != 0)
     {
-      rrep_error (ERR_PROCESS_ARG, file_list[0]);
+      rrep_error (ERR_RECURSION, NULL);
       failure_flag = true;
     }
 
@@ -1030,12 +1033,15 @@ main (int argc, char **argv)
 
   /* Initialize pattern.  */
   pattern.string = NULL;
+  pattern.string_len = 0;
   pattern.compiled = NULL;
   /* Initialize replacement.  */
   replacement.string = NULL;
+  replacement.string_len = 0;
   replacement.sub = NULL;
   replacement.part = NULL;
   replacement.part_len = NULL;
+  replacement.nsub = 0;
   /* Set program invocation name.  */
   set_program_name (argv[0]);
 

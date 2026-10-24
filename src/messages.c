@@ -161,6 +161,11 @@ rrep_error (const int errcode, const char *file_name)
                program_name, file_name);
       print_errno (saved_errno);
       break;
+    case ERR_RECURSION:
+      fprintf (stderr, _("%s: could not traverse file hierarchy: \n"),
+               program_name);
+      print_errno (saved_errno);
+      break;
     case ERR_DIR_NO_RECURSION:
       fprintf (stderr, _("%s: %s: directory given without recursive option\n"),
                program_name, file_name);
