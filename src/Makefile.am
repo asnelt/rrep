@@ -19,6 +19,10 @@ bin_PROGRAMS = rrep
 rrep_SOURCES = rrep.c messages.c bufferio.c pattern.c
 noinst_HEADERS = bufferio.h messages.h pattern.h rrep.h
 
-AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\" -I$(top_builddir)/lib -I$(top_srcdir)/lib
-LDADD = ../lib/libgnu.a $(QCOPY_ACL_LIB) $(LIB_ACL) $(LIBICONV) $(LIBINTL)
-
+AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\" -I$(top_builddir)/lib \
+  -I$(top_srcdir)/lib
+LDADD = ../lib/libgnu.a $(CLOCK_TIME_LIB) $(FILE_HAS_ACL_LIB) \
+  $(GETLOCALENAME_L_LIB) $(GETRANDOM_LIB) $(HARD_LOCALE_LIB) $(LIBPTHREAD) \
+  $(LIBTHREAD) $(LIB_ACL) $(LIBC32CONV) $(LIBINTL) $(LIBUNISTRING) \
+  $(MBRTOWC_LIB) $(PTHREAD_ONCE_LIB) $(QCOPY_ACL_LIB) $(SETLOCALE_LIB) \
+  $(SETLOCALE_NULL_LIB) @INTL_MACOSX_LIBS@

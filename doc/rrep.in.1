@@ -32,7 +32,7 @@ is \fB\-\fR, standard input is read and the result is written to standard
 output.
 Binary files are, by default, ignored.
 A file is regarded as binary if it contains the null character.
-In that case, the null character also ends a line.
+If processed, a null character in a binary file also ends a line.
 .SH "OPTIONS"
 .TP
 .BR \-E ", " \-\^\-extended\-regexp
@@ -71,9 +71,9 @@ Files that match the pattern
 will be skipped, except for files that are specifically given on the command
 line (using wildcard matching as described under \fB\-\^\-include\fR).
 .TP
-.BI \-\^\-exclude\-dir= PATTERN
+.BI \-\^\-exclude\-dir= DIR_PATTERN
 Directories that match
-.I PATTERN
+.I DIR_PATTERN
 will be skipped, except for directories that are specifically given on the
 command line (using wildcard matching as described under
 \fB\-\^\-include\fR).
@@ -96,9 +96,10 @@ Equivalent to \fB\-\^\-backup\fR without an argument.
 .TP
 .BI \-\^\-backup \fR[\fP = CONTROL \fR]\fP
 Like \fB\-b\fR but accepts a version control argument.
-The file name of the backup file is appended by a suffix.
-The backup suffix is \fB~\fR, unless set with \fB\-\^\-suffix\fR or
-.IR SIMPLE_BACKUP_SUFFIX .
+The backup suffix is appended to the file name.
+for a simple backup, the suffix is \fB~\fR, unless set with \fB\-\^\-suffix\fR
+or .IR SIMPLE_BACKUP_SUFFIX .
+For a numbered backup, the suffix is \fB.~\fR\fIN\fR\fB~\fR.
 The version control method may be selected via the \fB\-\^\-backup\fR option or
 through the
 .I VERSION_CONTROL

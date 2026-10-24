@@ -80,6 +80,7 @@ the matched pattern.
 
 Binary files are, by default, ignored.
 A file is regarded as binary if it contains the null character.
+If processed, a null character in a binary file also ends a line.
 
 @node Invoking
 @chapter Invoking @command{rrep}
@@ -102,7 +103,7 @@ through @samp{\9} to refer to the corresponding matching sub-expressions in
 respectively.
 @var{pattern} and @var{replacement} can also be set by the options
 @samp{-e @var{pattern}} and @samp{-p @var{replacement}}.
-In that case all the arguments following the options are seen as input files.
+In that case, all the arguments following the options are seen as input files.
 If no @var{input_file_names} are specified, or if @samp{-} is given as the only
 input file, then the standard input is read and the result is written to the
 standard output.
@@ -187,9 +188,10 @@ Equivalent to @samp{--backup} without an argument.
 @item --backup[=@var{control}]
 @cindex long backup
 Like @samp{-b} but accepts a version control argument.
-The file name of the backup file is appended by a suffix.
-The backup suffix is @samp{~}, unless set with @samp{--suffix} or
-@env{SIMPLE_BACKUP_SUFFIX}.
+The backup suffix is appended to the file name.
+For a simple backup, the suffix is @samp{~}, unless set with @samp{--suffix}
+or @env{SIMPLE_BACKUP_SUFFIX}.
+For a numbered backup, the suffix is @samp{.~@var{n}~}.
 Older backups are replaced.
 The version control method may be selected via the @samp{--backup} option or
 through the @env{VERSION_CONTROL} environment variable, where @samp{existing}

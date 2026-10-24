@@ -30,7 +30,7 @@
 #include "messages.h"
 
 #define _(string) gettext (string)
-#define AUTHORS proper_name ("Arno Onken")
+#define AUTHORS proper_name_lite ("Arno Onken", "Arno Onken")
 
 #define ANSI_RESET "\033[0m"
 #define ANSI_BOLD "\033[1m"
@@ -81,11 +81,11 @@ Options:\n\
  (ERE)\n\
   -F, --fixed-strings            PATTERN and REPLACEMENT are fixed strings\n\
   -r, --recursive                process directories recursively\n\
-  -R, --dereference-recursive    likewise, but follow all symlinks\n\
+  -R, --dereference-recursive    likewise, but follow all symbolic links\n\
       --include=FILE_PATTERN     process only files that match FILE_PATTERN\n\
       --exclude=FILE_PATTERN     files that match FILE_PATTERN will be\
  skipped\n\
-      --exclude-dir=PATTERN      directories that match PATTERN will be\
+      --exclude-dir=DIR_PATTERN  directories that match DIR_PATTERN will be\
  skipped\n\
   -S, --suffix=SUFFIX            backup with suffix SUFFIX\n\
   -V, --version                  print version information and exit\n\

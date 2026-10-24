@@ -22,6 +22,7 @@
 #include <string.h>
 #include "rrep.h"
 #include "messages.h"
+#include "bufferio.h"
 
 /* Pointer to buffer.  */
 char *buffer = NULL;

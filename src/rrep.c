@@ -196,7 +196,7 @@ write_replacement (FILE *fp, const char *start, const regmatch_t *match,
 }
 
 /* Copies in to out and replaces pattern by replacement.  */
-int
+static int
 replace_string (FILE *in, FILE *out, pattern_t *pattern,
                 const replace_t *replacement, const char *file_name,
                 size_t *file_len, size_t first_line_num)
@@ -351,7 +351,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
 }
 
 /* Makes a backup of the file.  */
-int
+static int
 backup_file (int dir_fd, int fd, const char *file, const char *file_name,
              const struct stat *st)
 {
@@ -429,7 +429,7 @@ backup_file (int dir_fd, int fd, const char *file, const char *file_name,
 }
 
 /* Restores the file times of the file descriptor fd.  */
-int
+static int
 restore_file_times (int fd, const char *file_name,
                     const struct timespec *times)
 {
@@ -447,7 +447,7 @@ restore_file_times (int fd, const char *file_name,
 /* Replaces pattern by replacement in the file file_name.  dir_fd is the
    directory file descriptor and file is the name of the file in that
    directory.  file_name includes the path.  */
-int
+static int
 process_file (int dir_fd, const char *file, const char *file_name,
               pattern_t *pattern, const replace_t *replacement,
               bool follow_flag)
@@ -745,7 +745,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
 
 /* Checks the include and exclude options and returns true if file_name
    qualifies.  */
-bool
+static bool
 check_include_name (const char *file_name, const struct exclude *included_name,
                     const struct exclude *excluded_name)
 {
@@ -760,7 +760,7 @@ check_include_name (const char *file_name, const struct exclude *included_name,
 }
 
 /* Returns true if file_name qualifies for processing.  */
-bool
+static bool
 check_name (const char *file_name, const struct exclude *included_name,
             const struct exclude *excluded_name)
 {
@@ -861,7 +861,7 @@ restore_dir_times (FTSENT *ent)
 }
 
 /* Processes the files in file_list.  */
-int
+static int
 process_file_list (char **file_list, pattern_t *pattern,
                    const replace_t *replacement)
 {
