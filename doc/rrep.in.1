@@ -58,25 +58,25 @@ command line.
 Likewise, but all symbolic links are followed.
 .TP
 .BI \-\^\-include= FILE_PATTERN
-Only files are processed that match the pattern
-.IR FILE_PATTERN ,
-except for files that are specifically given on the command line.
+Only files are processed whose base name matches the pattern
+.IR FILE_PATTERN .
+For conflicting \fB\-\^\-include\fR and \fB\-\^\-exclude\fR lists, the last
+matching option is used.
 \fB*\fR, \fB?\fR, and \fB[\fR...\fB]\fR can be used as wildcards in
 .IR FILE_PATTERN .
 Wildcards and backslash characters can be quoted with \fB\e\fR.
 .TP
 .BI \-\^\-exclude= FILE_PATTERN
-Files that match the pattern
+Files whose base name matches the pattern
 .I FILE_PATTERN
-will be skipped, except for files that are specifically given on the command
-line (using wildcard matching as described under \fB\-\^\-include\fR).
+will be skipped, using wildcard matching as described under
+\fB\-\^\-include\fR.
 .TP
 .BI \-\^\-exclude\-dir= DIR_PATTERN
 Directories that match
 .I DIR_PATTERN
-will be skipped, except for directories that are specifically given on the
-command line (using wildcard matching as described under
-\fB\-\^\-include\fR).
+will be skipped, using wildcard matching as described under
+\fB\-\^\-include\fR.
 .TP
 .BI \-S " SUFFIX" "\fR,\fP \-\^\-suffix=" SUFFIX
 Override default backup suffix.

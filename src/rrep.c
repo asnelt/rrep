@@ -90,8 +90,7 @@ static struct option const long_options[] =
   {NULL, 0, NULL, 0}
 };
 
-static struct exclude *included_patterns = NULL;
-static struct exclude *excluded_patterns = NULL;
+static struct exclude *file_patterns = NULL;
 static struct exclude *excluded_directory_patterns = NULL;
 
 /* Node of a linked list of directory times and associated file descriptor.  */
@@ -740,26 +739,16 @@ process_file (int dir_fd, const char *file, const char *file_name,
   return SUCCESS;
 }
 
-/* Checks the include and exclude options and returns true if file_name
-   qualifies.  */
+/* Returns true if file_name is not excluded by patterns.  */
 static bool
-check_include_name (const char *file_name, const struct exclude *included_name,
-                    const struct exclude *excluded_name)
+check_patterns (const char *file_name, const struct exclude *patterns)
 {
-  /* Check include option.  */
-  if (included_name && excluded_file_name (included_name, file_name))
-    return false;
-  /* Check excluded option.  */
-  if (excluded_name && excluded_file_name (excluded_name, file_name))
-    return false;
-
-  return true;
+  return !(patterns && excluded_file_name (patterns, file_name));
 }
 
 /* Returns true if file_name qualifies for processing.  */
 static bool
-check_name (const char *file_name, const struct exclude *included_name,
-            const struct exclude *excluded_name)
+check_name (const char *file_name, const struct exclude *patterns)
 {
   if (file_name == NULL || file_name[0] == '\0')
     return false;
@@ -767,7 +756,17 @@ check_name (const char *file_name, const struct exclude *included_name,
   if (file_name[0] == '.' && file_name[1] != '\0' && !(options & OPT_ALL))
     return false;
 
-  return check_include_name (file_name, included_name, excluded_name);
+  return check_patterns (file_name, patterns);
+}
+
+/* Returns true if file entry ent qualifies for processing.  */
+static bool
+check_file_entry (const FTSENT *ent)
+{
+  if (ent->fts_level == FTS_ROOTLEVEL)
+    return check_patterns (ent->fts_path, file_patterns);
+
+  return check_name (ent->fts_name, file_patterns);
 }
 
 /* Opens directory dir_name relative to dir_fd and saves its times in *dtp.  */
@@ -940,17 +939,25 @@ process_file_list (char **file_list, pattern_t *pattern,
       switch (ent->fts_info)
         {
         case FTS_D: /* Directory visited in preorder.  */
-          if (ent->fts_level == FTS_ROOTLEVEL && !(options & OPT_RECURSIVE))
+          if (ent->fts_level == FTS_ROOTLEVEL)
             {
-              rrep_error (ERR_DIR_NO_RECURSION, ent->fts_path);
-              fts_set (fts, ent, FTS_SKIP);
-              failure_flag = true;
-              break;
+              if (!check_patterns (ent->fts_path,
+                                   excluded_directory_patterns))
+                {
+                  fts_set (fts, ent, FTS_SKIP);
+                  break;
+                }
+              if (!(options & OPT_RECURSIVE))
+                {
+                  rrep_error (ERR_DIR_NO_RECURSION, ent->fts_path);
+                  fts_set (fts, ent, FTS_SKIP);
+                  failure_flag = true;
+                  break;
+                }
             }
-          if (ent->fts_level > FTS_ROOTLEVEL
-              && (!(options & OPT_RECURSIVE)
-                  || !check_name (ent->fts_name, NULL,
-                                  excluded_directory_patterns)))
+          else if (!(options & OPT_RECURSIVE)
+                   || !check_name (ent->fts_name,
+                                   excluded_directory_patterns))
             {
               fts_set (fts, ent, FTS_SKIP);
               break;
@@ -978,9 +985,7 @@ process_file_list (char **file_list, pattern_t *pattern,
           break;
 
         case FTS_F: /* Regular file.  */
-          if (ent->fts_level > FTS_ROOTLEVEL
-              && !check_name (ent->fts_name, included_patterns,
-                              excluded_patterns))
+          if (!check_file_entry (ent))
             break;
           if (ent->fts_level == FTS_ROOTLEVEL)
             {
@@ -996,9 +1001,7 @@ process_file_list (char **file_list, pattern_t *pattern,
           break;
 
         case FTS_SLNONE: /* Symbolic link with nonexistent target.  */
-          if (ent->fts_level > FTS_ROOTLEVEL
-              && !check_name (ent->fts_name, included_patterns,
-                              excluded_patterns))
+          if (!check_file_entry (ent))
             break;
           errno = ENOENT;
           rrep_error (ERR_PROCESS_ARG, ent->fts_path);
@@ -1045,20 +1048,14 @@ process_file_list (char **file_list, pattern_t *pattern,
   return SUCCESS;
 }
 
-/* Frees included_patterns, excluded_patterns and
-   excluded_directory_patterns.  */
+/* Frees file_patterns and excluded_directory_patterns.  */
 static void
 free_included_excluded_patterns (void)
 {
-  if (included_patterns != NULL)
+  if (file_patterns != NULL)
     {
-      free_exclude (included_patterns);
-      included_patterns = NULL;
-    }
-  if (excluded_patterns != NULL)
-    {
-      free_exclude (excluded_patterns);
-      excluded_patterns = NULL;
+      free_exclude (file_patterns);
+      file_patterns = NULL;
     }
   if (excluded_directory_patterns != NULL)
     {
@@ -1129,19 +1126,16 @@ main (int argc, char **argv)
           break;
 
         case INCLUDE_OPTION:
-          if (!included_patterns)
-            included_patterns = new_exclude ();
-          add_exclude (included_patterns, optarg,
-                       EXCLUDE_WILDCARDS | EXCLUDE_INCLUDE);
-          break;
-
         case EXCLUDE_OPTION:
-          if (!excluded_patterns)
-            excluded_patterns = new_exclude ();
-          add_exclude (excluded_patterns, optarg, EXCLUDE_WILDCARDS);
+          if (!file_patterns)
+            file_patterns = new_exclude ();
+          add_exclude (file_patterns, optarg,
+                       EXCLUDE_WILDCARDS
+                       | (opt == INCLUDE_OPTION ? EXCLUDE_INCLUDE : 0));
           break;
 
         case EXCLUDE_DIR_OPTION:
+          strip_trailing_slashes (optarg);
           if (!excluded_directory_patterns)
             excluded_directory_patterns = new_exclude ();
           add_exclude (excluded_directory_patterns, optarg, EXCLUDE_WILDCARDS);
