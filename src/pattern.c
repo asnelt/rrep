@@ -16,6 +16,7 @@
 
 #include <config.h>
 #include <ctype.h>
+#include <limits.h>
 #include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -505,9 +506,12 @@ int
 parse_replace (const char *string, replace_t *replacement)
 {
   const char *next;
-  char escape_substring[3]; /* Substring for escape error message.  */
+  char escape_substring[MB_LEN_MAX + 2]; /* Substring for escape error
+                                            message.  */
+  mbstate_t state;
   size_t nsub = 0;
-  size_t len; /* Counter for lengths of substrings.  */
+  size_t sub_len; /* Counter for lengths of substrings.  */
+  size_t len;
   size_t i, j;
 
   /* Copy original string into replacement.  */
@@ -526,28 +530,30 @@ parse_replace (const char *string, replace_t *replacement)
 
   /* Do three swipes over string.  */
   /* First swipe: count number of subpatterns.  */
+  memset (&state, 0, sizeof (state));
   next = string;
   while (*next != '\0')
     {
-      if (*next == '&')
+      len = count_bytes (next, &state);
+      if (len == 1 && *next == '&')
         nsub++;
-      else if (*next == '\\')
+      else if (len == 1 && *next == '\\')
         {
-          if (*(next + 1) >= '1' && *(next + 1) <= '9')
+          next++;
+          len = count_bytes (next, &state);
+          if (len == 1 && *next >= '1' && *next <= '9')
             nsub++;
-          else if (*(next + 1) != '&' && *(next + 1) != 'n'
-                   && *(next + 1) != '\\')
+          else if (len != 1 || (*next != '&' && *next != 'n' && *next != '\\'))
             {
               escape_substring[0] = '\\';
-              escape_substring[1] = *(next + 1);
-              escape_substring[2] = '\0';
+              memcpy (escape_substring + 1, next, len);
+              escape_substring[len + 1] = '\0';
               rrep_error (ERR_UNKNOWN_ESCAPE, escape_substring);
               free_replace (replacement);
               return FAILURE;
             }
-          next++;
         }
-      next++;
+      next += len;
     }
 
   /* Allocate memory for string and index arrays.  */
@@ -580,36 +586,48 @@ parse_replace (const char *string, replace_t *replacement)
     }
 
   /* Second swipe: allocate memory for substrings.  */
+  memset (&state, 0, sizeof (state));
   next = string;
-  len = 0;
+  sub_len = 0;
   i = 0;
   while (true)
     {
-      len++;
       if (*next == '\0' || *next == '&'
           || (*next == '\\' && *(next + 1) >= '1' && *(next + 1) <= '9'))
         {
-          replacement->part[i] = (char *) malloc (len * sizeof (char));
+          replacement->part[i] = (char *) malloc ((sub_len + 1)
+                                                  * sizeof (char));
           if (replacement->part[i] == NULL)
             {
               rrep_error (ERR_ALLOC_REPLACEMENT, NULL);
               free_replace (replacement);
               return FAILURE;
             }
-          replacement->part_len[i] = len - 1;
-          len = 0;
+          replacement->part_len[i] = sub_len;
+          sub_len = 0;
           i++;
+          if (*next == '\0')
+            break;
           if (*next == '\\')
+            next += 2;
+          else
             next++;
         }
       else if (*next == '\\')
-        next++;
-      if (*next == '\0')
-        break;
-      next++;
+        {
+          sub_len++;
+          next += 2;
+        }
+      else
+        {
+          len = count_bytes (next, &state);
+          sub_len += len;
+          next += len;
+        }
     }
 
   /* Third swipe: extract substrings.  */
+  memset (&state, 0, sizeof (state));
   next = string;
   i = 0;
   j = 0;
@@ -626,6 +644,7 @@ parse_replace (const char *string, replace_t *replacement)
           replacement->sub[i] = 0;
           i++;
           j = 0;
+          next++;
         }
       else if (*next == '\\')
         {
@@ -644,15 +663,15 @@ parse_replace (const char *string, replace_t *replacement)
                 replacement->part[i][j] = *(next + 1);
               j++;
             }
-          next++;
+          next += 2;
         }
       else
         {
-          replacement->part[i][j] = *next;
-          j++;
+          len = count_bytes (next, &state);
+          memcpy (replacement->part[i] + j, next, len);
+          j += len;
+          next += len;
         }
-
-      next++;
     }
 
   return SUCCESS;

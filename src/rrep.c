@@ -161,36 +161,33 @@ write_replacement (FILE *fp, const char *start, const regmatch_t *match,
                    const replace_t *replacement, const char *file_name,
                    char **pos)
 {
-  bool failure_flag = false;
   size_t i;
 
   if (options & OPT_FIXED)
     {
       /* REPLACEMENT is a fixed string.  */
-      failure_flag |= write_string (fp, replacement->string,
-                                    replacement->string_len, file_name, pos);
-    }
-  else
-    {
-      failure_flag |= write_string (fp, replacement->part[0],
-                                    replacement->part_len[0], file_name, pos);
-      for (i = 0; i < replacement->nsub; i++)
-        {
-          /* Match for next index available?  */
-          if (match[replacement->sub[i]].rm_so > -1)
-            failure_flag |=
-              write_string (fp, start + match[replacement->sub[i]].rm_so,
-                            match[replacement->sub[i]].rm_eo
-                            - match[replacement->sub[i]].rm_so, file_name,
-                            pos);
-          failure_flag |= write_string (fp, replacement->part[i + 1],
-                                        replacement->part_len[i + 1],
-                                        file_name, pos);
-        }
+      return write_string (fp, replacement->string, replacement->string_len,
+                           file_name, pos);
     }
 
-  if (failure_flag)
+  if (write_string (fp, replacement->part[0], replacement->part_len[0],
+                    file_name, pos) != SUCCESS)
     return FAILURE;
+
+  for (i = 0; i < replacement->nsub; i++)
+    {
+      /* Match for next index available?  */
+      if (match[replacement->sub[i]].rm_so > -1
+          && write_string (fp, start + match[replacement->sub[i]].rm_so,
+                           match[replacement->sub[i]].rm_eo
+                           - match[replacement->sub[i]].rm_so, file_name,
+                           pos) != SUCCESS)
+        return FAILURE;
+      if (write_string (fp, replacement->part[i + 1],
+                        replacement->part_len[i + 1], file_name, pos)
+          != SUCCESS)
+        return FAILURE;
+    }
 
   return SUCCESS;
 }
