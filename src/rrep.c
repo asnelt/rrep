@@ -30,6 +30,7 @@
 #include <wchar.h>
 #include "acl.h"
 #include "backupfile.h"
+#include "dirname.h"
 #include "full-write.h"
 #include "gettext.h"
 #include "ignore-value.h"
@@ -769,24 +770,22 @@ check_name (const char *file_name, const struct exclude *included_name,
   return check_include_name (file_name, included_name, excluded_name);
 }
 
-/* Saves directory times in fts_pointer.  */
+/* Opens directory dir_name relative to dir_fd and saves its times in *dtp.  */
 static int
-save_dir_times (FTSENT *ent)
+open_dir (int dir_fd, const char *dir_name, const char *dir_path,
+          int openat_flags, struct dir_times **dtp)
 {
   int fd;
   struct stat st;
   struct dir_times *dt;
-  int openat_flags;
 
-  openat_flags = O_RDONLY | O_DIRECTORY;
-  if (!(options & OPT_DEREF) && ent->fts_level > FTS_ROOTLEVEL)
-    openat_flags |= O_NOFOLLOW;
-  fd = openat (ent->fts_fts->fts_cwd_fd, ent->fts_accpath, openat_flags);
+  *dtp = NULL;
+  fd = openat (dir_fd, dir_name, openat_flags | O_DIRECTORY | O_RDONLY);
   if (fd < 0 && errno == EACCES)
     return SUCCESS;
   if (fd < 0 || fstat (fd, &st) < 0)
     {
-      rrep_error (ERR_KEEP_TIMES, ent->fts_path);
+      rrep_error (ERR_KEEP_TIMES, dir_path);
       if (fd >= 0)
         close (fd);
       return FAILURE;
@@ -795,7 +794,7 @@ save_dir_times (FTSENT *ent)
   dt = (struct dir_times *) malloc (sizeof (struct dir_times));
   if (dt == NULL)
     {
-      rrep_error (ERR_KEEP_TIMES, ent->fts_path);
+      rrep_error (ERR_KEEP_TIMES, dir_path);
       close (fd);
       return FAILURE;
     }
@@ -805,22 +804,20 @@ save_dir_times (FTSENT *ent)
   dt->times[1] = st.st_mtim;
   dt->next = saved_dir_times;
   saved_dir_times = dt;
-  ent->fts_pointer = dt;
+  *dtp = dt;
 
   return SUCCESS;
 }
 
-/* Restores directory times from fts_pointer and frees fts_pointer.  */
+/* Closes directory dir_path and restores directory times.  */
 static int
-restore_dir_times (FTSENT *ent)
+close_dir (const char *dir_path, struct dir_times *dt)
 {
-  struct dir_times *dt;
-  struct dir_times **dtp;
   struct stat st;
+  struct dir_times **dtp;
   bool modified_flag, accessed_flag;
   bool failure_flag = false;
 
-  dt = (struct dir_times *) ent->fts_pointer;
   if (dt == NULL)
     return SUCCESS;
 
@@ -833,7 +830,7 @@ restore_dir_times (FTSENT *ent)
   if (accessed_flag && fdutimens (dt->fd, NULL, dt->times) != 0
       && (modified_flag || (errno != EPERM && errno != EACCES)))
     {
-      rrep_error (ERR_KEEP_TIMES, ent->fts_path);
+      rrep_error (ERR_KEEP_TIMES, dir_path);
       failure_flag = true;
     }
   close (dt->fd);
@@ -847,7 +844,70 @@ restore_dir_times (FTSENT *ent)
         }
     }
   free (dt);
+
+  if (failure_flag)
+    return FAILURE;
+
+  return SUCCESS;
+}
+
+/* Saves directory times in fts_pointer.  */
+static int
+save_dir_times (FTSENT *ent)
+{
+  struct dir_times *dt;
+  int openat_flags = 0;
+
+  if (!(options & OPT_DEREF) && ent->fts_level > FTS_ROOTLEVEL)
+    openat_flags |= O_NOFOLLOW;
+  if (open_dir (ent->fts_fts->fts_cwd_fd, ent->fts_accpath, ent->fts_path,
+                openat_flags, &dt) != SUCCESS)
+    return FAILURE;
+  ent->fts_pointer = dt;
+
+  return SUCCESS;
+}
+
+/* Restores directory times from fts_pointer and frees fts_pointer.  */
+static int
+restore_dir_times (FTSENT *ent)
+{
+  struct dir_times *dt;
+
+  dt = (struct dir_times *) ent->fts_pointer;
   ent->fts_pointer = NULL;
+
+  return close_dir (ent->fts_path, dt);
+}
+
+/* Processes a file that was given on the command line.  */
+static int
+process_root_file (FTSENT *ent, pattern_t *pattern,
+                   const replace_t *replacement)
+{
+  char *dir_path = NULL;
+  struct dir_times *dt = NULL;
+  bool failure_flag = false;
+
+  if (options & OPT_KEEP_TIMES && backup_method != no_backups)
+    {
+      dir_path = mdir_name (ent->fts_path);
+      if (dir_path == NULL)
+        {
+          rrep_error (ERR_KEEP_TIMES, ent->fts_path);
+          failure_flag = true;
+        }
+      else if (open_dir (ent->fts_fts->fts_cwd_fd, dir_path, dir_path, 0, &dt)
+               != SUCCESS)
+        failure_flag = true;
+    }
+
+  failure_flag |= process_file (ent->fts_fts->fts_cwd_fd, ent->fts_accpath,
+                                ent->fts_path, pattern, replacement, true);
+
+  if (close_dir (dir_path, dt) != SUCCESS)
+    failure_flag = true;
+  free (dir_path);
 
   if (failure_flag)
     return FAILURE;
@@ -864,7 +924,6 @@ process_file_list (char **file_list, pattern_t *pattern,
   int fts_flags;
   FTSENT *ent;
   struct dir_times *dt;
-  bool follow_flag;
   bool failure_flag = false;
 
   fts_flags = FTS_CWDFD | FTS_VERBATIM | FTS_COMFOLLOW;
@@ -923,10 +982,14 @@ process_file_list (char **file_list, pattern_t *pattern,
               && !check_name (ent->fts_name, included_patterns,
                               excluded_patterns))
             break;
-          follow_flag = options & OPT_DEREF || ent->fts_level == FTS_ROOTLEVEL;
+          if (ent->fts_level == FTS_ROOTLEVEL)
+            {
+              failure_flag |= process_root_file (ent, pattern, replacement);
+              break;
+            }
           failure_flag |= process_file (fts->fts_cwd_fd, ent->fts_accpath,
                                         ent->fts_path, pattern, replacement,
-                                        follow_flag);
+                                        options & OPT_DEREF);
           break;
 
         case FTS_SL: /* Symbolic link.  */
