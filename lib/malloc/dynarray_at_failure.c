@@ -1,5 +1,5 @@
 /* Report an dynamic array index out of bounds condition.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -25,7 +25,8 @@
 #include <stdio.h>
 
 void
-__libc_dynarray_at_failure (size_t size, size_t index)
+__libc_dynarray_at_failure (__attribute_maybe_unused__ size_t size,
+                            __attribute_maybe_unused__ size_t index)
 {
 #ifdef _LIBC
   char buf[200];

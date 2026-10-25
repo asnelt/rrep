@@ -1,6 +1,6 @@
 /* backupfile.h -- declarations for making Emacs style backup file names
 
-   Copyright (C) 1990-1992, 1997-1999, 2003-2004, 2009-2022 Free Software
+   Copyright (C) 1990-1992, 1997-1999, 2003-2004, 2009-2026 Free Software
    Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,11 @@
 
 #ifndef BACKUPFILE_H_
 #define BACKUPFILE_H_
+
+/* This file uses _GL_ATTRIBUTE_MALLOC, _GL_ATTRIBUTE_RETURNS_NONNULL.  */
+#if !_GL_CONFIG_H_INCLUDED
+ #error "Please include config.h first."
+#endif
 
 /* Get AT_FDCWD, as a convenience for users of this file.  */
 #include <fcntl.h>

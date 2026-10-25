@@ -1,7 +1,7 @@
 # English translations for rrep package.
-# Copyright (C) 2022 Arno Onken
+# Copyright (C) 2026 Arno Onken
 # This file is distributed under the same license as the rrep package.
-# Automatically generated, 2022.
+# Automatically generated, 2026.
 #
 # All this catalog "translates" are quotation characters.
 # The msgids must be ASCII and therefore cannot contain real quotation
@@ -30,10 +30,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: rrep 1.3.7\n"
+"Project-Id-Version: rrep 1.4.0\n"
 "Report-Msgid-Bugs-To: asnelt@asnelt.org\n"
-"POT-Creation-Date: 2022-09-11 22:48+0100\n"
-"PO-Revision-Date: 2022-09-11 22:48+0100\n"
+"POT-Creation-Date: 2026-10-25 18:22+0000\n"
+"PO-Revision-Date: 2026-10-25 18:22+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: en@boldquot\n"
@@ -47,65 +47,64 @@ msgstr ""
 msgid "Arno Onken"
 msgstr "Arno Onken"
 
-#: src/messages.c:40
+#: src/messages.c:46
 #, c-format
 msgid ""
-"Copyright (C) 2011, 2013, 2019, 2022 %s\n"
-"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl."
-"html>\n"
+"Copyright (C) 2011, 2013, 2019, 2022, 2026 %s\n"
+"License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/"
+"gpl.html>\n"
 "This is free software: you are free to change and redistribute it.\n"
 "There is NO WARRANTY, to the extent permitted by law.\n"
 msgstr ""
-"Copyright (C) 2011, 2013, 2019, 2022 %s\n"
-"License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl."
-"html>\n"
+"Copyright (C) 2011, 2013, 2019, 2022, 2026 %s\n"
+"License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/"
+"gpl.html>\n"
 "This is free software: you are free to change and redistribute it.\n"
 "There is NO WARRANTY, to the extent permitted by law.\n"
 
-#: src/messages.c:52
+#: src/messages.c:59
 #, c-format
 msgid "Usage: %s [OPTION]... PATTERN REPLACEMENT [FILE]...\n"
 msgstr "Usage: %s [OPTION]... PATTERN REPLACEMENT [FILE]...\n"
 
-#: src/messages.c:61
+#: src/messages.c:68
 #, c-format
 msgid "Replace PATTERN by REPLACEMENT in each FILE or standard input.\n"
 msgstr "Replace PATTERN by REPLACEMENT in each FILE or standard input.\n"
 
-#: src/messages.c:63
+#: src/messages.c:70
 #, c-format
 msgid ""
 "PATTERN is, by default, a basic regular expression (BRE).  REPLACEMENT may\n"
-"contain the special character & to refer to that portion of the pattern "
-"space\n"
-"which matched, and the special escapes \\1 through \\9 to refer to the\n"
+"contain the special character & to refer to that portion of the line which\n"
+"matched, and the special escapes \\1 through \\9 to refer to the\n"
 "corresponding matching sub-expressions in PATTERN.\n"
 msgstr ""
 "PATTERN is, by default, a basic regular expression (BRE).  REPLACEMENT may\n"
-"contain the special character & to refer to that portion of the pattern "
-"space\n"
-"which matched, and the special escapes \\1 through \\9 to refer to the\n"
+"contain the special character & to refer to that portion of the line which\n"
+"matched, and the special escapes \\1 through \\9 to refer to the\n"
 "corresponding matching sub-expressions in PATTERN.\n"
 
-#: src/messages.c:68
+#: src/messages.c:75
 #, c-format
 msgid "Example: %s 'hello world' 'Hello, World!' menu.h main.c\n"
 msgstr "Example: %s ‘[1mhello world[0m’ ‘[1mHello, World![0m’ menu.h main.c\n"
 
-#: src/messages.c:71
+#: src/messages.c:78
 #, c-format
 msgid ""
 "Options:\n"
 "  -E, --extended-regexp          PATTERN is an extended regular expression "
 "(ERE)\n"
 "  -F, --fixed-strings            PATTERN and REPLACEMENT are fixed strings\n"
-"  -R, -r, --recursive            process directories recursively\n"
+"  -r, --recursive                process directories recursively\n"
+"  -R, --dereference-recursive    likewise, but follow all symbolic links\n"
 "      --include=FILE_PATTERN     process only files that match FILE_PATTERN\n"
 "      --exclude=FILE_PATTERN     files that match FILE_PATTERN will be "
 "skipped\n"
-"      --exclude-dir=PATTERN      directories that match PATTERN will be "
+"      --exclude-dir=DIR_PATTERN  directories that match DIR_PATTERN will be "
 "skipped\n"
-"  -S, --suffix=SUFFIX            override default backup suffix\n"
+"  -S, --suffix=SUFFIX            backup with suffix SUFFIX\n"
 "  -V, --version                  print version information and exit\n"
 "  -a, --all                      do not ignore files starting with .\n"
 "  -b                             backup before overwriting files\n"
@@ -113,7 +112,7 @@ msgid ""
 "argument\n"
 "      --binary                   do not ignore binary files\n"
 "      --dry-run                  simulation mode\n"
-"  -e, --regex=PATTERN            use PATTERN for matching\n"
+"  -e, --regexp=PATTERN           use PATTERN for matching\n"
 "  -h, --help                     display this help and exit\n"
 "  -i, --ignore-case              ignore case distinctions\n"
 "      --keep-times               keep access and modification times\n"
@@ -121,6 +120,7 @@ msgid ""
 "      --interactive              prompt before modifying a file\n"
 "  -q, --quiet, --silent          suppress all normal messages\n"
 "  -s, --no-messages              suppress error messages\n"
+"  -v, --verbose                  print changed lines\n"
 "  -w, --word-regexp              force PATTERN to match only whole words\n"
 "  -x, --line-regexp              force PATTERN to match only whole lines\n"
 msgstr ""
@@ -128,13 +128,14 @@ msgstr ""
 "  -E, --extended-regexp          PATTERN is an extended regular expression "
 "(ERE)\n"
 "  -F, --fixed-strings            PATTERN and REPLACEMENT are fixed strings\n"
-"  -R, -r, --recursive            process directories recursively\n"
+"  -r, --recursive                process directories recursively\n"
+"  -R, --dereference-recursive    likewise, but follow all symbolic links\n"
 "      --include=FILE_PATTERN     process only files that match FILE_PATTERN\n"
 "      --exclude=FILE_PATTERN     files that match FILE_PATTERN will be "
 "skipped\n"
-"      --exclude-dir=PATTERN      directories that match PATTERN will be "
+"      --exclude-dir=DIR_PATTERN  directories that match DIR_PATTERN will be "
 "skipped\n"
-"  -S, --suffix=SUFFIX            override default backup suffix\n"
+"  -S, --suffix=SUFFIX            backup with suffix SUFFIX\n"
 "  -V, --version                  print version information and exit\n"
 "  -a, --all                      do not ignore files starting with .\n"
 "  -b                             backup before overwriting files\n"
@@ -142,7 +143,7 @@ msgstr ""
 "argument\n"
 "      --binary                   do not ignore binary files\n"
 "      --dry-run                  simulation mode\n"
-"  -e, --regex=PATTERN            use PATTERN for matching\n"
+"  -e, --regexp=PATTERN           use PATTERN for matching\n"
 "  -h, --help                     display this help and exit\n"
 "  -i, --ignore-case              ignore case distinctions\n"
 "      --keep-times               keep access and modification times\n"
@@ -150,25 +151,25 @@ msgstr ""
 "      --interactive              prompt before modifying a file\n"
 "  -q, --quiet, --silent          suppress all normal messages\n"
 "  -s, --no-messages              suppress error messages\n"
+"  -v, --verbose                  print changed lines\n"
 "  -w, --word-regexp              force PATTERN to match only whole words\n"
 "  -x, --line-regexp              force PATTERN to match only whole lines\n"
 
-#: src/messages.c:101
+#: src/messages.c:110
 #, c-format
 msgid ""
-"With no FILE, or when FILE is -, read standard input and write to standard\n"
-"output.  Exit status is %d if any error occurs, %d otherwise.\n"
+"With no FILE, or when the only FILE is -, read standard input and write to\n"
+"standard output.  Exit status is %d if any error occurs, %d otherwise.\n"
 msgstr ""
-"With no FILE, or when FILE is -, read standard input and write to standard\n"
-"output.  Exit status is %d if any error occurs, %d otherwise.\n"
+"With no FILE, or when the only FILE is -, read standard input and write to\n"
+"standard output.  Exit status is %d if any error occurs, %d otherwise.\n"
 
-#: src/messages.c:106
+#: src/messages.c:115
 #, c-format
 msgid ""
 "The backup suffix is ~, unless set with --suffix or SIMPLE_BACKUP_SUFFIX.\n"
-"The version control method may be selected via the --backup option or "
-"through\n"
-"the VERSION_CONTROL environment variable.  Here are the values:\n"
+"The version control method may be selected via the --backup option or\n"
+"through the VERSION_CONTROL environment variable.  Here are the values:\n"
 "\n"
 "  none, off       never make backups (even if --backup is given)\n"
 "  numbered, t     make numbered backups\n"
@@ -176,168 +177,187 @@ msgid ""
 "  simple, never   always make simple backups\n"
 msgstr ""
 "The backup suffix is ~, unless set with --suffix or SIMPLE_BACKUP_SUFFIX.\n"
-"The version control method may be selected via the --backup option or "
-"through\n"
-"the VERSION_CONTROL environment variable.  Here are the values:\n"
+"The version control method may be selected via the --backup option or\n"
+"through the VERSION_CONTROL environment variable.  Here are the values:\n"
 "\n"
 "  none, off       never make backups (even if --backup is given)\n"
 "  numbered, t     make numbered backups\n"
 "  existing, nil   numbered if numbered backups exist, simple otherwise\n"
 "  simple, never   always make simple backups\n"
 
-#: src/messages.c:116
+#: src/messages.c:125
 #, c-format
 msgid "Report bugs to: %s\n"
 msgstr "Report bugs to: %s\n"
 
-#: src/messages.c:124
+#: src/messages.c:133
 #, c-format
 msgid "Try `%s --help' for more information.\n"
 msgstr "Try ‘[1m%s --help[0m’ for more information.\n"
 
-#: src/messages.c:137
+#: src/messages.c:155
 #, c-format
 msgid "%s: %s: could not process argument: "
 msgstr "%s: %s: could not process argument: "
 
-#: src/messages.c:142
+#: src/messages.c:160
 #, c-format
 msgid "%s: %s: could not process directory: "
 msgstr "%s: %s: could not process directory: "
 
-#: src/messages.c:147
+#: src/messages.c:165
+#, c-format
+msgid "%s: could not traverse file hierarchy: "
+msgstr "%s: could not traverse file hierarchy: "
+
+#: src/messages.c:170
+#, c-format
+msgid "%s: %s: directory given without recursive option\n"
+msgstr "%s: %s: directory given without recursive option\n"
+
+#: src/messages.c:174
+#, c-format
+msgid "%s: standard input given with other files\n"
+msgstr "%s: standard input given with other files\n"
+
+#: src/messages.c:178
 #, c-format
 msgid "%s: PATTERN must have at least one character\n"
 msgstr "%s: PATTERN must have at least one character\n"
 
-#: src/messages.c:151
+#: src/messages.c:182
 #, c-format
 msgid "%s: %s: unknown escape sequence in REPLACEMENT\n"
 msgstr "%s: %s: unknown escape sequence in REPLACEMENT\n"
 
-#: src/messages.c:155
+#: src/messages.c:186
 #, c-format
-msgid "%s: could not save current working directory: "
-msgstr "%s: could not save current working directory: "
+msgid "%s: %s: invalid reference in REPLACEMENT\n"
+msgstr "%s: %s: invalid reference in REPLACEMENT\n"
 
-#: src/messages.c:160
+#: src/messages.c:190
 #, c-format
-msgid "%s: could not allocate memory for suffix: "
-msgstr "%s: could not allocate memory for suffix: "
+msgid "%s: duplicate PATTERN or REPLACEMENT option\n"
+msgstr "%s: duplicate PATTERN or REPLACEMENT option\n"
 
-#: src/messages.c:165
+#: src/messages.c:194
 #, c-format
 msgid "%s: could not allocate memory for buffer: "
 msgstr "%s: could not allocate memory for buffer: "
 
-#: src/messages.c:170
+#: src/messages.c:200
 #, c-format
 msgid "%s: %s: could not allocate memory for file_buffer: "
 msgstr "%s: %s: could not allocate memory for file_buffer: "
 
-#: src/messages.c:175
+#: src/messages.c:205
 #, c-format
 msgid "%s: could not allocate memory for file_list: "
 msgstr "%s: could not allocate memory for file_list: "
 
-#: src/messages.c:180
-#, c-format
-msgid "%s: %s: could not allocate memory for next_path: "
-msgstr "%s: %s: could not allocate memory for next_path: "
-
-#: src/messages.c:185
+#: src/messages.c:210
 #, c-format
 msgid "%s: could not allocate memory for pattern: "
 msgstr "%s: could not allocate memory for pattern: "
 
-#: src/messages.c:190
+#: src/messages.c:215
 #, c-format
 msgid "%s: could not allocate memory for replacement: "
 msgstr "%s: could not allocate memory for replacement: "
 
-#: src/messages.c:195
+#: src/messages.c:220
 #, c-format
 msgid "%s: %s: could not allocate memory for backup string: "
 msgstr "%s: %s: could not allocate memory for backup string: "
 
-#: src/messages.c:201
+#: src/messages.c:226
+#, c-format
+msgid "%s: %s: could not allocate memory for verbose buffer: "
+msgstr "%s: %s: could not allocate memory for verbose buffer: "
+
+#: src/messages.c:232
 #, c-format
 msgid "%s: %s: could not reallocate memory for buffer: "
 msgstr "%s: %s: could not reallocate memory for buffer: "
 
-#: src/messages.c:206
+#: src/messages.c:237
 #, c-format
 msgid "%s: %s: could not reallocate memory for file_buffer: "
 msgstr "%s: %s: could not reallocate memory for file_buffer: "
 
-#: src/messages.c:212
-#, c-format
-msgid "%s: %s: not enough memory to process file: "
-msgstr "%s: %s: not enough memory to process file: "
-
-#: src/messages.c:217
+#: src/messages.c:243
 #, c-format
 msgid "%s: %s: could not open file for reading: "
 msgstr "%s: %s: could not open file for reading: "
 
-#: src/messages.c:222
+#: src/messages.c:248
 #, c-format
 msgid "%s: %s: could not open file for writing: "
 msgstr "%s: %s: could not open file for writing: "
 
-#: src/messages.c:227
-#, c-format
-msgid "%s: could not open directory: "
-msgstr "%s: could not open directory: "
-
-#: src/messages.c:232
+#: src/messages.c:253
 #, c-format
 msgid "%s: %s: could not read file: "
 msgstr "%s: %s: could not read file: "
 
-#: src/messages.c:237
+#: src/messages.c:258
 #, c-format
 msgid "%s: %s: could not read temporary file: "
 msgstr "%s: %s: could not read temporary file: "
 
-#: src/messages.c:242
+#: src/messages.c:263
+#, c-format
+msgid "%s: %s: line too long\n"
+msgstr "%s: %s: line too long\n"
+
+#: src/messages.c:266
+#, c-format
+msgid "%s: %s: could not write file: "
+msgstr "%s: %s: could not write file: "
+
+#: src/messages.c:271
+#, c-format
+msgid "%s: %s: could not write temporary file: "
+msgstr "%s: %s: could not write temporary file: "
+
+#: src/messages.c:276
 #, c-format
 msgid "%s: %s: could not write backup file: "
 msgstr "%s: %s: could not write backup file: "
 
-#: src/messages.c:247
+#: src/messages.c:281
 #, c-format
 msgid "%s: %s: could not overwrite file: "
 msgstr "%s: %s: could not overwrite file: "
 
-#: src/messages.c:252
+#: src/messages.c:286
 #, c-format
-msgid "%s: %s: could keep file times: "
-msgstr "%s: %s: could keep file times: "
+msgid "%s: %s: file replaced during processing\n"
+msgstr "%s: %s: file replaced during processing\n"
 
-#: src/messages.c:277
+#: src/messages.c:290
+#, c-format
+msgid "%s: %s: could not keep file times: "
+msgstr "%s: %s: could not keep file times: "
+
+#: src/messages.c:321
 #, c-format
 msgid "%s: pattern replaced\n"
 msgstr "%s: pattern replaced\n"
 
-#: src/messages.c:285
-#, c-format
-msgid "%s: %s: omitting directory\n"
-msgstr "%s: %s: omitting directory\n"
-
-#: src/messages.c:295
+#: src/messages.c:409
 #, c-format
 msgid "Simulation mode: no files are modified.\n"
 msgstr "Simulation mode: no files are modified.\n"
 
-#: src/messages.c:296
+#: src/messages.c:411
 #, c-format
 msgid "PATTERN found in the following files:\n"
 msgstr "PATTERN found in the following files:\n"
 
 #. TRANSLATORS: this is a user prompt.  In English the user can answer with y
 #. for 'yes' or n for 'no'.  [y/n] should be translated as well.
-#: src/messages.c:306
+#: src/messages.c:421
 #, c-format
 msgid "Pattern found in %s.  Replace pattern [y/n]? "
 msgstr "Pattern found in %s.  Replace pattern [y/n]? "

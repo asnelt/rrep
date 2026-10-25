@@ -1,6 +1,6 @@
 /* yesno.c -- read a yes/no response from stdin
 
-   Copyright (C) 1990, 1998, 2001, 2003-2022 Free Software Foundation, Inc.
+   Copyright (C) 1990, 1998, 2001, 2003-2026 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -21,6 +21,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+
+#if USE_UNLOCKED_IO
+# include "unlocked-io.h"
+#endif
 
 /* Return true if we read an affirmative line from standard input.
 

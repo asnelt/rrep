@@ -1,6 +1,6 @@
 /* Provide gettimeofday for systems that don't have it or for which it's broken.
 
-   Copyright (C) 2001-2003, 2005-2007, 2009-2022 Free Software Foundation, Inc.
+   Copyright (C) 2001-2003, 2005-2007, 2009-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -61,6 +61,9 @@ initialize (void)
 # else
 
 #  define GetSystemTimePreciseAsFileTimeFunc GetSystemTimePreciseAsFileTime
+#  if _GL_GNUC_PREREQ (4, 2)
+#   pragma GCC diagnostic ignored "-Waddress"
+#  endif
 
 # endif
 
@@ -82,29 +85,29 @@ gettimeofday (struct timeval *restrict tv, void *restrict tz)
 
   /* On native Windows, there are two ways to get the current time:
      GetSystemTimeAsFileTime
-     <https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getsystemtimeasfiletime>
+     <https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemtimeasfiletime>
      or
      GetSystemTimePreciseAsFileTime
-     <https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getsystemtimepreciseasfiletime>.
+     <https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemtimepreciseasfiletime>.
      GetSystemTimeAsFileTime produces values that jump by increments of
      15.627 milliseconds (!) on average.
      Whereas GetSystemTimePreciseAsFileTime values usually jump by 1 or 2
      microseconds.
      More discussion on this topic:
      <http://www.windowstimestamp.com/description>.  */
-  FILETIME current_time;
-
 # if !(_WIN32_WINNT >= _WIN32_WINNT_WIN8)
   if (!initialized)
     initialize ();
 # endif
+
+  FILETIME current_time;
   if (GetSystemTimePreciseAsFileTimeFunc != NULL)
     GetSystemTimePreciseAsFileTimeFunc (&current_time);
   else
     GetSystemTimeAsFileTime (&current_time);
 
   /* Convert from FILETIME to 'struct timeval'.  */
-  /* FILETIME: <https://docs.microsoft.com/en-us/windows/desktop/api/minwinbase/ns-minwinbase-filetime> */
+  /* FILETIME: <https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime> */
   ULONGLONG since_1601 =
     ((ULONGLONG) current_time.dwHighDateTime << 32)
     | (ULONGLONG) current_time.dwLowDateTime;
@@ -113,8 +116,10 @@ gettimeofday (struct timeval *restrict tv, void *restrict tz)
   ULONGLONG since_1970 =
     since_1601 - (ULONGLONG) 134774 * (ULONGLONG) 86400 * (ULONGLONG) 10000000;
   ULONGLONG microseconds_since_1970 = since_1970 / (ULONGLONG) 10;
-  tv->tv_sec = microseconds_since_1970 / (ULONGLONG) 1000000;
-  tv->tv_usec = microseconds_since_1970 % (ULONGLONG) 1000000;
+  *tv = (struct timeval) {
+    .tv_sec  = microseconds_since_1970 / (ULONGLONG) 1000000,
+    .tv_usec = microseconds_since_1970 % (ULONGLONG) 1000000
+  };
 
   return 0;
 
@@ -127,10 +132,7 @@ gettimeofday (struct timeval *restrict tv, void *restrict tz)
   struct timeval otv;
   int result = gettimeofday (&otv, (struct timezone *) tz);
   if (result == 0)
-    {
-      tv->tv_sec = otv.tv_sec;
-      tv->tv_usec = otv.tv_usec;
-    }
+    *tv = otv;
 #  else
   int result = gettimeofday (tv, (struct timezone *) tz);
 #  endif
@@ -143,8 +145,7 @@ gettimeofday (struct timeval *restrict tv, void *restrict tz)
 #   error "Only 1-second nominal clock resolution found.  Is that intended?" \
           "If so, compile with the -DOK_TO_USE_1S_CLOCK option."
 #  endif
-  tv->tv_sec = time (NULL);
-  tv->tv_usec = 0;
+  *tv = (struct timeval) { .tv_sec = time (NULL), .tv_usec = 0 };
 
   return 0;
 

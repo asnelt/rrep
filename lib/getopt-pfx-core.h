@@ -1,5 +1,5 @@
 /* getopt (basic, portable features) gnulib wrapper header.
-   Copyright (C) 1989-2022 Free Software Foundation, Inc.
+   Copyright (C) 1989-2026 Free Software Foundation, Inc.
    This file is part of gnulib.
    Unlike most of the getopt implementation, it is NOT shared
    with the GNU C Library.
@@ -31,6 +31,16 @@
    functions and variables.  Renaming avoids problems with some
    compilers and linkers.  */
 #ifdef __GETOPT_PREFIX
+
+/* Include platform-dependent header files that may declare getopt() and
+   friends.  */
+# if defined _AIX || defined __hpux || defined __sun || defined __QNX__
+#  include <stdio.h>
+# endif
+# if defined MUSL_LIBC || (defined __FreeBSD__ || defined __DragonFly__) || defined __NetBSD__ || defined __OpenBSD__ || (defined __APPLE__ && defined __MACH__) || defined _AIX || defined __sun || defined __minix || defined __HAIKU__
+#  include <unistd.h>
+# endif
+
 # ifndef __GETOPT_ID
 #  define __GETOPT_CONCAT(x, y) x ## y
 #  define __GETOPT_XCONCAT(x, y) __GETOPT_CONCAT (x, y)
@@ -47,7 +57,7 @@
 # define optind __GETOPT_ID (optind)
 # define optopt __GETOPT_ID (optopt)
 
-/* Work around a a problem on macOS, which declares getopt with a
+/* Work around a problem on macOS, which declares getopt with a
    trailing __DARWIN_ALIAS(getopt) that would expand to something like
    __asm("_" "rpl_getopt" "$UNIX2003") were it not for the following
    hack to suppress the macOS declaration <https://bugs.gnu.org/40205>.  */

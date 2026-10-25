@@ -1,6 +1,6 @@
 /* backupfile.c -- make Emacs style backup file names
 
-   Copyright (C) 1990-2006, 2009-2022 Free Software Foundation, Inc.
+   Copyright (C) 1990-2006, 2009-2026 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdbool.h>
 #include <stdckdint.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -212,7 +211,6 @@ numbered_backup (int dir_fd, char **buffer, idx_t buffer_size, idx_t filelen,
   enum numbered_backup_result result = BACKUP_IS_NEW;
   DIR *dirp = *dirpp;
   char *buf = *buffer;
-  idx_t versionlenmax = 1;
   idx_t baselen = filelen - base_offset;
 
   if (dirp)
@@ -235,12 +233,14 @@ numbered_backup (int dir_fd, char **buffer, idx_t buffer_size, idx_t filelen,
       *dirpp = dirp;
     }
 
+  idx_t versionlenmax = 1;
+
   for (struct dirent *dp; (dp = readdir (dirp)) != NULL; )
     {
       if (_D_EXACT_NAMLEN (dp) < baselen + 4)
         continue;
 
-      if (memcmp (buf + base_offset, dp->d_name, baselen + 2) != 0)
+      if (!memeq (buf + base_offset, dp->d_name, baselen + 2))
         continue;
 
       char const *p = dp->d_name + baselen + 2;
@@ -332,7 +332,7 @@ backupfile_internal (int dir_fd, char const *file,
     return s;
 
   DIR *dirp = NULL;
-  int sdir = dir_fd;
+  int sdir = -1;
   idx_t base_max = 0;
   while (true)
     {
@@ -371,17 +371,18 @@ backupfile_internal (int dir_fd, char const *file,
       if (! rename)
         break;
 
-      idx_t offset = backup_type == simple_backups ? 0 : base_offset;
+      dir_fd = sdir < 0 ? dir_fd : sdir;
+      idx_t offset = sdir < 0 ? 0 : base_offset;
       unsigned flags = backup_type == simple_backups ? 0 : RENAME_NOREPLACE;
-      if (renameatu (sdir, file + offset, sdir, s + offset, flags) == 0)
+      if (renameatu (dir_fd, file + offset, dir_fd, s + offset, flags) == 0)
         break;
-      int e = errno;
-      if (! (e == EEXIST && extended))
+      int saved_errno = errno;
+      if (! (saved_errno == EEXIST && extended))
         {
           if (dirp)
             closedir (dirp);
           free (s);
-          errno = e;
+          errno = saved_errno;
           return NULL;
         }
     }

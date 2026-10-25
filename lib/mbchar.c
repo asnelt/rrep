@@ -1,4 +1,4 @@
-/* Copyright (C) 2001, 2006, 2009-2022 Free Software Foundation, Inc.
+/* Copyright (C) 2001, 2006, 2009-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -14,24 +14,9 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 
-#include <config.h>
-
 #define MBCHAR_INLINE _GL_EXTERN_INLINE
+#include <config.h>
 
 #include <limits.h>
 
 #include "mbchar.h"
-
-#if IS_BASIC_ASCII
-
-/* Bit table of characters in the ISO C "basic character set".  */
-const unsigned int is_basic_table [UCHAR_MAX / 32 + 1] =
-{
-  0x00001a00,           /* '\t' '\v' '\f' */
-  0xffffffef,           /* ' '...'#' '%'...'?' */
-  0xfffffffe,           /* 'A'...'Z' '[' '\\' ']' '^' '_' */
-  0x7ffffffe            /* 'a'...'z' '{' '|' '}' '~' */
-  /* The remaining bits are 0.  */
-};
-
-#endif /* IS_BASIC_ASCII */

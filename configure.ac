@@ -1,7 +1,7 @@
 dnl
 dnl autoconf input file for ``rrep''
 dnl
-dnl Copyright (C) 2011, 2013, 2022 Arno Onken <asnelt@asnelt.org>
+dnl Copyright (C) 2011, 2013, 2022, 2026 Arno Onken <asnelt@asnelt.org>
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -14,11 +14,9 @@ dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 dnl GNU General Public License for more details.
 dnl
 dnl You should have received a copy of the GNU General Public License
-dnl along with this program; if not, write to the Free Software
-dnl Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
-dnl 02110-1301, USA.
+dnl along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AC_INIT([rrep], [1.3.7], [asnelt@asnelt.org])
+AC_INIT([rrep], [1.4.0], [asnelt@asnelt.org])
 
 AC_CONFIG_AUX_DIR(build-aux)
 AC_CONFIG_SRCDIR(src/rrep.c)

@@ -1,6 +1,6 @@
 /* Backup files.
 
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published
@@ -16,7 +16,6 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include "backupfile.h"
-#include <stdbool.h>
 #include <stdlib.h>
 
 extern char *backupfile_internal (int, char const *, enum backup_type, bool)

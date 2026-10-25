@@ -1,6 +1,6 @@
 /* intprops.h -- properties of integer types
 
-   Copyright (C) 2001-2022 Free Software Foundation, Inc.
+   Copyright (C) 2001-2026 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify it
    under the terms of the GNU Lesser General Public License as published
@@ -25,14 +25,34 @@
 
 /* True if the arithmetic type T is an integer type.  bool counts as
    an integer.  */
-#define TYPE_IS_INTEGER(t) ((t) 1.5 == 1)
+#if (__STDC_VERSION__ < 201112 || (defined _MSC_VER && _MSC_VER < 1944) \
+     || _GL__GENERIC_BOGUS)
+# define TYPE_IS_INTEGER(t) ((t) 1.5 == 1)
+#else
+/* Pacify -Wuseless-cast and do not default to the simpler expression;
+   see <https://gcc.gnu.org/PR125261>.  */
+# define TYPE_IS_INTEGER(t) \
+    (_Generic ((t) {0}, \
+               bool: 1, char: 1, signed char: 1, unsigned char: 1, \
+               short int: 1, unsigned short int: 1, int: 1, unsigned int: 1, \
+               long int: 1, unsigned long int: 1, long long int: 1, unsigned long long int: 1, \
+               float: 0, double: 0, long double: 0))
+#endif
 
-/* True if the real type T is signed.  */
+/* True if the standard integer or standard real type T is signed.  */
 #define TYPE_SIGNED(t) _GL_TYPE_SIGNED (t)
 
 /* Return 1 if the real expression E, after promotion, has a
    signed or floating type.  Do not evaluate E.  */
 #define EXPR_SIGNED(e) _GL_EXPR_SIGNED (e)
+
+/* The same value as as the arithmetic expression E, but with E's type
+   after integer promotions.  For example, if E is of type 'enum {A, B}'
+   then 'switch (INT_PROMOTE (E))' pacifies gcc -Wswitch-enum if some
+   enum values are deliberately omitted from the switch's cases.
+   Here, unary + is safer than a cast or inline function, as unary +
+   does only integer promotions and is disallowed on pointers.  */
+#define INT_PROMOTE(e) (+ (e))
 
 
 /* Minimum and maximum values for integer types and expressions.  */
@@ -42,12 +62,34 @@
    Padding bits are not supported; this is checked at compile-time below.  */
 #define TYPE_WIDTH(t) _GL_TYPE_WIDTH (t)
 
-/* The maximum and minimum values for the integer type T.  */
-#define TYPE_MINIMUM(t) ((t) ~ TYPE_MAXIMUM (t))
-#define TYPE_MAXIMUM(t)                                                 \
-  ((t) (! TYPE_SIGNED (t)                                               \
-        ? (t) -1                                                        \
-        : ((((t) 1 << (TYPE_WIDTH (t) - 2)) - 1) * 2 + 1)))
+/* The maximum and minimum values for the standard integer type T.  */
+#if (__STDC_VERSION__ < 201112 || (defined _MSC_VER && _MSC_VER < 1944) \
+     || _GL__GENERIC_BOGUS)
+# define TYPE_MINIMUM(t) ((t) ~ TYPE_MAXIMUM (t))
+# define TYPE_MAXIMUM(t)                                                \
+   ((t) (! TYPE_SIGNED (t)                                              \
+         ? (t) -1                                                       \
+         : ((((t) 1 << (TYPE_WIDTH (t) - 2)) - 1) * 2 + 1)))
+#else
+/* Pacify -Wuseless-cast and do not default to the simpler expressions;
+   see <https://gcc.gnu.org/PR125261>.  */
+# define TYPE_MINIMUM(t) \
+   (_Generic ((t) {0}, \
+              bool: (bool) 0, char: (char) CHAR_MIN, \
+              signed char: (signed char) SCHAR_MIN, unsigned char: (unsigned char) 0, \
+              short int: (short int) SHRT_MIN, unsigned short int: (unsigned short int) 0, \
+              int: INT_MIN, unsigned int: 0u, \
+              long int: LONG_MIN, unsigned long int: 0ul, \
+              long long int: LLONG_MIN, unsigned long long int: 0ull))
+# define TYPE_MAXIMUM(t) \
+   (_Generic ((t) {0}, \
+              bool: (bool) 1, char: (char) CHAR_MAX, \
+              signed char: (signed char) SCHAR_MAX, unsigned char: (unsigned char) -1, \
+              short int: (short int) SHRT_MAX, unsigned short int: (unsigned short int) -1, \
+              int: INT_MAX, unsigned int: -1u, \
+              long int: LONG_MAX, unsigned long int: -1ul, \
+              long long int: LLONG_MAX, unsigned long long int: -1ull))
+#endif
 
 /* Bound on length of the string representing an unsigned integer
    value representable in B bits.  log10 (2.0) < 146/485.  The
@@ -176,11 +218,11 @@
    that the result (e.g., A + B) has that type.  */
 #if _GL_HAS_BUILTIN_OVERFLOW_P
 # define _GL_ADD_OVERFLOW(a, b, min, max)                               \
-   __builtin_add_overflow_p (a, b, (__typeof__ ((a) + (b))) 0)
+   __builtin_add_overflow_p (a, b, _GL_INT_CONVERT ((a) + (b), 0))
 # define _GL_SUBTRACT_OVERFLOW(a, b, min, max)                          \
-   __builtin_sub_overflow_p (a, b, (__typeof__ ((a) - (b))) 0)
+   __builtin_sub_overflow_p (a, b, _GL_INT_CONVERT ((a) - (b), 0))
 # define _GL_MULTIPLY_OVERFLOW(a, b, min, max)                          \
-   __builtin_mul_overflow_p (a, b, (__typeof__ ((a) * (b))) 0)
+   __builtin_mul_overflow_p (a, b, _GL_INT_CONVERT ((a) * (b), 0))
 #else
 # define _GL_ADD_OVERFLOW(a, b, min, max)                                \
    ((min) < 0 ? INT_ADD_RANGE_OVERFLOW (a, b, min, max)                  \
@@ -197,11 +239,11 @@
     || INT_MULTIPLY_RANGE_OVERFLOW (a, b, min, max))
 #endif
 #define _GL_DIVIDE_OVERFLOW(a, b, min, max)                             \
-  ((min) < 0 ? (b) == _GL_INT_NEGATE_CONVERT (min, 1) && (a) < - (max)  \
+  ((min) < 0 ? (b) == _GL_INT_CONVERT (min, -1) && (a) < - (max)        \
    : (a) < 0 ? (b) <= (a) + (b) - 1                                     \
    : (b) < 0 && (a) + (b) <= (a))
 #define _GL_REMAINDER_OVERFLOW(a, b, min, max)                          \
-  ((min) < 0 ? (b) == _GL_INT_NEGATE_CONVERT (min, 1) && (a) < - (max)  \
+  ((min) < 0 ? (b) == _GL_INT_CONVERT (min, -1) && (a) < - (max)        \
    : (a) < 0 ? (a) % (b) != ((max) - (b) + 1) % (b)                     \
    : (b) < 0 && ! _GL_UNSIGNED_NEG_MULTIPLE (a, b, max))
 

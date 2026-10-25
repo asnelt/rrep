@@ -1,6 +1,6 @@
 /* pattern.h - declarations for pattern and replacement functions for
    rrep.
-   Copyright (C) 2011, 2022 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2022, 2026 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -13,9 +13,14 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
+
+#ifndef PATTERN_H
+#define PATTERN_H
+
+#include <regex.h>
+#include <stddef.h>
+#include <wchar.h>
 
 /* Data structure for PATTERN.  */
 typedef struct
@@ -36,11 +41,15 @@ typedef struct
   size_t nsub; /* Number of subpatterns in replacement.  */
 } replace_t;
 
+/* Determines the byte length of the multibyte character at position pos and
+   advances the state at ps.  Falls back to length 1 if an error occurs.  */
+extern size_t count_bytes (const char *, mbstate_t *);
+
 /* Matches regular expression or string in start.  Returns 0 if a match was
    found, REG_NOMATCH if no match was found or regerror error value if a
    regerror occurred.  Match offsets are stored in match.  */
-extern int match_pattern (pattern_t *, const char *, const char *,
-                          regmatch_t *);
+extern int match_pattern (pattern_t *, const char *, size_t, const char *,
+                          regmatch_t *, mbstate_t, mbstate_t, size_t);
 
 /* Frees the memory that was allocated for the fields of pattern.  */
 extern void free_pattern (pattern_t *);
@@ -56,3 +65,8 @@ extern void free_replace (replace_t *);
    escape sequences which are replaced in this function.  Moreover, the string
    is split into substrings.  The result is stored in replacement.  */
 extern int parse_replace (const char *, replace_t *);
+
+/* Checks the validity of references to pattern in replacement.  */
+extern int check_replace (const pattern_t *, const replace_t *);
+
+#endif /* PATTERN_H */
