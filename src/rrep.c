@@ -22,6 +22,7 @@
 #include <locale.h>
 #include <regex.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -121,6 +122,12 @@ write_string (FILE *fp, const char *string, const size_t string_len,
       /* Check if remaining file_buffer space is sufficient.  */
       while (file_buffer_size - (*pos - file_buffer) < string_len)
         {
+          if (file_buffer_size > SIZE_MAX / 2)
+            {
+              errno = ENOMEM;
+              rrep_error (ERR_REALLOC_FILEBUFFER, file_name);
+              return FAILURE;
+            }
           /* Reallocate memory.  */
           tmp = realloc (file_buffer, 2 * file_buffer_size);
           if (tmp == NULL)

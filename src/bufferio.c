@@ -15,8 +15,10 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include <config.h>
+#include <errno.h>
 #include <regex.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -129,7 +131,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
             }
           else
             {
-              if (buffer_size - 1 > MAX_LINE_LEN)
+              if (buffer_size > MAX_LINE_LEN)
                 {
                   rrep_error (ERR_LINE_LEN, file_name);
                   return FAILURE;
@@ -194,7 +196,15 @@ append_verbose (const char *string, const size_t string_len,
       new_size = (verbose_buffer_size == 0) ? INIT_BUFFER_SIZE
         : verbose_buffer_size;
       while (new_size - verbose_buffer_fill < string_len)
-        new_size *= 2;
+        {
+          if (new_size > SIZE_MAX / 2)
+            {
+              errno = ENOMEM;
+              rrep_error (ERR_ALLOC_VERBOSE, file_name);
+              return FAILURE;
+            }
+          new_size *= 2;
+        }
       tmp = realloc (verbose_buffer, new_size);
       if (tmp == NULL)
         {
