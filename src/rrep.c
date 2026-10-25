@@ -428,6 +428,21 @@ backup_file (int dir_fd, int fd, const char *file, const char *file_name,
   return SUCCESS;
 }
 
+/* Prepares a file status for processing.  */
+static void
+prepare_file_status (int fd)
+{
+  int flags;
+
+  flags = fcntl (fd, F_GETFL);
+  if (flags < 0)
+    return;
+  flags &= ~O_NONBLOCK;
+  if (options & OPT_KEEP_TIMES && O_NOATIME != 0)
+    flags |= O_NOATIME;
+  fcntl (fd, F_SETFL, flags);
+}
+
 /* Restores the file times of the file descriptor fd.  */
 static int
 restore_file_times (int fd, const char *file_name,
@@ -470,7 +485,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
   bool delimiter_flag; /* Trailing line delimiter found in line.  */
   bool failure_flag = false;
 
-  openat_flags = O_RDONLY;
+  openat_flags = O_RDONLY | O_NOCTTY | O_NONBLOCK;
   if (!follow_flag)
     openat_flags |= O_NOFOLLOW;
   fd = openat (dir_fd, file, openat_flags);
@@ -495,8 +510,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
   /* Save file times.  */
   times[0] = st.st_atim;
   times[1] = st.st_mtim;
-  if (options & OPT_KEEP_TIMES && O_NOATIME != 0)
-    fcntl (fd, F_SETFL, fcntl (fd, F_GETFL) | O_NOATIME);
+  prepare_file_status (fd);
 
   fp = fdopen (fd, "r");
   if (fp == NULL)
@@ -590,7 +604,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
         }
 
       /* Writing back to file is actually required.  */
-      openat_flags = O_RDWR;
+      openat_flags = O_RDWR | O_NOCTTY | O_NONBLOCK;
       if (!follow_flag)
         openat_flags |= O_NOFOLLOW;
       write_fd = openat (dir_fd, file, openat_flags);
@@ -611,8 +625,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
         }
       fclose (fp);
       fd = write_fd;
-      if (options & OPT_KEEP_TIMES && O_NOATIME != 0)
-        fcntl (fd, F_SETFL, fcntl (fd, F_GETFL) | O_NOATIME);
+      prepare_file_status (fd);
       fp = fdopen (fd, "r+");
       if (fp == NULL)
         {
