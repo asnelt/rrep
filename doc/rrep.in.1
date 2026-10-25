@@ -1,7 +1,7 @@
 .TH RREP 1 "rrep @VERSION@" "User Commands"
 .nh
 .SH "NAME"
-rrep \- replace patterns in files.
+rrep \- replace patterns in files
 .SH "SYNOPSIS"
 .B rrep
 .RI [ OPTIONS ]
@@ -18,9 +18,21 @@ and replaces those matches by a given
 The pattern is, by default, a basic regular expression.
 The replacement string may contain special characters to refer to portions of
 the matched pattern.
+\fB&\fR refers to the portion of the line that matched
+.IR PATTERN ,
+and \fB\e1\fR through \fB\e9\fR refer to the corresponding matching
+sub-expressions in
+.IR PATTERN .
 .PP
+If no
+.I FILE
+is given, or if the only
+.I FILE
+is \fB\-\fR, standard input is read and the result is written to standard
+output.
 Binary files are, by default, ignored.
 A file is regarded as binary if it contains the null character.
+If processed, a null character in a binary file also ends a line.
 .SH "OPTIONS"
 .TP
 .BR \-E ", " \-\^\-extended\-regexp
@@ -34,16 +46,22 @@ and
 are interpreted as fixed strings, not as regular expressions or escape
 sequences.
 .TP
-.BR \-R ", " \-r ", " \-\^\-recursive
+.BR \-r ", " \-\^\-recursive
 Each directory that is given on the command line is processed recursively.
 Files and sub-directories starting with the
 .B .
 character are, by default, ignored.
+Symbolic links in these directories are skipped as well, except if given on the
+command line.
+.TP
+.BR \-R ", " \-\^\-dereference\-recursive
+Likewise, but all symbolic links are followed.
 .TP
 .BI \-\^\-include= FILE_PATTERN
 Only files are processed that match the pattern
-.IR FILE_PATTERN ,
-except for files that are specifically given on the command line.
+.IR FILE_PATTERN .
+For conflicting \fB\-\^\-include\fR and \fB\-\^\-exclude\fR options, the last
+matching option is used.
 \fB*\fR, \fB?\fR, and \fB[\fR...\fB]\fR can be used as wildcards in
 .IR FILE_PATTERN .
 Wildcards and backslash characters can be quoted with \fB\e\fR.
@@ -51,21 +69,21 @@ Wildcards and backslash characters can be quoted with \fB\e\fR.
 .BI \-\^\-exclude= FILE_PATTERN
 Files that match the pattern
 .I FILE_PATTERN
-will be skipped, except for files that are specifically given on the command
-line (using wildcard matching as described under \fB\-\^\-include\fR).
+will be skipped, using wildcard matching as described under
+\fB\-\^\-include\fR.
 .TP
-.BI \-\^\-exclude\-dir= PATTERN
+.BI \-\^\-exclude\-dir= DIR_PATTERN
 Directories that match
-.I PATTERN
-will be skipped, except for files that are specifically given on the command
-line (using wildcard matching as described under \fB\-\^\-include\fR).
-.TP
-.BR \-V ", " \-\^\-version
-Print the version number of \fBrrep\fR.
+.I DIR_PATTERN
+will be skipped, using wildcard matching as described under
+\fB\-\^\-include\fR.
 .TP
 .BI \-S " SUFFIX" "\fR,\fP \-\^\-suffix=" SUFFIX
 Override default backup suffix.
 This option implicitly activates backups.
+.TP
+.BR \-V ", " \-\^\-version
+Print the version number of \fBrrep\fR.
 .TP
 .BR \-a ", " \-\^\-all
 Files and sub-directories starting with the \fB.\fR character in recursively
@@ -74,24 +92,35 @@ processed directories (see \fB\-\^\-recursive\fR) are processed as well.
 .BR \-b
 Backup before overwriting files.
 The backup files are written into the directory of the original file.
-Equivalent to using
-\fB\-\^\-backup=existing\fR.
+Equivalent to \fB\-\^\-backup\fR without an argument.
 .TP
 .BI \-\^\-backup \fR[\fP = CONTROL \fR]\fP
 Like \fB\-b\fR but accepts a version control argument.
-The file name of the backup file is appended by a \fB~\fR character.
-The backup suffix is \fB~\fR, unless set with \fB\-\^\-suffix\fR or
-.IR SIMPLE_BACKUP_SUFFIX .
+The backup suffix is appended to the file name.
+for a simple backup, the suffix is \fB~\fR, unless set with \fB\-\^\-suffix\fR
+or .IR SIMPLE_BACKUP_SUFFIX .
+For a numbered backup, the suffix is \fB.~\fR\fIN\fR\fB~\fR.
 The version control method may be selected via the \fB\-\^\-backup\fR option or
 through the
 .I VERSION_CONTROL
-environment variable. Here are the values:
-  \fBnone\fR, \fBoff\fR       never make backups
-                  (even if \fB\-\^\-backup\fR is given)
-  \fBnumbered\fR, \fBt\fR     make numbered backups
-  \fBexisting\fR, \fBnil\fR   numbered if numbered backups exist, simple
-                  otherwise
-  \fBsimple\fR, \fBnever\fR   always make simple backups
+environment variable, where \fBexisting\fR is the default.
+Here are the values:
+.RS
+.PD 0
+.TP 16
+.BR none ", " off
+never make backups (even if \fB\-\^\-backup\fR is given)
+.TP
+.BR numbered ", " t
+make numbered backups
+.TP
+.BR existing ", " nil
+numbered if numbered backups exist, simple otherwise
+.TP
+.BR simple ", " never
+always make simple backups
+.PD
+.RE
 .TP
 .BR \-\^\-binary
 Do not ignore binary files.
@@ -135,6 +164,9 @@ All normal output messages are suppressed.
 .BR \-s ", " \-\^\-no\-messages
 All error messages are suppressed.
 .TP
+.BR \-v ", " \-\^\-verbose
+Print changed lines together with the corresponding original lines.
+.TP
 .BR \-w ", " \-\^\-word\-regexp
 Only those matches of
 .I PATTERN
@@ -162,7 +194,7 @@ the author via electronic mail to
 The author will try to help you out, although he may not have time to fix your
 problems.
 .SH "COPYRIGHT"
-Copyright 2011, 2013, 2019, 2022 Arno Onken
+Copyright 2011, 2013, 2019, 2022, 2026 Arno Onken
 .PP
 This is free software; see the source for copying conditions.
 There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
@@ -170,8 +202,8 @@ PURPOSE.
 .SH "SEE ALSO"
 .SS "Regular Manual Pages"
 find(1), grep(1), sed(1), xargs(1), regex(7).
-.SS "TeXinfo Documentation"
-The full documentation for rrep is maintained as a TeXinfo manual.
+.SS "Texinfo Documentation"
+The full documentation for rrep is maintained as a Texinfo manual.
 If the info and rrep programs are properly installed at your site, the command
 .IP
 .B info rrep

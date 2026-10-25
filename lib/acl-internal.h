@@ -1,6 +1,6 @@
 /* Internal implementation of access control lists.  -*- coding: utf-8 -*-
 
-   Copyright (C) 2002-2003, 2005-2022 Free Software Foundation, Inc.
+   Copyright (C) 2002-2003, 2005-2026 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -17,9 +17,13 @@
 
    Written by Paul Eggert, Andreas Grünbacher, and Bruno Haible.  */
 
+/* This file uses _GL_INLINE_HEADER_BEGIN, _GL_INLINE, _GL_ATTRIBUTE_PURE.  */
+#if !_GL_CONFIG_H_INCLUDED
+ #error "Please include config.h first."
+#endif
+
 #include "acl.h"
 
-#include <stdbool.h>
 #include <stdlib.h>
 
 /* All systems define the ACL related API in <sys/acl.h>.  */
@@ -48,22 +52,13 @@ extern int aclsort (int, int, struct acl *);
 #include <errno.h>
 
 #include <limits.h>
-#ifndef MIN
-# define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif
-
-#ifndef SIZE_MAX
-# define SIZE_MAX ((size_t) -1)
-#endif
+#include <stdint.h>
 
 #ifndef HAVE_FCHMOD
 # define HAVE_FCHMOD false
 # define fchmod(fd, mode) (-1)
 #endif
 
-#ifndef _GL_INLINE_HEADER_BEGIN
- #error "Please include config.h first."
-#endif
 _GL_INLINE_HEADER_BEGIN
 #ifndef ACL_INTERNAL_INLINE
 # define ACL_INTERNAL_INLINE _GL_INLINE
@@ -73,7 +68,7 @@ _GL_INLINE_HEADER_BEGIN
 
 # if HAVE_ACL_GET_FILE
 /* POSIX 1003.1e (draft 17 -- abandoned) specific version.  */
-/* Linux, FreeBSD, Mac OS X, IRIX, Tru64, Cygwin >= 2.5 */
+/* Linux, FreeBSD, Mac OS X, Cygwin >= 2.5 */
 
 #  ifndef MIN_ACL_ENTRIES
 #   define MIN_ACL_ENTRIES 4
@@ -81,17 +76,7 @@ _GL_INLINE_HEADER_BEGIN
 
 /* POSIX 1003.1e (draft 17) */
 #  ifdef HAVE_ACL_GET_FD
-/* Most platforms have a 1-argument acl_get_fd, only OSF/1 has a 2-argument
-   macro(!).  */
-#   if HAVE_ACL_FREE_TEXT /* OSF/1 */
-ACL_INTERNAL_INLINE acl_t
-rpl_acl_get_fd (int fd)
-{
-  return acl_get_fd (fd, ACL_TYPE_ACCESS);
-}
-#    undef acl_get_fd
-#    define acl_get_fd rpl_acl_get_fd
-#   endif
+/* acl_get_fd takes one argument.  */
 #  else
 #   define HAVE_ACL_GET_FD false
 #   undef acl_get_fd
@@ -100,17 +85,7 @@ rpl_acl_get_fd (int fd)
 
 /* POSIX 1003.1e (draft 17) */
 #  ifdef HAVE_ACL_SET_FD
-/* Most platforms have a 2-argument acl_set_fd, only OSF/1 has a 3-argument
-   macro(!).  */
-#   if HAVE_ACL_FREE_TEXT /* OSF/1 */
-ACL_INTERNAL_INLINE int
-rpl_acl_set_fd (int fd, acl_t acl)
-{
-  return acl_set_fd (fd, ACL_TYPE_ACCESS, acl);
-}
-#    undef acl_set_fd
-#    define acl_set_fd rpl_acl_set_fd
-#   endif
+/* acl_set_fd takes two arguments.  */
 #  else
 #   define HAVE_ACL_SET_FD false
 #   undef acl_set_fd
@@ -123,8 +98,13 @@ rpl_acl_set_fd (int fd, acl_t acl)
 #  endif
 
 /* Linux-specific */
-/* Cygwin >= 2.5 implements this function, but it returns 1 for all
-   directories, thus is unusable.  */
+/* Cygwin >= 2.5 implements acl_extended_file(), but it returns 1 for nearly all
+   directories — for reasons explained in
+   <https://sourceware.org/pipermail/cygwin/2025-March/257762.html> —, thus is
+   unusable.  For the user, 'ls' should not print a '+' sign, indicating the
+   presence of an ACL, for 99,9% of the files; this would not be useful.
+   Therefore, on Cygwin, we ignore the acl_extended_file function and instead
+   use our own acl_access_nontrivial function.  */
 #  if !defined HAVE_ACL_EXTENDED_FILE || defined __CYGWIN__
 #   undef HAVE_ACL_EXTENDED_FILE
 #   define HAVE_ACL_EXTENDED_FILE false
@@ -136,7 +116,7 @@ rpl_acl_set_fd (int fd, acl_t acl)
 #  endif
 
 /* Set to 0 if a file's mode is stored independently from the ACL.  */
-#  if (HAVE_ACL_COPY_EXT_NATIVE && HAVE_ACL_CREATE_ENTRY_NP) || defined __sgi /* Mac OS X, IRIX */
+#  if HAVE_ACL_COPY_EXT_NATIVE && HAVE_ACL_CREATE_ENTRY_NP /* Mac OS X */
 #   define MODE_INSIDE_ACL 0
 #  endif
 
@@ -176,14 +156,14 @@ extern int acl_default_nontrivial (acl_t);
 
 /* Return 1 if the given ACL is non-trivial.
    Return 0 if it is trivial, i.e. equivalent to a simple stat() mode.  */
-extern int acl_nontrivial (int count, aclent_t *entries) _GL_ATTRIBUTE_PURE;
+extern int acl_nontrivial (int count, aclent_t const *entries) _GL_ATTRIBUTE_PURE;
 
 #  ifdef ACE_GETACL /* Solaris 10 */
 
 /* Test an ACL retrieved with ACE_GETACL.
    Return 1 if the given ACL, consisting of COUNT entries, is non-trivial.
    Return 0 if it is trivial, i.e. equivalent to a simple stat() mode.  */
-extern int acl_ace_nontrivial (int count, ace_t *entries) _GL_ATTRIBUTE_PURE;
+extern int acl_ace_nontrivial (int count, ace_t const *entries) _GL_ATTRIBUTE_PURE;
 
 /* Definitions for when the built executable is executed on Solaris 10
    (newer version) or Solaris 11.  */
@@ -222,13 +202,13 @@ extern int acl_ace_nontrivial (int count, ace_t *entries) _GL_ATTRIBUTE_PURE;
 
 /* Return 1 if the given ACL is non-trivial.
    Return 0 if it is trivial, i.e. equivalent to a simple stat() mode.  */
-extern int acl_nontrivial (int count, struct acl_entry *entries);
+extern int acl_nontrivial (int count, struct acl_entry const *entries);
 
 #  if HAVE_ACLV_H /* HP-UX >= 11.11 */
 
 /* Return 1 if the given ACL is non-trivial.
    Return 0 if it is trivial, i.e. equivalent to a simple stat() mode.  */
-extern int aclv_nontrivial (int count, struct acl *entries);
+extern int aclv_nontrivial (int count, struct acl const *entries);
 
 #  endif
 
@@ -246,7 +226,7 @@ extern int acl_nontrivial (struct acl *a);
 
 /* Return 1 if the given ACL is non-trivial.
    Return 0 if it is trivial, i.e. equivalent to a simple stat() mode.  */
-extern int acl_nontrivial (int count, struct acl *entries);
+extern int acl_nontrivial (int count, struct acl const *entries);
 
 # endif
 
@@ -260,7 +240,7 @@ extern int acl_nontrivial (int count, struct acl *entries);
 struct permission_context {
   mode_t mode;
 #if USE_ACL
-# if HAVE_ACL_GET_FILE /* Linux, FreeBSD, Mac OS X, IRIX, Tru64, Cygwin >= 2.5 */
+# if HAVE_ACL_GET_FILE /* Linux, FreeBSD, Mac OS X, Cygwin >= 2.5 */
   acl_t acl;
 #  if !HAVE_ACL_TYPE_EXTENDED
   acl_t default_acl;
@@ -269,17 +249,19 @@ struct permission_context {
 
 # elif defined GETACL /* Solaris, Cygwin < 2.5 */
   int count;
-  aclent_t *entries;
+  aclent_t *entries
+    _GL_ATTRIBUTE_COUNTED_BY (count);
 #  ifdef ACE_GETACL
   int ace_count;
-  ace_t *ace_entries;
+  ace_t *ace_entries
+    _GL_ATTRIBUTE_COUNTED_BY (ace_count);
 #  endif
 
 # elif HAVE_GETACL /* HP-UX */
-  struct acl_entry entries[NACLENTRIES];
+  struct acl_entry entries[NACLENTRIES] /* COUNTED_BY (count) */;
   int count;
 #  if HAVE_ACLV_H
-  struct acl aclv_entries[NACLVENTRIES];
+  struct acl aclv_entries[NACLVENTRIES] /* COUNTED_BY (aclv_count) */;
   int aclv_count;
 #  endif
 
@@ -288,7 +270,7 @@ struct permission_context {
   bool have_u;
 
 # elif HAVE_ACLSORT /* NonStop Kernel */
-  struct acl entries[NACLENTRIES];
+  struct acl entries[NACLENTRIES] /* COUNTED_BY (count) */;
   int count;
 
 # endif

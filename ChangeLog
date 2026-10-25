@@ -1,3 +1,337 @@
+2026-10-25 20:04  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c, rrep.c: Made size checks stricter.
+
+2026-10-25 18:22  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c, messages.c, messages.h: Added check for line length.
+
+2026-10-25 18:10  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Avoided infinite file blocking.
+
+2026-10-25 17:41  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Avoided data loss by first writing and then truncating.
+
+2026-10-24 22:33  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.in.1: Fixed typo.
+
+2026-10-24 21:49  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.in.1, rrep.texi, messages.c: Fixed formatting.
+
+2026-10-24 21:21  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.in.1, rrep.texi, rrep.c: Made file and directory inclusion
+	  and exclusion consistent with GNU grep.
+
+2026-10-24 20:21  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Added parent directory time restoration.
+
+2026-10-24 19:25  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c, rrep.c: Broadened multibyte support.
+
+2026-10-24 17:39  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Improved recursion error
+	  messages.
+
+2026-10-24 15:43  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Fixed formatting.
+
+2026-10-24 15:06  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Changed to let gnulib set suffix
+	  string.
+
+2026-10-24 14:15  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.in.1, rrep.texi, Makefile.am, bufferio.c, messages.c,
+	  rrep.c: Fixed small inconsistencies.
+
+2026-10-23 22:49  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.in.1, rrep.texi, messages.c: Updated documentation.
+
+2026-10-23 19:33  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Moved file name output to
+	  messages module.
+
+2026-10-23 19:10  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.h, messages.c, messages.h, pattern.h, rrep.h: Added
+	  include guards to headers.
+
+2026-10-23 18:58  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Removed needless file time restorations.
+
+2026-10-22 22:50  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Added check if standard in is
+	  given with other files.
+
+2026-10-22 22:26  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Changed symbolic link following.
+
+2026-10-22 21:17  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Prevented backups with symbolic links.
+
+2026-10-21 23:19  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c, bufferio.h, messages.c, messages.h, pattern.c,
+	  pattern.h, rrep.c, rrep.h: Fixed formatting in line with GNU
+	  indent.
+
+2026-10-18 19:55  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Added missing brackets.
+
+2026-10-18 17:49  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c, rrep.c: Closed memory leaks.
+
+2026-10-18 16:54  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Made line length consistent for pattern matching.
+
+2026-10-18 12:02  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, pattern.c: Fix code format mistakes.
+
+2026-10-18 11:58  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Made restoring file times more consistent.
+
+2026-10-17 21:58  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Considered null line delimiter.
+
+2026-10-17 19:41  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c: Reduced pattern search length.
+
+2026-10-15 22:31  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c, pattern.h, rrep.c: Calculated line length only once
+	  per line.
+
+2026-10-15 22:04  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c: Fixed ignore case fixed string option.
+
+2026-10-15 20:36  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c, rrep.c: Accounted for broken up multibyte characters.
+
+2026-10-10 17:15  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c: Speeded up whole line and whole word options.
+
+2026-10-09 21:37  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, pattern.c, pattern.h, rrep.c: Added check
+	  for invalid replacement references.
+
+2026-10-07 22:53  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Avoided rewriting unchanged lines.
+
+2026-10-01 22:54  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Opened file for writing only when
+	  necessary.
+
+2026-09-30 23:04  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c: Revised errno printing.
+
+2026-09-30 22:55  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c: Passed larger part of line to regexec for word
+	  detection.
+
+2026-09-29 23:58  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Revised stream processing.
+
+2026-09-29 18:58  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Revised time keeping.
+
+2026-09-29 18:32  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.in.1, rrep.texi, messages.c, messages.h, rrep.c: Revised
+	  directory processing.
+
+2026-09-28 20:00  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.texi, messages.c, rrep.c: Fixed argument typo.
+
+2026-09-28 19:55  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c, rrep.c: Corrected multibyte counting.
+
+2026-09-28 19:43  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Fixed --dereference-recursive option.
+
+2026-09-27 22:55  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c, rrep.c: Fixed multibyte state tracking.
+
+2026-09-27 16:38  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.in.1, rrep.texi, messages.c, rrep.c, rrep.h: Added option
+	  for --dereference-recursive.
+
+2026-09-26 22:41  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.in.1, rrep.texi, bufferio.c, bufferio.h, messages.c,
+	  messages.h, rrep.c, rrep.h: Added option for --verbose.
+
+2026-09-21 21:45  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c, bufferio.h, messages.c, pattern.c, pattern.h,
+	  rrep.c: Added support for multibyte characters.
+
+2026-09-17 21:23  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c: Added check for shorter whole word match.
+
+2026-09-06 20:11  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Applied gnulib fts.
+
+2026-09-02 23:15  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Used utimensat instead of deprecated utime.
+
+2026-09-02 22:36  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c, rrep.c: Silenced compiler warnings.
+
+2026-09-02 22:27  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c: Corrected memory allocation for escaped characters.
+
+2026-09-01 23:02  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Freed suffix_string on parse_pattern failure.
+
+2026-09-01 22:57  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c: Matched overlapping patterns.
+
+2026-08-31 23:10  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c: Allowed null terminator in case the file has no
+	  trailing newline.
+
+2026-08-31 22:48  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Temporarily removed any trailing newline character from
+	  line.
+
+2026-08-30 23:17  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c, rrep.c, rrep.h: Enabled ignore case option for fixed
+	  strings.
+
+2026-08-30 20:43  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Added stdout write check.
+
+2026-08-30 20:24  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Added check for successful write.
+
+2026-08-30 19:33  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c: Addressed empty input file case.
+
+2026-08-29 23:01  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Fixed error return value.
+
+2026-08-29 22:33  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h: Removed unused ERR_MEMORY error message.
+
+2026-08-29 22:26  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Fixed --replace-with argument.
+
+2026-08-29 20:09  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Avoided TOCTOU file overwrite.
+
+2026-08-16 23:25  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Added lstat fallback for entry type.
+
+2026-08-16 22:23  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Added error message for duplicate
+	  option.
+
+2026-08-16 21:41  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Added warning about skipped
+	  symbolic links.
+
+2026-08-16 17:49  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c: Added missing string.h include.
+
+2026-08-16 17:48  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c, rrep.c: Doubled buffer size when reallocating.
+
+2026-08-16 17:37  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Removed unnecessary tmp_c buffer.
+
+2026-08-15:24  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c, rrep.c: Accounted for very long lines and file lists.
+
+2026-08-16 15:11  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Improved robustness of directory traversal.
+
+2026-08-16 14:45  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c: Fixed error message typo.
+
+2026-08-16 14:36  Arno Onken  <asnelt@asnelt.org>
+
+	* pattern.c: Made use of isalnum.
+
+2026-08-15 21:48  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Added missing closedir calls.
+
+2026-08-15 21:32  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c, rrep.c: Avoided double closing a file.
+
+2026-08-15 20:26  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Added check for backup success.
+
+2026-08-15 17:31  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Made free checks consistent.
+
 2022-09-11 22:42  Arno Onken  <asnelt@asnelt.org>
 
 	* rrep.texi: Corrected GFDL license text.

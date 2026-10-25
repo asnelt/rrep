@@ -1,5 +1,5 @@
 /* Core of implementation of fstat and stat for native Windows.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -44,24 +44,17 @@
 #include <limits.h>
 #include <string.h>
 #include <unistd.h>
+#include <wchar.h>
 #include <windows.h>
 
 /* Specification.  */
 #include "stat-w32.h"
 
 #include "pathmax.h"
-#include "verify.h"
 
 /* Don't assume that UNICODE is not defined.  */
 #undef LoadLibrary
 #define LoadLibrary LoadLibraryA
-#undef GetFinalPathNameByHandle
-#define GetFinalPathNameByHandle GetFinalPathNameByHandleA
-
-/* Older mingw headers do not define VOLUME_NAME_NONE.  */
-#ifndef VOLUME_NAME_NONE
-# define VOLUME_NAME_NONE 4
-#endif
 
 #if !WIN32_ASSUME_VISTA
 
@@ -69,20 +62,12 @@
 # define GetProcAddress \
    (void *) GetProcAddress
 
-# if _GL_WINDOWS_STAT_INODES == 2
 /* GetFileInformationByHandleEx was introduced only in Windows Vista.  */
 typedef DWORD (WINAPI * GetFileInformationByHandleExFuncType) (HANDLE hFile,
                                                                FILE_INFO_BY_HANDLE_CLASS fiClass,
                                                                LPVOID lpBuffer,
                                                                DWORD dwBufferSize);
 static GetFileInformationByHandleExFuncType GetFileInformationByHandleExFunc = NULL;
-# endif
-/* GetFinalPathNameByHandle was introduced only in Windows Vista.  */
-typedef DWORD (WINAPI * GetFinalPathNameByHandleFuncType) (HANDLE hFile,
-                                                           LPSTR lpFilePath,
-                                                           DWORD lenFilePath,
-                                                           DWORD dwFlags);
-static GetFinalPathNameByHandleFuncType GetFinalPathNameByHandleFunc = NULL;
 static BOOL initialized = FALSE;
 
 static void
@@ -90,21 +75,17 @@ initialize (void)
 {
   HMODULE kernel32 = LoadLibrary ("kernel32.dll");
   if (kernel32 != NULL)
-    {
-# if _GL_WINDOWS_STAT_INODES == 2
-      GetFileInformationByHandleExFunc =
-        (GetFileInformationByHandleExFuncType) GetProcAddress (kernel32, "GetFileInformationByHandleEx");
-# endif
-      GetFinalPathNameByHandleFunc =
-        (GetFinalPathNameByHandleFuncType) GetProcAddress (kernel32, "GetFinalPathNameByHandleA");
-    }
+    GetFileInformationByHandleExFunc =
+      (GetFileInformationByHandleExFuncType) GetProcAddress (kernel32, "GetFileInformationByHandleEx");
   initialized = TRUE;
 }
 
 #else
 
 # define GetFileInformationByHandleExFunc GetFileInformationByHandleEx
-# define GetFinalPathNameByHandleFunc GetFinalPathNameByHandle
+# if _GL_GNUC_PREREQ (4, 2)
+#  pragma GCC diagnostic ignored "-Waddress"
+# endif
 
 #endif
 
@@ -113,11 +94,11 @@ initialize (void)
 struct timespec
 _gl_convert_FILETIME_to_timespec (const FILETIME *ft)
 {
-  struct timespec result;
-  /* FILETIME: <https://docs.microsoft.com/en-us/windows/desktop/api/minwinbase/ns-minwinbase-filetime> */
+  /* FILETIME: <https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime> */
   unsigned long long since_1601 =
     ((unsigned long long) ft->dwHighDateTime << 32)
     | (unsigned long long) ft->dwLowDateTime;
+  struct timespec result;
   if (since_1601 == 0)
     {
       result.tv_sec = 0;
@@ -138,7 +119,7 @@ _gl_convert_FILETIME_to_timespec (const FILETIME *ft)
 time_t
 _gl_convert_FILETIME_to_POSIX (const FILETIME *ft)
 {
-  /* FILETIME: <https://docs.microsoft.com/en-us/windows/desktop/api/minwinbase/ns-minwinbase-filetime> */
+  /* FILETIME: <https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime> */
   unsigned long long since_1601 =
     ((unsigned long long) ft->dwHighDateTime << 32)
     | (unsigned long long) ft->dwLowDateTime;
@@ -162,7 +143,7 @@ int
 _gl_fstat_by_handle (HANDLE h, const char *path, struct stat *buf)
 {
   /* GetFileType
-     <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfiletype> */
+     <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfiletype> */
   DWORD type = GetFileType (h);
   if (type == FILE_TYPE_DISK)
     {
@@ -173,16 +154,16 @@ _gl_fstat_by_handle (HANDLE h, const char *path, struct stat *buf)
 
       /* st_mode can be determined through
          GetFileAttributesEx
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfileattributesexa>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/ns-fileapi-_win32_file_attribute_data>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileattributesexa>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-win32_file_attribute_data>
          or through
          GetFileInformationByHandle
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfileinformationbyhandle>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/ns-fileapi-_by_handle_file_information>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileinformationbyhandle>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-by_handle_file_information>
          or through
          GetFileInformationByHandleEx with argument FileBasicInfo
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/nf-winbase-getfileinformationbyhandleex>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/ns-winbase-_file_basic_info>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getfileinformationbyhandleex>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-file_basic_info>
          The latter requires -D_WIN32_WINNT=_WIN32_WINNT_VISTA or higher.  */
       BY_HANDLE_FILE_INFORMATION info;
       if (! GetFileInformationByHandle (h, &info))
@@ -198,12 +179,12 @@ _gl_fstat_by_handle (HANDLE h, const char *path, struct stat *buf)
 #if _GL_WINDOWS_STAT_INODES
       /* st_ino can be determined through
          GetFileInformationByHandle
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfileinformationbyhandle>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/ns-fileapi-_by_handle_file_information>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileinformationbyhandle>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-by_handle_file_information>
          as 64 bits, or through
          GetFileInformationByHandleEx with argument FileIdInfo
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/nf-winbase-getfileinformationbyhandleex>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/ns-winbase-_file_id_info>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getfileinformationbyhandleex>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-file_id_info>
          as 128 bits.
          The latter requires -D_WIN32_WINNT=_WIN32_WINNT_WIN8 or higher.  */
       /* Experiments show that GetFileInformationByHandleEx does not provide
@@ -228,7 +209,7 @@ _gl_fstat_by_handle (HANDLE h, const char *path, struct stat *buf)
           if (GetFileInformationByHandleExFunc (h, FileIdInfo, &id, sizeof (id)))
             {
               buf->st_dev = id.VolumeSerialNumber;
-              verify (sizeof (ino_t) == sizeof (id.FileId));
+              static_assert (sizeof (ino_t) == sizeof (id.FileId));
               memcpy (&buf->st_ino, &id.FileId, sizeof (ino_t));
               goto ino_done;
             }
@@ -273,25 +254,40 @@ _gl_fstat_by_handle (HANDLE h, const char *path, struct stat *buf)
              name suffix.
              If the file name is already known, use it. Otherwise, for
              non-empty files, it can be determined through
-             GetFinalPathNameByHandle
-             <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfinalpathnamebyhandlea>
-             or through
              GetFileInformationByHandleEx with argument FileNameInfo
-             <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/nf-winbase-getfileinformationbyhandleex>
-             <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/ns-winbase-_file_name_info>
-             Both require -D_WIN32_WINNT=_WIN32_WINNT_VISTA or higher.  */
+             <https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getfileinformationbyhandleex>
+             <https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-file_name_info>
+             This requires -D_WIN32_WINNT=_WIN32_WINNT_VISTA or higher.  */
           if (info.nFileSizeHigh > 0 || info.nFileSizeLow > 0)
             {
-              char fpath[PATH_MAX];
-              if (path != NULL
-                  || (GetFinalPathNameByHandleFunc != NULL
-                      && GetFinalPathNameByHandleFunc (h, fpath, sizeof (fpath), VOLUME_NAME_NONE)
-                         < sizeof (fpath)
-                      && (path = fpath, 1)))
+              /* Room for the header and for the file name.  */
+              union
+                {
+                  FILE_NAME_INFO info;
+                  char storage[sizeof (FILE_NAME_INFO)
+                               + PATH_MAX * sizeof (WCHAR)];
+                } fni;
+              if (GetFileInformationByHandleExFunc != NULL
+                  && GetFileInformationByHandleExFunc (h, FileNameInfo,
+                                                       &fni.info,
+                                                       sizeof (fni)))
+                {
+                  size_t length = fni.info.FileNameLength / sizeof (WCHAR);
+                  const WCHAR *name = fni.info.FileName;
+                  if (length >= 4 && name[length - 4] == L'.')
+                    {
+                      const WCHAR *suffix = name + length - 3;
+                      if (_wcsnicmp (suffix, L"exe", 3) == 0
+                          || _wcsnicmp (suffix, L"bat", 3) == 0
+                          || _wcsnicmp (suffix, L"cmd", 3) == 0
+                          || _wcsnicmp (suffix, L"com", 3) == 0)
+                        mode |= S_IEXEC_UGO;
+                    }
+                }
+              else if (path != NULL)
                 {
                   const char *last_dot = NULL;
-                  const char *p;
-                  for (p = path; *p != '\0'; p++)
+                  for (const char *p = path; *p != '\0'; p++)
                     if (*p == '.')
                       last_dot = p;
                   if (last_dot != NULL)
@@ -313,12 +309,12 @@ _gl_fstat_by_handle (HANDLE h, const char *path, struct stat *buf)
 
       /* st_nlink can be determined through
          GetFileInformationByHandle
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfileinformationbyhandle>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/ns-fileapi-_by_handle_file_information>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileinformationbyhandle>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-by_handle_file_information>
          or through
          GetFileInformationByHandleEx with argument FileStandardInfo
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/nf-winbase-getfileinformationbyhandleex>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/ns-winbase-_file_standard_info>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getfileinformationbyhandleex>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-file_standard_info>
          The latter requires -D_WIN32_WINNT=_WIN32_WINNT_VISTA or higher.  */
       buf->st_nlink = (info.nNumberOfLinks > SHRT_MAX ? SHRT_MAX : info.nNumberOfLinks);
 
@@ -331,19 +327,19 @@ _gl_fstat_by_handle (HANDLE h, const char *path, struct stat *buf)
 
       /* st_size can be determined through
          GetFileSizeEx
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfilesizeex>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfilesizeex>
          or through
          GetFileAttributesEx
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfileattributesexa>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/ns-fileapi-_win32_file_attribute_data>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileattributesexa>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-win32_file_attribute_data>
          or through
          GetFileInformationByHandle
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfileinformationbyhandle>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/ns-fileapi-_by_handle_file_information>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileinformationbyhandle>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-by_handle_file_information>
          or through
          GetFileInformationByHandleEx with argument FileStandardInfo
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/nf-winbase-getfileinformationbyhandleex>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/ns-winbase-_file_standard_info>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getfileinformationbyhandleex>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-file_standard_info>
          The latter requires -D_WIN32_WINNT=_WIN32_WINNT_VISTA or higher.  */
       if (sizeof (buf->st_size) <= 4)
         /* Range check already done above.  */
@@ -353,19 +349,19 @@ _gl_fstat_by_handle (HANDLE h, const char *path, struct stat *buf)
 
       /* st_atime, st_mtime, st_ctime can be determined through
          GetFileTime
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfiletime>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfiletime>
          or through
          GetFileAttributesEx
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfileattributesexa>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/ns-fileapi-_win32_file_attribute_data>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileattributesexa>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-win32_file_attribute_data>
          or through
          GetFileInformationByHandle
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfileinformationbyhandle>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/ns-fileapi-_by_handle_file_information>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileinformationbyhandle>
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/ns-fileapi-by_handle_file_information>
          or through
          GetFileInformationByHandleEx with argument FileBasicInfo
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/nf-winbase-getfileinformationbyhandleex>
-         <https://docs.microsoft.com/en-us/windows/desktop/api/winbase/ns-winbase-_file_basic_info>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getfileinformationbyhandleex>
+         <https://learn.microsoft.com/en-us/windows/win32/api/winbase/ns-winbase-file_basic_info>
          The latter requires -D_WIN32_WINNT=_WIN32_WINNT_VISTA or higher.  */
 #if _GL_WINDOWS_STAT_TIMESPEC
       buf->st_atim = _gl_convert_FILETIME_to_timespec (&info.ftLastAccessTime);
@@ -395,7 +391,7 @@ _gl_fstat_by_handle (HANDLE h, const char *path, struct stat *buf)
       if (type == FILE_TYPE_PIPE)
         {
           /* PeekNamedPipe
-             <https://msdn.microsoft.com/en-us/library/aa365779.aspx> */
+             <https://learn.microsoft.com/en-us/windows/win32/api/namedpipeapi/nf-namedpipeapi-peeknamedpipe> */
           DWORD bytes_available;
           if (PeekNamedPipe (h, NULL, 0, NULL, &bytes_available, NULL))
             buf->st_size = bytes_available;

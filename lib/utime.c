@@ -1,5 +1,5 @@
 /* Work around platform bugs in utime.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -24,7 +24,6 @@
 #if defined _WIN32 && ! defined __CYGWIN__
 
 # include <errno.h>
-# include <stdbool.h>
 # include <windows.h>
 # include "filename.h"
 # include "malloca.h"
@@ -53,10 +52,8 @@ _gl_utimens_windows (const char *name, struct timespec ts[2])
 
   /* Remove trailing slashes (except the very first one, at position
      drive_prefix_len), but remember their presence.  */
-  size_t rlen;
+  size_t rlen = len;
   bool check_dir = false;
-
-  rlen = len;
   while (rlen > drive_prefix_len && ISSLASH (name[rlen-1]))
     {
       check_dir = true;
@@ -89,8 +86,8 @@ _gl_utimens_windows (const char *name, struct timespec ts[2])
 
   /* Open a handle to the file.
      CreateFile
-     <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-createfilea>
-     <https://docs.microsoft.com/en-us/windows/desktop/FileIO/creating-and-opening-files>  */
+     <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea>
+     <https://learn.microsoft.com/en-us/windows/win32/fileio/creating-and-opening-files>  */
   HANDLE handle =
     CreateFile (rname,
                 FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
@@ -111,7 +108,7 @@ _gl_utimens_windows (const char *name, struct timespec ts[2])
   if (check_dir)
     {
       /* GetFileAttributes
-         <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getfileattributesa>  */
+         <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileattributesa>  */
       DWORD attributes = GetFileAttributes (rname);
       if (attributes == INVALID_FILE_ATTRIBUTES)
         {
@@ -131,18 +128,18 @@ _gl_utimens_windows (const char *name, struct timespec ts[2])
 
   {
     /* Use SetFileTime(). See
-       <https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-setfiletime>
-       <https://docs.microsoft.com/en-us/windows/desktop/api/minwinbase/ns-minwinbase-filetime>  */
+       <https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfiletime>
+       <https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime>  */
     FILETIME last_access_time;
     FILETIME last_write_time;
     if (ts == NULL)
       {
         /* GetSystemTimeAsFileTime is the same as
            GetSystemTime followed by SystemTimeToFileTime.
-           <https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getsystemtimeasfiletime>.
+           <https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemtimeasfiletime>.
            It would be overkill to use
            GetSystemTimePreciseAsFileTime
-           <https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getsystemtimepreciseasfiletime>.  */
+           <https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemtimepreciseasfiletime>.  */
         FILETIME current_time;
         GetSystemTimeAsFileTime (&current_time);
         last_access_time = current_time;

@@ -1,5 +1,5 @@
 /* Extended regular expression matching and search library.
-   Copyright (C) 2002-2022 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Isamu Hasegawa <isamu@yamato.ibm.com>.
 
@@ -387,7 +387,7 @@ build_wcs_upper_buffer (re_string_t *pstr)
 	      {
 		size_t mbcdlen;
 
-		mbcdlen = __wcrtomb ((char *) buf, wcu, &prev_st);
+		mbcdlen = __wcrtomb (buf, wcu, &prev_st);
 		if (__glibc_likely (mbclen == mbcdlen))
 		  memcpy (pstr->mbs + byte_idx, buf, mbclen);
 		else if (mbcdlen != (size_t) -1)
@@ -465,8 +465,8 @@ build_wcs_upper_buffer (re_string_t *pstr)
 	      pstr->offsets[byte_idx] = src_idx;
 	    ++src_idx;
 
-	    /* And also cast it to wide char.  */
-	    pstr->wcs[byte_idx++] = (wchar_t) ch;
+	    /* And also convert it to wide char.  */
+	    pstr->wcs[byte_idx++] = ch;
 	    if (__glibc_unlikely (mbclen == (size_t) -1))
 	      pstr->cur_state = prev_st;
 	  }
@@ -937,8 +937,7 @@ re_node_set_alloc (re_node_set *set, Idx size)
   set->alloc = size;
   set->nelem = 0;
   set->elems = re_malloc (Idx, size);
-  if (__glibc_unlikely (set->elems == NULL)
-      && (MALLOC_0_IS_NONNULL || size != 0))
+  if (__glibc_unlikely (set->elems == NULL))
     return REG_ESPACE;
   return REG_NOERROR;
 }
@@ -1242,8 +1241,8 @@ re_node_set_merge (re_node_set *dest, const re_node_set *src)
 }
 
 /* Insert the new element ELEM to the re_node_set* SET.
-   SET should not already have ELEM.
-   Return true if successful.  */
+   SET is not expected to already contain ELEM, but tolerate
+   duplicates as a no-op.  Return true if successful.  */
 
 static bool
 __attribute_warn_unused_result__
@@ -1286,8 +1285,16 @@ re_node_set_insert (re_node_set *set, Idx elem)
   else
     {
       for (idx = set->nelem; set->elems[idx - 1] > elem; idx--)
-	set->elems[idx] = set->elems[idx - 1];
-      DEBUG_ASSERT (set->elems[idx - 1] < elem);
+        {
+          set->elems[idx] = set->elems[idx - 1];
+          /* Although we already guaranteed that idx is at least 2 here,
+             add an assertion to pacify GCC 16.1.1 -Wanalyzer-out-of-bounds
+             when _REGEX_AVOID_UCHAR_H is defined.  */
+          DEBUG_ASSERT (1 < idx);
+        }
+      /* Already in set.  Return early.  */
+      if (__glibc_unlikely (set->elems[idx - 1] == elem))
+	return true;
     }
 
   /* Insert the new element.  */
@@ -1596,7 +1603,7 @@ create_ci_newstate (const re_dfa_t *dfa, const re_node_set *nodes,
   reg_errcode_t err;
   re_dfastate_t *newstate;
 
-  newstate = (re_dfastate_t *) calloc (sizeof (re_dfastate_t), 1);
+  newstate = (re_dfastate_t *) calloc (1, sizeof (re_dfastate_t));
   if (__glibc_unlikely (newstate == NULL))
     return NULL;
   err = re_node_set_init_copy (&newstate->nodes, nodes);
@@ -1644,7 +1651,7 @@ create_cd_newstate (const re_dfa_t *dfa, const re_node_set *nodes,
   reg_errcode_t err;
   re_dfastate_t *newstate;
 
-  newstate = (re_dfastate_t *) calloc (sizeof (re_dfastate_t), 1);
+  newstate = (re_dfastate_t *) calloc (1, sizeof (re_dfastate_t));
   if (__glibc_unlikely (newstate == NULL))
     return NULL;
   err = re_node_set_init_copy (&newstate->nodes, nodes);

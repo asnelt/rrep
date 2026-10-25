@@ -1,5 +1,5 @@
 /* Create a temporary file.
-   Copyright (C) 2007, 2009-2022 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2009-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -22,7 +22,6 @@
 #include <stdio.h>
 
 #include <errno.h>
-#include <stdbool.h>
 
 #if defined _WIN32 && ! defined __CYGWIN__
 /* A native Windows platform.  */
@@ -75,7 +74,7 @@ supports_delete_on_close ()
       OSVERSIONINFO v;
 
       /* According to
-         <https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getversionexa>
+         <https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getversionexa>
          this structure must be initialized as follows:  */
       v.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
 
@@ -91,13 +90,12 @@ FILE *
 tmpfile (void)
 {
   char dir[PATH_MAX];
-  DWORD retval;
 
   /* Find Windows temporary file directory.
      We provide this as the directory argument to path_search because Windows
      defines P_tmpdir to "\\" and will therefore try to put all temporary files
      in the root directory (unless $TMPDIR is set). */
-  retval = GetTempPath (PATH_MAX, dir);
+  DWORD retval = GetTempPath (PATH_MAX, dir);
   if (retval > 0 && retval < PATH_MAX)
     {
       char xtemplate[PATH_MAX];
@@ -106,8 +104,8 @@ tmpfile (void)
         {
           size_t len = strlen (xtemplate);
           int o_temporary = (supports_delete_on_close () ? _O_TEMPORARY : 0);
-          int fd;
 
+          int fd;
           do
             {
               memcpy (&xtemplate[len - 6], "XXXXXX", 6);
@@ -157,8 +155,6 @@ FILE *
 tmpfile (void)
 {
   char buf[PATH_MAX];
-  int fd;
-  FILE *fp;
 
   /* Try $TMPDIR first, not /tmp nor P_tmpdir, because we need this replacement
      on Android, and /tmp does not exist on Android.  */
@@ -166,7 +162,7 @@ tmpfile (void)
   if (path_search (buf, sizeof buf, NULL, "tmpf", true))
     return NULL;
 
-  fd = gen_tempname (buf, 0, 0, GT_FILE);
+  int fd = gen_tempname (buf, 0, 0, GT_FILE);
   if (fd < 0)
     return NULL;
 
@@ -174,7 +170,8 @@ tmpfile (void)
      a file is not really removed until it is closed.  */
   (void) unlink (buf);
 
-  if ((fp = fdopen (fd, "w+b")) == NULL)
+  FILE *fp = fdopen (fd, "w+b");
+  if (fp == NULL)
     {
       int saved_errno = errno;
       close (fd);

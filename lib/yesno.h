@@ -1,5 +1,5 @@
 /* declare yesno
-   Copyright (C) 2004, 2009-2022 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2009-2026 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -17,8 +17,16 @@
 #ifndef YESNO_H_
 # define YESNO_H_
 
-# include <stdbool.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 bool yesno (void);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

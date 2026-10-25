@@ -1,5 +1,5 @@
 /* Type-safe arrays which grow dynamically.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -167,7 +167,9 @@ struct DYNARRAY_STRUCT
    elements.  Name mangling needed due to the DYNARRAY_ELEMENT_FREE
    macro expansion.  */
 static inline void
-DYNARRAY_NAME (free__elements__) (DYNARRAY_ELEMENT *__dynarray_array,
+DYNARRAY_NAME (free__elements__) (__attribute_maybe_unused__
+                                  DYNARRAY_ELEMENT *__dynarray_array,
+                                  __attribute_maybe_unused__
                                   size_t __dynarray_used)
 {
 #ifdef DYNARRAY_ELEMENT_FREE

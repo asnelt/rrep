@@ -1,5 +1,5 @@
 /* getopt_long and getopt_long_only entry points for GNU getopt.
-   Copyright (C) 1987-2022 Free Software Foundation, Inc.
+   Copyright (C) 1987-2026 Free Software Foundation, Inc.
    This file is part of the GNU C Library and is also part of gnulib.
    Patches to this file should be submitted to both projects.
 
@@ -21,14 +21,22 @@
 # include <config.h>
 #endif
 
-#include "getopt.h"
+#include <getopt.h>
 #include "getopt_int.h"
+
+/* Convert char *__getopt_argv_const * to char ** without provoking
+   gcc -Wuseless-cast when __getopt_argv_const is empty.  */
+#ifdef __getopt_argv_const_is_empty
+# define ARGV_CAST(argv) (argv)
+#else
+# define ARGV_CAST(argv) ((char **) (argv))
+#endif
 
 int
 getopt_long (int argc, char *__getopt_argv_const *argv, const char *options,
 	     const struct option *long_options, int *opt_index)
 {
-  return _getopt_internal (argc, (char **) argv, options, long_options,
+  return _getopt_internal (argc, ARGV_CAST (argv), options, long_options,
 			   opt_index, 0, 0);
 }
 
@@ -51,7 +59,7 @@ getopt_long_only (int argc, char *__getopt_argv_const *argv,
 		  const char *options,
 		  const struct option *long_options, int *opt_index)
 {
-  return _getopt_internal (argc, (char **) argv, options, long_options,
+  return _getopt_internal (argc, ARGV_CAST (argv), options, long_options,
 			   opt_index, 1, 0);
 }
 
@@ -73,7 +81,6 @@ _getopt_long_only_r (int argc, char **argv, const char *options,
 int
 main (int argc, char **argv)
 {
-  int c;
   int digit_optind = 0;
 
   while (1)
@@ -91,8 +98,8 @@ main (int argc, char **argv)
 	{0, 0, 0, 0}
       };
 
-      c = getopt_long (argc, argv, "abc:d:0123456789",
-		       long_options, &option_index);
+      int c = getopt_long (argc, argv, "abc:d:0123456789",
+			   long_options, &option_index);
       if (c == -1)
 	break;
 

@@ -1,5 +1,5 @@
 /* Case-insensitive string comparison function.
-   Copyright (C) 1998-1999, 2005-2022 Free Software Foundation, Inc.
+   Copyright (C) 1998-1999, 2005-2026 Free Software Foundation, Inc.
    Written by Bruno Haible <bruno@clisp.org>, 2005,
    based on earlier glibc code.
 
@@ -23,10 +23,14 @@
 
 #include <ctype.h>
 #include <limits.h>
+#include <stdlib.h>
+#include <uchar.h>
 
-#include "mbuiter.h"
-
-#define TOLOWER(Ch) (isupper (Ch) ? tolower (Ch) : (Ch))
+#if GNULIB_MCEL_PREFER
+# include "mcel.h"
+#else
+# include "mbuiterf.h"
+#endif
 
 /* Compare the character strings S1 and S2, ignoring case, returning less than,
    equal to or greater than zero if S1 is lexicographically less than, equal to
@@ -39,60 +43,72 @@ mbscasecmp (const char *s1, const char *s2)
   if (s1 == s2)
     return 0;
 
+  const char *iter1 = s1;
+  const char *iter2 = s2;
+
   /* Be careful not to look at the entire extent of s1 or s2 until needed.
      This is useful because when two strings differ, the difference is
      most often already in the very few first characters.  */
   if (MB_CUR_MAX > 1)
     {
-      mbui_iterator_t iter1;
-      mbui_iterator_t iter2;
-
-      mbui_init (iter1, s1);
-      mbui_init (iter2, s2);
-
-      while (mbui_avail (iter1) && mbui_avail (iter2))
+#if GNULIB_MCEL_PREFER
+      while (true)
         {
-          int cmp = mb_casecmp (mbui_cur (iter1), mbui_cur (iter2));
+          mcel_t g1 = mcel_scanz (iter1); iter1 += g1.len;
+          mcel_t g2 = mcel_scanz (iter2); iter2 += g2.len;
+          int cmp = mcel_tocmp (c32tolower, g1, g2);
+          if (cmp | !g1.ch)
+            return cmp;
+        }
+#else
+      mbuif_state_t state1;
+      mbuif_init (state1);
+
+      mbuif_state_t state2;
+      mbuif_init (state2);
+
+      while (mbuif_avail (state1, iter1) && mbuif_avail (state2, iter2))
+        {
+          mbchar_t cur1 = mbuif_next (state1, iter1);
+          mbchar_t cur2 = mbuif_next (state2, iter2);
+          int cmp = mb_casecmp (cur1, cur2);
 
           if (cmp != 0)
             return cmp;
 
-          mbui_advance (iter1);
-          mbui_advance (iter2);
+          iter1 += mb_len (cur1);
+          iter2 += mb_len (cur2);
         }
-      if (mbui_avail (iter1))
+      if (mbuif_avail (state1, iter1))
         /* s2 terminated before s1.  */
         return 1;
-      if (mbui_avail (iter2))
+      if (mbuif_avail (state2, iter2))
         /* s1 terminated before s2.  */
         return -1;
       return 0;
+#endif
     }
   else
-    {
-      const unsigned char *p1 = (const unsigned char *) s1;
-      const unsigned char *p2 = (const unsigned char *) s2;
-      unsigned char c1, c2;
-
-      do
-        {
-          c1 = TOLOWER (*p1);
-          c2 = TOLOWER (*p2);
-
-          if (c1 == '\0')
-            break;
-
-          ++p1;
-          ++p2;
-        }
-      while (c1 == c2);
-
-      if (UCHAR_MAX <= INT_MAX)
-        return c1 - c2;
-      else
+    for (;;)
+      {
+        unsigned char c1 = *iter1++;
+        unsigned char c2 = *iter2++;
         /* On machines where 'char' and 'int' are types of the same size, the
            difference of two 'unsigned char' values - including the sign bit -
            doesn't fit in an 'int'.  */
-        return _GL_CMP (c1, c2);
-    }
+        int cmp = UCHAR_MAX <= INT_MAX ? c1 - c2 : _GL_CMP (c1, c2);
+        if (cmp != 0)
+          {
+            c1 = tolower (c1);
+            if (c1 == c2)
+              cmp = 0;
+            else
+              {
+                c2 = tolower (c2);
+                cmp = UCHAR_MAX <= INT_MAX ? c1 - c2 : _GL_CMP (c1, c2);
+              }
+          }
+        if (cmp | !c1)
+          return cmp;
+      }
 }
