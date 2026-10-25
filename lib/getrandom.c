@@ -1,6 +1,6 @@
 /* Obtain a series of random bytes.
 
-   Copyright 2020-2022 Free Software Foundation, Inc.
+   Copyright 2020-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <stdbool.h>
 #include <unistd.h>
 
 #if defined _WIN32 && ! defined __CYGWIN__
@@ -84,6 +83,9 @@ initialize (void)
 # else
 
 #  define BCryptGenRandomFunc BCryptGenRandom
+#  if _GL_GNUC_PREREQ (4, 2)
+#   pragma GCC diagnostic ignored "-Waddress"
+#  endif
 
 # endif
 
@@ -115,7 +117,7 @@ getrandom (void *buffer, size_t length, unsigned int flags)
 {
 #if defined _WIN32 && ! defined __CYGWIN__
   /* BCryptGenRandom, defined in <bcrypt.h>
-     <https://docs.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom>
+     <https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom>
      with the BCRYPT_USE_SYSTEM_PREFERRED_RNG flag
      works in Windows 7 and newer.  */
   static int bcrypt_not_working /* = 0 */;
@@ -134,10 +136,10 @@ getrandom (void *buffer, size_t length, unsigned int flags)
     }
 # if !HAVE_LIB_BCRYPT
   /* CryptGenRandom, defined in <wincrypt.h>
-     <https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom>
+     <https://learn.microsoft.com/en-us/windows/win32/api/wincrypt/nf-wincrypt-cryptgenrandom>
      works in older releases as well, but is now deprecated.
      CryptAcquireContext, defined in <wincrypt.h>
-     <https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/nf-wincrypt-cryptacquirecontexta>  */
+     <https://learn.microsoft.com/en-us/windows/win32/api/wincrypt/nf-wincrypt-cryptacquirecontexta>  */
   {
     static int crypt_initialized /* = 0 */;
     static HCRYPTPROV provider;

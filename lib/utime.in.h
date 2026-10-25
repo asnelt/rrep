@@ -1,5 +1,5 @@
 /* Substitute for and wrapper around <utime.h>.
-   Copyright (C) 2017-2022 Free Software Foundation, Inc.
+   Copyright (C) 2017-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -21,6 +21,13 @@
 #endif
 @PRAGMA_COLUMNS@
 
+/* This file uses #include_next of a system file that defines time_t.
+   For the 'year2038' module to work right, <config.h> needs to have been
+   included before.  */
+#if !_GL_CONFIG_H_INCLUDED
+ #error "Please include config.h first."
+#endif
+
 /* The include_next requires a split double-inclusion guard.  */
 #if @HAVE_UTIME_H@
 # @INCLUDE_NEXT@ @NEXT_UTIME_H@
@@ -28,6 +35,11 @@
 
 #ifndef _@GUARD_PREFIX@_UTIME_H
 #define _@GUARD_PREFIX@_UTIME_H
+
+/* This file uses GNULIB_POSIXCHECK, HAVE_RAW_DECL_*.  */
+#if !_GL_CONFIG_H_INCLUDED
+ #error "Please include config.h first."
+#endif
 
 #if !@HAVE_UTIME_H@
 # include <sys/utime.h>
@@ -59,7 +71,7 @@
 #  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
 #   define utime rpl_utime
 #  endif
-_GL_FUNCDECL_RPL (utime, int, (const char *filename, const struct utimbuf *ts)
+_GL_FUNCDECL_RPL (utime, int, (const char *filename, const struct utimbuf *ts),
                               _GL_ARG_NONNULL ((1)));
 _GL_CXXALIAS_RPL (utime, int, (const char *filename, const struct utimbuf *ts));
 # elif defined _WIN32 && !defined __CYGWIN__
@@ -70,7 +82,7 @@ _GL_CXXALIAS_RPL (utime, int, (const char *filename, const struct utimbuf *ts));
 _GL_CXXALIAS_MDA (utime, int, (const char *filename, const struct utimbuf *ts));
 # else
 #  if !@HAVE_UTIME@
-_GL_FUNCDECL_SYS (utime, int, (const char *filename, const struct utimbuf *ts)
+_GL_FUNCDECL_SYS (utime, int, (const char *filename, const struct utimbuf *ts),
                               _GL_ARG_NONNULL ((1)));
 #  endif
 _GL_CXXALIAS_SYS (utime, int, (const char *filename, const struct utimbuf *ts));
@@ -79,7 +91,6 @@ _GL_CXXALIAS_SYS (utime, int, (const char *filename, const struct utimbuf *ts));
 _GL_CXXALIASWARN (utime);
 # endif
 #elif defined GNULIB_POSIXCHECK
-# undef utime
 # if HAVE_RAW_DECL_UTIME
 _GL_WARN_ON_USE (utime,
                  "utime is unportable - "
@@ -94,7 +105,9 @@ _GL_WARN_ON_USE (utime,
 #   undef utime
 #   define utime _utime
 #  endif
-_GL_CXXALIAS_MDA (utime, int, (const char *filename, const struct utimbuf *ts));
+/* Need to cast, because on MSVC, the second parameter is of type
+   'struct _utimbuf *'.  */
+_GL_CXXALIAS_MDA_CAST (utime, int, (const char *filename, const struct utimbuf *ts));
 # else
 _GL_CXXALIAS_SYS (utime, int, (const char *filename, const struct utimbuf *ts));
 # endif
@@ -104,7 +117,7 @@ _GL_CXXALIASWARN (utime);
 #endif
 
 #if @GNULIB_UTIME@
-extern int _gl_utimens_windows (const char *filename, struct timespec ts[2]);
+_GL_EXTERN_C int _gl_utimens_windows (const char *filename, struct timespec ts[2]);
 #endif
 
 

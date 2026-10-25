@@ -1,6 +1,6 @@
 /* xalloc.h -- malloc with out-of-memory checking
 
-   Copyright (C) 1990-2000, 2003-2004, 2006-2022 Free Software Foundation, Inc.
+   Copyright (C) 1990-2000, 2003-2004, 2006-2026 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -18,18 +18,20 @@
 #ifndef XALLOC_H_
 #define XALLOC_H_
 
+/* This file uses _GL_INLINE_HEADER_BEGIN, _GL_INLINE, _Noreturn,
+   _GL_ATTRIBUTE_ALLOC_SIZE, _GL_ATTRIBUTE_MALLOC,
+   _GL_ATTRIBUTE_RETURNS_NONNULL.  */
+#if !_GL_CONFIG_H_INCLUDED
+ #error "Please include config.h first."
+#endif
+
 #include <stddef.h>
 #include <stdlib.h>
-#include <stdint.h>
 
 #if GNULIB_XALLOC
 # include "idx.h"
-# include "intprops.h"
 #endif
 
-#ifndef _GL_INLINE_HEADER_BEGIN
- #error "Please include config.h first."
-#endif
 _GL_INLINE_HEADER_BEGIN
 #ifndef XALLOC_INLINE
 # define XALLOC_INLINE _GL_INLINE
@@ -48,7 +50,7 @@ extern "C" {
    or by using gnulib's xalloc-die module.  This is the
    function to call when one wants the program to die because of a
    memory allocation failure.  */
-/*extern*/ _Noreturn void xalloc_die (void);
+_Noreturn void xalloc_die (void);
 
 #endif /* GNULIB_XALLOC_DIE */
 
@@ -168,41 +170,41 @@ char *xcharalloc (size_t n)
    without a cast.  Use templates to work around the problem when
    possible.  */
 
-template <typename T> inline T *
-xrealloc (T *p, size_t s)
+template <typename _T_> inline _T_ *
+xrealloc (_T_ *p, size_t s)
 {
-  return (T *) xrealloc ((void *) p, s);
+  return (_T_ *) xrealloc ((void *) p, s);
 }
 
-template <typename T> inline T *
-xreallocarray (T *p, size_t n, size_t s)
+template <typename _T_> inline _T_ *
+xreallocarray (_T_ *p, size_t n, size_t s)
 {
-  return (T *) xreallocarray ((void *) p, n, s);
+  return (_T_ *) xreallocarray ((void *) p, n, s);
 }
 
 /* FIXME: Deprecate this in favor of xreallocarray?  */
-template <typename T> inline T *
-xnrealloc (T *p, size_t n, size_t s)
+template <typename _T_> inline _T_ *
+xnrealloc (_T_ *p, size_t n, size_t s)
 {
   return xreallocarray (p, n, s);
 }
 
-template <typename T> inline T *
-x2realloc (T *p, size_t *pn)
+template <typename _T_> inline _T_ *
+x2realloc (_T_ *p, size_t *pn)
 {
-  return (T *) x2realloc ((void *) p, pn);
+  return (_T_ *) x2realloc ((void *) p, pn);
 }
 
-template <typename T> inline T *
-x2nrealloc (T *p, size_t *pn, size_t s)
+template <typename _T_> inline _T_ *
+x2nrealloc (_T_ *p, size_t *pn, size_t s)
 {
-  return (T *) x2nrealloc ((void *) p, pn, s);
+  return (_T_ *) x2nrealloc ((void *) p, pn, s);
 }
 
-template <typename T> inline T *
-xmemdup (T const *p, size_t s)
+template <typename _T_> inline _T_ *
+xmemdup (_T_ const *p, size_t s)
 {
-  return (T *) xmemdup ((void const *) p, s);
+  return (_T_ *) xmemdup ((void const *) p, s);
 }
 
 #endif /* GNULIB_XALLOC && C++ */

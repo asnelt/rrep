@@ -1,5 +1,5 @@
 /* Extended regular expression matching and search library.
-   Copyright (C) 2002-2022 Free Software Foundation, Inc.
+   Copyright (C) 2002-2026 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Isamu Hasegawa <isamu@yamato.ibm.com>.
 
@@ -27,9 +27,8 @@
 
 #include <langinfo.h>
 #include <locale.h>
-#include <wchar.h>
-#include <wctype.h>
-#include <stdbool.h>
+#include <stdckdint.h>
+#include <stdcountof.h>
 #include <stdint.h>
 
 #ifndef _LIBC
@@ -98,22 +97,14 @@
 #endif
 
 /* This is for other GNU distributions with internationalized messages.  */
-#if (HAVE_LIBINTL_H && ENABLE_NLS) || defined _LIBC
+#ifdef _LIBC
 # include <libintl.h>
-# ifdef _LIBC
-#  undef gettext
-#  define gettext(msgid) \
-  __dcgettext (_libc_intl_domainname, msgid, LC_MESSAGES)
-# endif
-#else
 # undef gettext
-# define gettext(msgid) (msgid)
-#endif
-
-#ifndef gettext_noop
-/* This define is so xgettext can find the internationalizable
-   strings.  */
+# define gettext(msgid) \
+  __dcgettext (_libc_intl_domainname, msgid, LC_MESSAGES)
 # define gettext_noop(String) String
+#else
+# include "gettext.h"
 #endif
 
 /* Number of ASCII characters.  */
@@ -128,22 +119,47 @@
 #define NEWLINE_CHAR '\n'
 #define WIDE_NEWLINE_CHAR L'\n'
 
-/* Rename to standard API for using out of glibc.  */
+/* Use Gnulib <uchar.h> if outside glibc and not avoided by the app.  */
+#if defined _LIBC || defined _REGEX_AVOID_UCHAR_H
+# include <wchar.h>
+# include <wctype.h>
+#else
+# include <uchar.h>
+# undef wctype_t
+# define wchar_t char32_t
+# define wctype_t c32_type_test_t
+#endif
+
 #ifndef _LIBC
 # undef __wctype
 # undef __iswalnum
 # undef __iswctype
 # undef __towlower
 # undef __towupper
-# define __wctype wctype
-# define __iswalnum iswalnum
-# define __iswctype iswctype
-# define __towlower towlower
-# define __towupper towupper
-# define __btowc btowc
-# define __mbrtowc mbrtowc
-# define __wcrtomb wcrtomb
+# undef __btowc
+# undef __mbrtowc
+# undef __wcrtomb
+# undef __regfree
 # define __regfree regfree
+# ifdef _REGEX_AVOID_UCHAR_H
+#  define __wctype wctype
+#  define __iswalnum iswalnum
+#  define __iswctype iswctype
+#  define __towlower towlower
+#  define __towupper towupper
+#  define __btowc btowc
+#  define __mbrtowc mbrtowc
+#  define __wcrtomb wcrtomb
+# else
+#  define __wctype c32_get_type_test
+#  define __iswalnum c32isalnum
+#  define __iswctype c32_apply_type_test
+#  define __towlower c32tolower
+#  define __towupper c32toupper
+#  define __btowc btoc32
+#  define __mbrtowc mbrtoc32
+#  define __wcrtomb c32rtomb
+# endif
 #endif /* not _LIBC */
 
 /* Types related to integers.  Unless protected by #ifdef _LIBC, the
@@ -151,9 +167,6 @@
    as some non-GCC platforms lack them, an issue when this code is
    used in Gnulib.  */
 
-#ifndef SSIZE_MAX
-# define SSIZE_MAX ((ssize_t) (SIZE_MAX / 2))
-#endif
 #ifndef ULONG_WIDTH
 # define ULONG_WIDTH REGEX_UINTEGER_WIDTH (ULONG_MAX)
 /* The number of usable bits in an unsigned integer type with maximum
@@ -182,7 +195,11 @@
    reindenting a lot of regex code that formerly used 'int'.  */
 typedef regoff_t Idx;
 #ifdef _REGEX_LARGE_OFFSETS
-# define IDX_MAX SSIZE_MAX
+# ifdef SSIZE_MAX
+#  define IDX_MAX SSIZE_MAX
+# else
+#  define IDX_MAX ((Idx) ((size_t) -1 / 2))
+# endif
 #else
 # define IDX_MAX INT_MAX
 #endif
@@ -439,12 +456,6 @@ typedef struct re_dfa_t re_dfa_t;
 #define re_string_skip_bytes(pstr,idx) ((pstr)->cur_idx += (idx))
 #define re_string_set_index(pstr,idx) ((pstr)->cur_idx = (idx))
 
-#ifdef _LIBC
-# define MALLOC_0_IS_NONNULL 1
-#elif !defined MALLOC_0_IS_NONNULL
-# define MALLOC_0_IS_NONNULL 0
-#endif
-
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? (b) : (a))
 #endif
@@ -452,7 +463,11 @@ typedef struct re_dfa_t re_dfa_t;
 # define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
-#define re_malloc(t,n) ((t *) malloc ((n) * sizeof (t)))
+#if defined _LIBC || HAVE_MALLOC_0_NONNULL
+# define re_malloc(t,n) ((t *) malloc ((n) * sizeof (t)))
+#else
+# define re_malloc(t,n) ((t *) malloc ((n) * sizeof (t) + ((n) == 0)))
+#endif
 #define re_realloc(p,t,n) ((t *) realloc (p, (n) * sizeof (t)))
 #define re_free(p) free (p)
 
@@ -789,8 +804,8 @@ __attribute__ ((pure, unused))
 re_string_wchar_at (const re_string_t *pstr, Idx idx)
 {
   if (pstr->mb_cur_max == 1)
-    return (wint_t) pstr->mbs[idx];
-  return (wint_t) pstr->wcs[idx];
+    return pstr->mbs[idx];
+  return pstr->wcs[idx];
 }
 
 #ifdef _LIBC
@@ -799,7 +814,8 @@ re_string_wchar_at (const re_string_t *pstr, Idx idx)
 
 static int
 __attribute__ ((pure, unused))
-re_string_elem_size_at (const re_string_t *pstr, Idx idx)
+re_string_elem_size_at (__attribute_maybe_unused__ const re_string_t *pstr,
+			__attribute_maybe_unused__ Idx idx)
 {
 #ifdef _LIBC
   const unsigned char *p, *extra;
@@ -823,7 +839,7 @@ re_string_elem_size_at (const re_string_t *pstr, Idx idx)
 }
 
 #ifdef _LIBC
-# if __GNUC__ >= 7
+# if __glibc_has_attribute (__fallthrough__)
 #  define FALLTHROUGH __attribute__ ((__fallthrough__))
 # else
 #  define FALLTHROUGH ((void) 0)

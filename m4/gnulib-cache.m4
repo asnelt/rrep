@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2022 Free Software Foundation, Inc.
+# Copyright (C) 2002-2026 Free Software Foundation, Inc.
 #
 # This file is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,60 +38,88 @@
 #  --no-libtool \
 #  --macro-prefix=gl \
 #  backupfile \
-#  copy-file \
-#  dirent \
-#  errno \
+#  bool \
+#  dirname-lgpl \
+#  errno-h \
 #  exclude \
-#  fchdir \
+#  fcntl \
 #  fcntl-h \
-#  fnmatch \
+#  fseeko \
+#  fts \
+#  full-write \
 #  getopt-gnu \
 #  gettext-h \
-#  locale \
-#  malloc-gnu \
+#  ignore-value \
+#  intprops \
+#  isatty \
+#  locale-h \
+#  malloc-posix \
+#  mbrlen \
+#  mbrtowc \
+#  mbsstr \
 #  memchr \
+#  openat \
+#  pread \
 #  progname \
-#  propername \
-#  realloc-gnu \
+#  propername-lite \
+#  qcopy-acl \
+#  realloc-posix \
 #  regex \
-#  stdbool \
-#  stdio \
-#  stdlib \
-#  strdup-posix \
-#  string \
-#  sys_stat \
+#  setlocale \
+#  stdio-h \
+#  stdlib-h \
+#  string-h \
+#  sys_stat-h \
 #  tmpfile \
-#  unistd \
+#  unistd-h \
+#  unlinkat \
+#  utimens \
+#  wchar-h \
+#  wctype-h \
 #  yesno
 
 # Specification in the form of a few gnulib-tool.m4 macro invocations:
 gl_LOCAL_DIR([])
 gl_MODULES([
   backupfile
-  copy-file
-  dirent
-  errno
+  bool
+  dirname-lgpl
+  errno-h
   exclude
-  fchdir
+  fcntl
   fcntl-h
-  fnmatch
+  fseeko
+  fts
+  full-write
   getopt-gnu
   gettext-h
-  locale
-  malloc-gnu
+  ignore-value
+  intprops
+  isatty
+  locale-h
+  malloc-posix
+  mbrlen
+  mbrtowc
+  mbsstr
   memchr
+  openat
+  pread
   progname
-  propername
-  realloc-gnu
+  propername-lite
+  qcopy-acl
+  realloc-posix
   regex
-  stdbool
-  stdio
-  stdlib
-  strdup-posix
-  string
-  sys_stat
+  setlocale
+  stdio-h
+  stdlib-h
+  string-h
+  sys_stat-h
   tmpfile
-  unistd
+  unistd-h
+  unlinkat
+  utimens
+  wchar-h
+  wctype-h
   yesno
 ])
 gl_AVOID([])

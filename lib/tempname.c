@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2022 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2026 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -20,7 +20,6 @@
 # include "tempname.h"
 #endif
 
-#include <stdbool.h>
 #include <errno.h>
 
 #include <stdio.h>
@@ -112,9 +111,11 @@ random_bits (random_value *r, random_value s)
   __clock_gettime64 (CLOCK_REALTIME, &tv);
   v = mix_random_values (v, tv.tv_sec);
   v = mix_random_values (v, tv.tv_nsec);
+#else
+  v = mix_random_values (v, clock ());
 #endif
 
-  *r = mix_random_values (v, clock ());
+  *r = v;
   return false;
 }
 
@@ -190,11 +191,7 @@ int
 try_tempname_len (char *tmpl, int suffixlen, void *args,
                   int (*tryfunc) (char *, void *), size_t x_suffix_len)
 {
-  size_t len;
-  char *XXXXXX;
-  unsigned int count;
-  int fd = -1;
-  int save_errno = errno;
+  int saved_errno = errno;
 
   /* A lower bound on the number of temporary files to attempt to
      generate.  The maximum total number of temporary file names that
@@ -226,7 +223,7 @@ try_tempname_len (char *tmpl, int suffixlen, void *args,
   random_value const biased_min
     = RANDOM_VALUE_MAX - RANDOM_VALUE_MAX % BASE_62_POWER;
 
-  len = strlen (tmpl);
+  size_t len = strlen (tmpl);
   if (len < x_suffix_len + suffixlen
       || strspn (&tmpl[len - x_suffix_len - suffixlen], "X") < x_suffix_len)
     {
@@ -235,9 +232,9 @@ try_tempname_len (char *tmpl, int suffixlen, void *args,
     }
 
   /* This is where the Xs start.  */
-  XXXXXX = &tmpl[len - x_suffix_len - suffixlen];
+  char *XXXXXX = &tmpl[len - x_suffix_len - suffixlen];
 
-  for (count = 0; count < attempts; ++count)
+  for (unsigned int count = 0; count < attempts; ++count)
     {
       for (size_t i = 0; i < x_suffix_len; i++)
         {
@@ -256,10 +253,10 @@ try_tempname_len (char *tmpl, int suffixlen, void *args,
           vdigits--;
         }
 
-      fd = tryfunc (tmpl, args);
+      int fd = tryfunc (tmpl, args);
       if (fd >= 0)
         {
-          __set_errno (save_errno);
+          __set_errno (saved_errno);
           return fd;
         }
       else if (errno != EEXIST)

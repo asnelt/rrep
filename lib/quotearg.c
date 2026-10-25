@@ -1,6 +1,6 @@
 /* quotearg.c - quote arguments for output
 
-   Copyright (C) 1998-2002, 2004-2022 Free Software Foundation, Inc.
+   Copyright (C) 1998-2002, 2004-2026 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -17,14 +17,14 @@
 
 /* Written by Paul Eggert <eggert@twinsun.com> */
 
+#include <config.h>
+
 /* Without this pragma, gcc 4.7.0 20111124 mistakenly suggests that
    the quoting_options_from_style function might be candidate for
    attribute 'pure'  */
-#if (__GNUC__ == 4 && 6 <= __GNUC_MINOR__) || 4 < __GNUC__
+#if _GL_GNUC_PREREQ (4, 6)
 # pragma GCC diagnostic ignored "-Wsuggest-attribute=pure"
 #endif
-
-#include <config.h>
 
 #include "quotearg.h"
 #include "quote.h"
@@ -32,28 +32,46 @@
 #include "attribute.h"
 #include "minmax.h"
 #include "xalloc.h"
-#include "c-strcaseeq.h"
-#include "localcharset.h"
 
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wchar.h>
-#include <wctype.h>
 
-#include "gettext.h"
-#define _(msgid) gettext (msgid)
-#define N_(msgid) msgid
+/* Use Gnulib <uchar.h> if not avoided by the app.  Applications
+   defining _QUOTEARG_AVOID_UCHAR_H might avoid the need for Gnulib's
+   c32isprint, mbrtoc32, mbsinit, mbszero, and uchar-h modules.  */
 
-#ifndef SIZE_MAX
-# define SIZE_MAX ((size_t) -1)
+#ifndef _QUOTEARG_AVOID_UCHAR_H
+# include <uchar.h>
+# include <wchar.h>
+#else
+# if !defined __UCLIBC__ || defined __UCLIBC_HAS_WCHAR__
+#  include <wchar.h>
+#  include <wctype.h>
+#  define char32_t wchar_t
+#  define c32isprint iswprint
+# else
+#  define mbrtowc(pwc, s, n, ps) ((size_t) ((*(pwc) = *(s)) ? 1 : 0))
+#  define char32_t unsigned char
+#  define mbstate_t signed char /* Any complete type will do.  */
+#  define c32isprint isprint
+# endif
+# define mbrtoc32 mbrtowc
+# ifndef GNULIB_MBRTOC32_REGULAR
+#  define GNULIB_MBRTOC32_REGULAR 1
+# endif
 #endif
 
-#define INT_BITS (sizeof (int) * CHAR_BIT)
+#if !GNULIB_defined_mbszero
+# define mbszero(ps) (*(mbstate_t *) {(ps)} = (mbstate_t) {0})
+#endif
+
+#include "gettext.h"
+#define _(msgid) dgettext (GNULIB_TEXT_DOMAIN, msgid)
+#define N_(msgid) msgid
 
 struct quoting_options
 {
@@ -65,7 +83,7 @@ struct quoting_options
 
   /* Quote the characters indicated by this bit vector even if the
      quoting style would not normally require them to be quoted.  */
-  unsigned int quote_these_too[(UCHAR_MAX / INT_BITS) + 1];
+  unsigned int quote_these_too[(UCHAR_MAX / UINT_WIDTH) + 1];
 
   /* The left quote for custom_quoting_style.  */
   char const *left_quote;
@@ -87,7 +105,7 @@ char const *const quoting_style_args[] =
   "escape",
   "locale",
   "clocale",
-  0
+  NULL
 };
 
 /* Correspondences to quoting style names.  */
@@ -114,10 +132,10 @@ static struct quoting_options default_quoting_options;
 struct quoting_options *
 clone_quoting_options (struct quoting_options *o)
 {
-  int e = errno;
+  int saved_errno = errno;
   struct quoting_options *p = xmemdup (o ? o : &default_quoting_options,
                                        sizeof *o);
-  errno = e;
+  errno = saved_errno;
   return p;
 }
 
@@ -146,10 +164,10 @@ set_char_quoting (struct quoting_options *o, char c, int i)
 {
   unsigned char uc = c;
   unsigned int *p =
-    (o ? o : &default_quoting_options)->quote_these_too + uc / INT_BITS;
-  int shift = uc % INT_BITS;
-  int r = (*p >> shift) & 1;
-  *p ^= ((i & 1) ^ r) << shift;
+    (o ? o : &default_quoting_options)->quote_these_too + uc / UINT_WIDTH;
+  int shift = uc % UINT_WIDTH;
+  unsigned int r = (*p >> shift) & 1;
+  *p ^= ((i & 1U) ^ r) << shift;
   return r;
 }
 
@@ -160,10 +178,9 @@ set_char_quoting (struct quoting_options *o, char c, int i)
 int
 set_quoting_flags (struct quoting_options *o, int i)
 {
-  int r;
   if (!o)
     o = &default_quoting_options;
-  r = o->flags;
+  int r = o->flags;
   o->flags = i;
   return r;
 }
@@ -200,13 +217,12 @@ static char const *
 gettext_quote (char const *msgid, enum quoting_style s)
 {
   char const *translation = _(msgid);
-  char const *locale_code;
 
   if (translation != msgid)
     return translation;
 
-  /* For UTF-8 and GB-18030, use single quotes U+2018 and U+2019.
-     Here is a list of other locales that include U+2018 and U+2019:
+  /* For UTF-8, use single quotes U+2018 and U+2019.
+     Here is a list of other locale encodings that include U+2018 and U+2019:
 
         ISO-8859-7   0xA1                 KOI8-T       0x91
         CP869        0x8B                 CP874        0x91
@@ -219,15 +235,21 @@ gettext_quote (char const *msgid, enum quoting_style s)
         EUC-JP       0xA1 0xC6            EUC-KR       0xA1 0xAE
         EUC-TW       0xA1 0xE4            BIG5         0xA1 0xA5
         BIG5-HKSCS   0xA1 0xA5            EUC-CN       0xA1 0xAE
-        GBK          0xA1 0xAE            Georgian-PS  0x91
-        PT154        0x91
+        GBK          0xA1 0xAE            GB18030      0xA1 0xAE
+        Georgian-PS  0x91                 PT154        0x91
 
-     None of these is still in wide use; using iconv is overkill.  */
-  locale_code = locale_charset ();
-  if (STRCASEEQ (locale_code, "UTF-8", 'U','T','F','-','8',0,0,0,0))
-    return msgid[0] == '`' ? "\xe2\x80\x98": "\xe2\x80\x99";
-  if (STRCASEEQ (locale_code, "GB18030", 'G','B','1','8','0','3','0',0,0))
-    return msgid[0] == '`' ? "\xa1\ae": "\xa1\xaf";
+     These are not in wide use; using iconv is overkill,
+     and C-locale quotes might be better for these locales anyway.
+
+     If the current encoding is consistent with UTF-8 for U+2018,
+     assume that the locale uses UTF-8.  This is safe in practice,
+     and means we need not use a function like locale_charset that
+     has other dependencies.  */
+  static char const quote[][4] = { "\xe2\x80\x98", "\xe2\x80\x99" };
+  char32_t w;
+  mbstate_t mbs; mbszero (&mbs);
+  if (mbrtoc32 (&w, quote[0], 3, &mbs) == 3 && w == 0x2018)
+    return quote[msgid[0] == '\''];
 
   return (s == clocale_quoting_style ? "\"" : "'");
 }
@@ -253,15 +275,14 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
                           char const *left_quote,
                           char const *right_quote)
 {
-  size_t i;
+  bool unibyte_locale = MB_CUR_MAX == 1;
+
   size_t len = 0;
   size_t orig_buffersize = 0;
-  char const *quote_string = 0;
+  char const *quote_string = NULL;
   size_t quote_string_len = 0;
   bool backslash_escapes = false;
-  bool unibyte_locale = MB_CUR_MAX == 1;
   bool elide_outer_quotes = (flags & QA_ELIDE_OUTER_QUOTES) != 0;
-  bool pending_shell_escape_end = false;
   bool encountered_single_quote = false;
   bool all_c_and_shell_quote_compat = true;
 
@@ -304,7 +325,8 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
       } \
     while (0)
 
- process_input:
+ process_input: ;
+  bool pending_shell_escape_end = false;
 
   switch (quoting_style)
     {
@@ -356,8 +378,8 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
             right_quote = gettext_quote (N_("'"), quoting_style);
           }
         if (!elide_outer_quotes)
-          for (quote_string = left_quote; *quote_string; quote_string++)
-            STORE (*quote_string);
+          for (char const *lq = left_quote; *lq; lq++)
+            STORE (*lq);
         backslash_escapes = true;
         quote_string = right_quote;
         quote_string_len = strlen (quote_string);
@@ -390,10 +412,8 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
       abort ();
     }
 
-  for (i = 0;  ! (argsize == SIZE_MAX ? arg[i] == '\0' : i == argsize);  i++)
+  for (size_t i = 0;  ! (argsize == SIZE_MAX ? arg[i] == '\0' : i == argsize);  i++)
     {
-      unsigned char c;
-      unsigned char esc;
       bool is_right_quote = false;
       bool escaping = false;
       bool c_and_shell_quote_compat = false;
@@ -407,14 +427,14 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
                      and when the quote string is more than 1 byte long.
                      If we do call strlen, save the result.  */
                   ? (argsize = strlen (arg)) : argsize))
-          && memcmp (arg + i, quote_string, quote_string_len) == 0)
+          && memeq (arg + i, quote_string, quote_string_len))
         {
           if (elide_outer_quotes)
             goto force_outer_quoting_style;
           is_right_quote = true;
         }
 
-      c = arg[i];
+      unsigned char c = arg[i];
       switch (c)
         {
         case '\0':
@@ -444,7 +464,7 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
           break;
 
         case '?':
-          switch (quoting_style)
+          switch (+quoting_style)
             {
             case shell_always_quoting_style:
               if (elide_outer_quotes)
@@ -470,50 +490,48 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
                     STORE ('"');
                     STORE ('?');
                     break;
-
-                  default:
-                    break;
                   }
               break;
-
-            default:
-              break;
             }
           break;
 
-        case '\a': esc = 'a'; goto c_escape;
-        case '\b': esc = 'b'; goto c_escape;
-        case '\f': esc = 'f'; goto c_escape;
-        case '\n': esc = 'n'; goto c_and_shell_escape;
-        case '\r': esc = 'r'; goto c_and_shell_escape;
-        case '\t': esc = 't'; goto c_and_shell_escape;
-        case '\v': esc = 'v'; goto c_escape;
-        case '\\': esc = c;
-          /* Never need to escape '\' in shell case.  */
-          if (quoting_style == shell_always_quoting_style)
-            {
-              if (elide_outer_quotes)
-                goto force_outer_quoting_style;
+        {
+          unsigned char esc;
+
+          case '\a': esc = 'a'; goto c_escape;
+          case '\b': esc = 'b'; goto c_escape;
+          case '\f': esc = 'f'; goto c_escape;
+          case '\n': esc = 'n'; goto c_and_shell_escape;
+          case '\r': esc = 'r'; goto c_and_shell_escape;
+          case '\t': esc = 't'; goto c_and_shell_escape;
+          case '\v': esc = 'v'; goto c_escape;
+          case '\\': esc = c;
+            /* Never need to escape '\' in shell case.  */
+            if (quoting_style == shell_always_quoting_style)
+              {
+                if (elide_outer_quotes)
+                  goto force_outer_quoting_style;
+                goto store_c;
+              }
+
+            /* No need to escape the escape if we are trying to elide
+               outer quotes and nothing else is problematic.  */
+            if (backslash_escapes && elide_outer_quotes && quote_string_len)
               goto store_c;
-            }
 
-          /* No need to escape the escape if we are trying to elide
-             outer quotes and nothing else is problematic.  */
-          if (backslash_escapes && elide_outer_quotes && quote_string_len)
-            goto store_c;
-
-        c_and_shell_escape:
-          if (quoting_style == shell_always_quoting_style
-              && elide_outer_quotes)
-            goto force_outer_quoting_style;
-          /* fall through */
-        c_escape:
-          if (backslash_escapes)
-            {
-              c = esc;
-              goto store_escape;
-            }
-          break;
+          c_and_shell_escape:
+            if (quoting_style == shell_always_quoting_style
+                && elide_outer_quotes)
+              goto force_outer_quoting_style;
+            /* fall through */
+          c_escape:
+            if (backslash_escapes)
+              {
+                c = esc;
+                goto store_escape;
+              }
+            break;
+        }
 
         case '{': case '}': /* sometimes special if isolated */
           if (! (argsize == SIZE_MAX ? arg[1] == '\0' : argsize == 1))
@@ -532,12 +550,9 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
         case '<':
         case '=': /* sometimes special in 0th or (with "set -k") later args */
         case '>': case '[':
-        case '^': /* special in old /bin/sh, e.g. SunOS 4.1.4 */
+        case '^': /* special in old /bin/sh, e.g., Solaris 10 */
         case '`': case '|':
-          /* A shell special character.  In theory, '$' and '`' could
-             be the first bytes of multibyte characters, which means
-             we should check them with mbrtowc, but in practice this
-             doesn't happen so it's not worth worrying about.  */
+          /* A shell special character.  */
           if (quoting_style == shell_always_quoting_style
               && elide_outer_quotes)
             goto force_outer_quoting_style;
@@ -611,19 +626,18 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
               }
             else
               {
-                mbstate_t mbstate;
-                memset (&mbstate, 0, sizeof mbstate);
+                mbstate_t mbs; mbszero (&mbs);
 
                 m = 0;
                 printable = true;
                 if (argsize == SIZE_MAX)
                   argsize = strlen (arg);
 
-                do
+                for (;;)
                   {
-                    wchar_t w;
-                    size_t bytes = mbrtowc (&w, &arg[i + m],
-                                            argsize - (i + m), &mbstate);
+                    char32_t w;
+                    size_t bytes = mbrtoc32 (&w, &arg[i + m],
+                                             argsize - (i + m), &mbs);
                     if (bytes == 0)
                       break;
                     else if (bytes == (size_t) -1)
@@ -640,6 +654,10 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
                       }
                     else
                       {
+                        #if !GNULIB_MBRTOC32_REGULAR
+                        if (bytes == (size_t) -3)
+                          bytes = 0;
+                        #endif
                         /* Work around a bug with older shells that "see" a '\'
                            that is really the 2nd byte of a multibyte character.
                            In practice the problem is limited to ASCII
@@ -647,25 +665,24 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
                         if ('[' == 0x5b && elide_outer_quotes
                             && quoting_style == shell_always_quoting_style)
                           {
-                            size_t j;
-                            for (j = 1; j < bytes; j++)
+                            for (size_t j = 1; j < bytes; j++)
                               switch (arg[i + m + j])
                                 {
                                 case '[': case '\\': case '^':
                                 case '`': case '|':
                                   goto force_outer_quoting_style;
-
-                                default:
-                                  break;
                                 }
                           }
 
-                        if (! iswprint (w))
+                        if (! c32isprint (w))
                           printable = false;
                         m += bytes;
                       }
+                    #if !GNULIB_MBRTOC32_REGULAR
+                    if (mbsinit (&mbs))
+                    #endif
+                      break;
                   }
-                while (! mbsinit (&mbstate));
               }
 
             c_and_shell_quote_compat = printable;
@@ -705,7 +722,7 @@ quotearg_buffer_restyled (char *buffer, size_t buffersize,
       if (! (((backslash_escapes && quoting_style != shell_always_quoting_style)
               || elide_outer_quotes)
              && quote_these_too
-             && quote_these_too[c / INT_BITS] >> (c % INT_BITS) & 1)
+             && quote_these_too[c / UINT_WIDTH] >> (c % UINT_WIDTH) & 1)
           && !is_right_quote)
         goto store_c;
 
@@ -779,11 +796,11 @@ quotearg_buffer (char *buffer, size_t buffersize,
                  struct quoting_options const *o)
 {
   struct quoting_options const *p = o ? o : &default_quoting_options;
-  int e = errno;
+  int saved_errno = errno;
   size_t r = quotearg_buffer_restyled (buffer, buffersize, arg, argsize,
                                        p->style, p->flags, p->quote_these_too,
                                        p->left_quote, p->right_quote);
-  errno = e;
+  errno = saved_errno;
   return r;
 }
 
@@ -805,10 +822,10 @@ quotearg_alloc_mem (char const *arg, size_t argsize, size_t *size,
                     struct quoting_options const *o)
 {
   struct quoting_options const *p = o ? o : &default_quoting_options;
-  int e = errno;
+  int saved_errno = errno;
   /* Elide embedded null bytes if we can't return a size.  */
   int flags = p->flags | (size ? 0 : QA_ELIDE_NULL_BYTES);
-  size_t bufsize = quotearg_buffer_restyled (0, 0, arg, argsize, p->style,
+  size_t bufsize = quotearg_buffer_restyled (NULL, 0, arg, argsize, p->style,
                                              flags, p->quote_these_too,
                                              p->left_quote,
                                              p->right_quote) + 1;
@@ -816,7 +833,7 @@ quotearg_alloc_mem (char const *arg, size_t argsize, size_t *size,
   quotearg_buffer_restyled (buf, bufsize, arg, argsize, p->style, flags,
                             p->quote_these_too,
                             p->left_quote, p->right_quote);
-  errno = e;
+  errno = saved_errno;
   if (size)
     *size = bufsize - 1;
   return buf;
@@ -840,8 +857,7 @@ void
 quotearg_free (void)
 {
   struct slotvec *sv = slotvec;
-  int i;
-  for (i = 1; i < nslots; i++)
+  for (int i = 1; i < nslots; i++)
     free (sv[i].val);
   if (sv[0].val != slot0)
     {
@@ -870,7 +886,7 @@ static char *
 quotearg_n_options (int n, char const *arg, size_t argsize,
                     struct quoting_options const *options)
 {
-  int e = errno;
+  int saved_errno = errno;
 
   struct slotvec *sv = slotvec;
 
@@ -914,7 +930,7 @@ quotearg_n_options (int n, char const *arg, size_t argsize,
                                   options->right_quote);
       }
 
-    errno = e;
+    errno = saved_errno;
     return val;
   }
 }

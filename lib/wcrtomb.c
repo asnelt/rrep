@@ -1,5 +1,5 @@
 /* Convert wide character to multibyte character.
-   Copyright (C) 2008-2022 Free Software Foundation, Inc.
+   Copyright (C) 2008-2026 Free Software Foundation, Inc.
    Written by Bruno Haible <bruno@clisp.org>, 2008.
 
    This file is free software: you can redistribute it and/or modify
@@ -23,22 +23,28 @@
 #include <errno.h>
 #include <stdlib.h>
 
+#if MBRTOWC_IN_C_LOCALE_MAYBE_EILSEQ
+# include "hard-locale.h"
+# include <locale.h>
+#endif
+
 
 size_t
 wcrtomb (char *s, wchar_t wc, mbstate_t *ps)
 #undef wcrtomb
 {
   /* This implementation of wcrtomb supports only stateless encodings.
-     ps must be in the initial state.  */
+     ps must be in an initial state.  */
   if (ps != NULL && !mbsinit (ps))
     {
       errno = EINVAL;
       return (size_t)(-1);
     }
 
-#if !HAVE_WCRTOMB                       /* IRIX 6.5 */ \
+#if !HAVE_WCRTOMB                       /* HP-UX 11.00, mingw */ \
     || WCRTOMB_RETVAL_BUG               /* Solaris 11.3, MSVC */ \
-    || WCRTOMB_C_LOCALE_BUG             /* Android */
+    || WCRTOMB_C_LOCALE_BUG             /* Android */ \
+    || MBRTOWC_IN_C_LOCALE_MAYBE_EILSEQ /* glibc, Cygwin < 3.5 */
   if (s == NULL)
     /* We know the NUL wide character corresponds to the NUL character.  */
     return 1;
@@ -60,12 +66,21 @@ wcrtomb (char *s, wchar_t wc, mbstate_t *ps)
           return (size_t)(-1);
         }
 # else
+#  if MBRTOWC_IN_C_LOCALE_MAYBE_EILSEQ  /* glibc, Cygwin < 3.5 */
+      /* Implement consistently with mbrtowc(): through a 1:1 correspondence,
+         mapping 0xDF80..0xDFFF back to 0x80..0xFF.  */
+      if (wc >= 0xDF80 && wc <= 0xDFFF && ! hard_locale (LC_CTYPE))
+        {
+          *s = (unsigned char) (wc - 0xDF00);
+          return 1;
+        }
+#  endif
       return wcrtomb (s, wc, ps);
 # endif
-#else                                   /* IRIX 6.5 */
+#else                                   /* HP-UX 11.00, mingw */
       /* Fallback for platforms that don't have wcrtomb().
          Implement on top of wctomb().
-         This code is not multithread-safe.  */
+         This code is not thread-safe.  */
       int ret = wctomb (s, wc);
 
       if (ret >= 0)

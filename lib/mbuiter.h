@@ -1,5 +1,5 @@
 /* Iterating through multibyte strings: macros for multi-byte encodings.
-   Copyright (C) 2001, 2005, 2007, 2009-2022 Free Software Foundation, Inc.
+   Copyright (C) 2001, 2005, 2007, 2009-2026 Free Software Foundation, Inc.
 
    This file is free software: you can redistribute it and/or modify
    it under the terms of the GNU Lesser General Public License as
@@ -89,35 +89,53 @@
 #ifndef _MBUITER_H
 #define _MBUITER_H 1
 
+/* This file uses _GL_INLINE_HEADER_BEGIN, _GL_INLINE,
+   _GL_ATTRIBUTE_ALWAYS_INLINE.  */
+#if !_GL_CONFIG_H_INCLUDED
+ #error "Please include config.h first."
+#endif
+
 #include <assert.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <uchar.h>
 #include <wchar.h>
 
 #include "mbchar.h"
+#include "mbiter-aux.h"
 #include "strnlen1.h"
 
-#ifndef _GL_INLINE_HEADER_BEGIN
- #error "Please include config.h first."
-#endif
 _GL_INLINE_HEADER_BEGIN
 #ifndef MBUITER_INLINE
-# define MBUITER_INLINE _GL_INLINE
+# define MBUITER_INLINE _GL_INLINE _GL_ATTRIBUTE_ALWAYS_INLINE
 #endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 struct mbuiter_multi
 {
+  #if !GNULIB_MBRTOC32_REGULAR
   bool in_shift;        /* true if next byte may not be interpreted as ASCII */
+                        /* If GNULIB_MBRTOC32_REGULAR, it is always false,
+                           so optimize it away.  */
+  #endif
   mbstate_t state;      /* if in_shift: current shift state */
+                        /* If GNULIB_MBRTOC32_REGULAR, it is in an initial state
+                           before and after every mbuiter_multi_next invocation.
+                         */
   bool next_done;       /* true if mbui_avail has already filled the following */
+  unsigned int cur_max; /* A cache of MB_CUR_MAX.  */
+  int is_utf8;          /* A cache of mbiter_is_utf8.  */
   struct mbchar cur;    /* the current character:
-        const char *cur.ptr             pointer to current character
+        const char *cur.ptr          pointer to current character
         The following are only valid after mbui_avail.
-        size_t cur.bytes                number of bytes of current character
-        bool cur.wc_valid               true if wc is a valid wide character
-        wchar_t cur.wc                  if wc_valid: the current character
+        size_t cur.bytes             number of bytes of current character
+        bool cur.wc_valid            true if wc is a valid 32-bit wide character
+        char32_t cur.wc              if wc_valid: the current character
         */
 };
 
@@ -126,14 +144,19 @@ mbuiter_multi_next (struct mbuiter_multi *iter)
 {
   if (iter->next_done)
     return;
+  #if !GNULIB_MBRTOC32_REGULAR
   if (iter->in_shift)
     goto with_shift;
+  #endif
   /* Handle most ASCII characters quickly, without calling mbrtowc().  */
   if (is_basic (*iter->cur.ptr))
     {
-      /* These characters are part of the basic character set.  ISO C 99
-         guarantees that their wide character code is identical to their
-         char code.  */
+      /* These characters are part of the POSIX portable character set.
+         For most of them, namely those in the ISO C basic character set,
+         ISO C 99 guarantees that their wide character code is identical to
+         their char code.  For the few other ones, this is the case as well,
+         in all locale encodings that are in use.  The 32-bit wide character
+         code is the same as well.  */
       iter->cur.bytes = 1;
       iter->cur.wc = *iter->cur.ptr;
       iter->cur.wc_valid = true;
@@ -141,18 +164,26 @@ mbuiter_multi_next (struct mbuiter_multi *iter)
   else
     {
       assert (mbsinit (&iter->state));
+      #if !GNULIB_MBRTOC32_REGULAR
       iter->in_shift = true;
-    with_shift:
-      iter->cur.bytes = mbrtowc (&iter->cur.wc, iter->cur.ptr,
-                                 strnlen1 (iter->cur.ptr, MB_CUR_MAX),
-                                 &iter->state);
+    with_shift:;
+      #endif
+      size_t avail_bytes = strnlen1 (iter->cur.ptr, iter->cur_max);
+      iter->cur.bytes = mbrtoc32 (&iter->cur.wc, iter->cur.ptr, avail_bytes,
+                                  &iter->state);
       if (iter->cur.bytes == (size_t) -1)
         {
           /* An invalid multibyte sequence was encountered.  */
-          iter->cur.bytes = 1;
+          iter->cur.bytes =
+            (mbiter_is_utf8 (&iter->is_utf8)
+             ? mbiter_utf8_maximal_subpart (iter->cur.ptr, avail_bytes)
+             : 1);
           iter->cur.wc_valid = false;
-          /* Whether to set iter->in_shift = false and reset iter->state
-             or not is not very important; the string is bogus anyway.  */
+          /* Allow the next invocation to continue from a sane state.  */
+          #if !GNULIB_MBRTOC32_REGULAR
+          iter->in_shift = false;
+          #endif
+          mbszero (&iter->state);
         }
       else if (iter->cur.bytes == (size_t) -2)
         {
@@ -171,12 +202,20 @@ mbuiter_multi_next (struct mbuiter_multi *iter)
               assert (*iter->cur.ptr == '\0');
               assert (iter->cur.wc == 0);
             }
+          #if !GNULIB_MBRTOC32_REGULAR
+          else if (iter->cur.bytes == (size_t) -3)
+            /* The previous multibyte sequence produced an additional 32-bit
+               wide character.  */
+            iter->cur.bytes = 0;
+          #endif
           iter->cur.wc_valid = true;
 
-          /* When in the initial state, we can go back treating ASCII
+          /* When in an initial state, we can go back treating ASCII
              characters more quickly.  */
+          #if !GNULIB_MBRTOC32_REGULAR
           if (mbsinit (&iter->state))
             iter->in_shift = false;
+          #endif
         }
     }
   iter->next_done = true;
@@ -191,20 +230,33 @@ mbuiter_multi_reloc (struct mbuiter_multi *iter, ptrdiff_t ptrdiff)
 MBUITER_INLINE void
 mbuiter_multi_copy (struct mbuiter_multi *new_iter, const struct mbuiter_multi *old_iter)
 {
+  #if !GNULIB_MBRTOC32_REGULAR
   if ((new_iter->in_shift = old_iter->in_shift))
     memcpy (&new_iter->state, &old_iter->state, sizeof (mbstate_t));
   else
-    memset (&new_iter->state, 0, sizeof (mbstate_t));
+  #endif
+    mbszero (&new_iter->state);
   new_iter->next_done = old_iter->next_done;
+  new_iter->cur_max = old_iter->cur_max;
   mb_copy (&new_iter->cur, &old_iter->cur);
 }
 
 /* Iteration macros.  */
 typedef struct mbuiter_multi mbui_iterator_t;
+#if !GNULIB_MBRTOC32_REGULAR
 #define mbui_init(iter, startptr) \
   ((iter).cur.ptr = (startptr), \
-   (iter).in_shift = false, memset (&(iter).state, '\0', sizeof (mbstate_t)), \
-   (iter).next_done = false)
+   (iter).in_shift = false, mbszero (&(iter).state), \
+   (iter).next_done = false, \
+   (iter).cur_max = MB_CUR_MAX, (iter).is_utf8 = -1)
+#else
+/* Optimized: no in_shift.  */
+#define mbui_init(iter, startptr) \
+  ((iter).cur.ptr = (startptr), \
+   mbszero (&(iter).state), \
+   (iter).next_done = false, \
+   (iter).cur_max = MB_CUR_MAX, (iter).is_utf8 = -1)
+#endif
 #define mbui_avail(iter) \
   (mbuiter_multi_next (&(iter)), !mb_isnul ((iter).cur))
 #define mbui_advance(iter) \
@@ -219,6 +271,11 @@ typedef struct mbuiter_multi mbui_iterator_t;
 
 /* Copying an iterator.  */
 #define mbui_copy mbuiter_multi_copy
+
+
+#ifdef __cplusplus
+}
+#endif
 
 _GL_INLINE_HEADER_END
 
