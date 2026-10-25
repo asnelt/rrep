@@ -259,6 +259,9 @@ rrep_error (const int errcode, const char *file_name)
                program_name, file_name);
       print_errno (saved_errno);
       break;
+    case ERR_LINE_LEN:
+      fprintf (stderr, _("%s: %s: line too long\n"), program_name, file_name);
+      break;
     case ERR_WRITE_FILE:
       fprintf (stderr, _("%s: %s: could not write file: "),
                program_name, file_name);

@@ -20,9 +20,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "intprops.h"
 #include "rrep.h"
 #include "messages.h"
 #include "bufferio.h"
+
+#define MAX_LINE_LEN ((size_t) TYPE_MAXIMUM (regoff_t))
 
 /* Pointer to buffer.  */
 char *buffer = NULL;
@@ -126,6 +129,11 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
             }
           else
             {
+              if (buffer_size - 1 > MAX_LINE_LEN)
+                {
+                  rrep_error (ERR_LINE_LEN, file_name);
+                  return FAILURE;
+                }
               /* Reallocate memory.  */
               tmp = realloc (buffer, 2 * buffer_size);
               if (tmp == NULL)
@@ -154,6 +162,11 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
         }
     }
 
+  if (search_pos - start > MAX_LINE_LEN)
+    {
+      rrep_error (ERR_LINE_LEN, file_name);
+      return FAILURE;
+    }
   /* Set pointer to line.  */
   *line = buffer + start;
   /* Temporarily replace character after line to generate a terminated
