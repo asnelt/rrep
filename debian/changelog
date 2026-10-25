@@ -1,3 +1,21 @@
+rrep (1.4.0-1) unstable; urgency=low
+
+  * New upstream release.
+  * Updated copyright for the changed gnulib modules and build files.
+  * Updated Standards-Version to 4.7.4.
+  * Updated debhelper-compat-version to 14 and activated the single-binary
+    addon explicitly.
+  * Removed redundant debhelper Build-Depends, Priority and Rules-Requires-Root
+    fields.
+  * Removed unnecessary autoreconf argument to dh.
+  * Moved upstream from SourceForge to sourcehut and updated Homepage, Vcs-*,
+    copyright Source and upstream metadata accordingly.
+  * Updated watch-file-standard to 5 and switched to sourcehut release
+    artifacts.
+  * Added lintian override for generated gperf data.
+
+ -- Arno Onken <asnelt@asnelt.org>  Sun, 25 Oct 2026 22:20:11 +0000
+
 rrep (1.3.7-1) unstable; urgency=low
 
   * New upstream release.

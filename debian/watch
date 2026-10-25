@@ -1,2 +1,7 @@
-version=4
-opts=pgpsigurlmangle=s/$/.asc/ http://sf.net/rrep/rrep-(\d\.\d\.\d)\.(?:zip|tgz|tbz|txz|(?:tar\.(?:gz|bz2|xz)))
+Version: 5
+
+Source: https://git.sr.ht/~asnelt/rrep/refs
+Matching-Pattern: .*/refs/upstream/@ANY_VERSION@
+Download-Url-Mangle: s%/refs/upstream/([^/]+)$%/refs/download/upstream/$1/rrep-$1.tar.gz%
+Filename-Mangle: s%.*/upstream/([^/]+)$%rrep-$1.tar.gz%
+Pgp-Sig-Url-Mangle: s/$/.asc/

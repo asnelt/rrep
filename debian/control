@@ -1,14 +1,12 @@
 Source: rrep
 Section: utils
-Priority: optional
 Maintainer: Arno Onken <asnelt@asnelt.org>
-Build-Depends: debhelper (>= 13), debhelper-compat (= 13), gettext,
+Build-Depends: debhelper-compat (= 14), dh-sequence-single-binary, gettext,
  libacl1-dev, texinfo
-Rules-Requires-Root: no
-Standards-Version: 4.6.1
-Homepage: https://sourceforge.net/projects/rrep/
-Vcs-Git: https://git.code.sf.net/p/rrep/code -b debian
-Vcs-Browser: https://sourceforge.net/p/rrep/code/
+Standards-Version: 4.7.4
+Homepage: https://sr.ht/~asnelt/rrep/
+Vcs-Git: https://git.sr.ht/~asnelt/rrep -b debian/latest
+Vcs-Browser: https://git.sr.ht/~asnelt/rrep/tree/debian/latest
 
 Package: rrep
 Architecture: any
