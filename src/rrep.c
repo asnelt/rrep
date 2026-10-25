@@ -140,7 +140,10 @@ write_string (FILE *fp, const char *string, const size_t string_len,
     {
       if (fwrite (string, sizeof (char), string_len, fp) != string_len)
         {
-          rrep_error (ERR_WRITE_FILE, file_name);
+          if (fp == stdout)
+            rrep_error (ERR_WRITE_FILE, file_name);
+          else
+            rrep_error (ERR_WRITE_TEMP, file_name);
           return FAILURE;
         }
     }
@@ -454,7 +457,8 @@ process_file (int dir_fd, const char *file, const char *file_name,
   struct timespec times[2]; /* File times.  */
   FILE *fp, *tmp;
   char *line;
-  size_t line_len, file_len, line_num;
+  size_t line_num, line_len, file_len;
+  off_t new_len; /* New file len.  */
   off_t lo; /* Line offset.  */
   regmatch_t match[10]; /* Matched regular expression.  */
   mbstate_t start_state; /* Multibyte state at start.  */
@@ -665,7 +669,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
             }
         }
 
-      if (fseeko (fp, lo, SEEK_SET) != 0 || ftruncate (fd, lo) < 0)
+      if (fseeko (fp, lo, SEEK_SET) != 0)
         {
           rrep_error (ERR_OVERWRITE, file_name);
           fclose (fp);
@@ -673,6 +677,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
             fclose (tmp);
           return FAILURE;
         }
+      new_len = lo;
       if (tmp == NULL)
         {
           /* Use file_buffer.  */
@@ -683,6 +688,7 @@ process_file (int dir_fd, const char *file, const char *file_name,
               fclose (fp);
               return FAILURE;
             }
+          new_len += file_len;
         }
       else
         {
@@ -707,12 +713,13 @@ process_file (int dir_fd, const char *file, const char *file_name,
                   fclose (tmp);
                   return FAILURE;
                 }
+              new_len += line_len;
             }
           fclose (tmp);
         }
 
-      /* File modified, so flush before restoring times.  */
-      if (fflush (fp) != 0)
+      /* File modified, so flush before truncating and restoring times.  */
+      if (fflush (fp) != 0 || ftruncate (fd, new_len) < 0)
         {
           rrep_error (ERR_OVERWRITE, file_name);
           restore_file_times (fd, file_name, times);
