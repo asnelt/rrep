@@ -190,6 +190,9 @@ append_verbose (const char *string, const size_t string_len,
   char *tmp;
   size_t new_size;
 
+  if (string_len == 0)
+    return SUCCESS;
+
   if (verbose_buffer_size - verbose_buffer_fill < string_len)
     {
       /* Reallocate memory.  */
