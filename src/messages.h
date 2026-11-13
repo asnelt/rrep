@@ -28,7 +28,7 @@ enum
   ERR_PROCESS_DIR, /* Could not process a directory.  */
   ERR_RECURSION, /* Could not traverse file hierarchy.  */
   ERR_DIR_NO_RECURSION, /* Directory as argument without recursion.  */
-  ERR_STDIN_WITH_FILES, /* Standard in as argument with other files.  */
+  ERR_STDIN_WITH_FILES, /* Standard input as argument with other files.  */
   ERR_PATTERN, /* Error in PATTERN.  */
   ERR_UNKNOWN_ESCAPE, /* Unknown escape sequence encountered.  */
   ERR_INVALID_REFERENCE, /* Invalid reference in REPLACEMENT.  */

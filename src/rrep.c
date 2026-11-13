@@ -46,7 +46,7 @@
 
 #define _(string) gettext (string)
 
-static char const short_options[] = "EFrRS:Vabe:hip:qsvwx";
+static const char short_options[] = "EFrRS:Vabe:hip:qsvwx";
 
 /* Long options that have no equivalent short option.  */
 enum
@@ -56,13 +56,12 @@ enum
   EXCLUDE_DIR_OPTION,
   BINARY_OPTION,
   DRY_RUN_OPTION,
-  KEEP_TIMES_OPTION,
   INTERACTIVE_OPTION,
+  KEEP_TIMES_OPTION,
 };
 
 /* Long options equivalences.  */
-static struct option const long_options[] =
-{
+static const struct option long_options[] = {
   {"extended-regexp", no_argument, NULL, 'E'},
   {"fixed-strings", no_argument, NULL, 'F'},
   {"recursive", no_argument, NULL, 'r'},
@@ -79,9 +78,9 @@ static struct option const long_options[] =
   {"regexp", required_argument, NULL, 'e'},
   {"help", no_argument, NULL, 'h'},
   {"ignore-case", no_argument, NULL, 'i'},
+  {"interactive", no_argument, NULL, INTERACTIVE_OPTION},
   {"keep-times", no_argument, NULL, KEEP_TIMES_OPTION},
   {"replace-with", required_argument, NULL, 'p'},
-  {"interactive", no_argument, NULL, INTERACTIVE_OPTION},
   {"quiet", no_argument, NULL, 'q'},
   {"silent", no_argument, NULL, 'q'},
   {"no-messages", no_argument, NULL, 's'},
@@ -129,7 +128,7 @@ write_string (FILE *fp, const char *string, const size_t string_len,
               return FAILURE;
             }
           /* Reallocate memory.  */
-          tmp = realloc (file_buffer, 2 * file_buffer_size);
+          tmp = (char *) realloc (file_buffer, 2 * file_buffer_size);
           if (tmp == NULL)
             {
               rrep_error (ERR_REALLOC_FILEBUFFER, file_name);
@@ -968,8 +967,7 @@ process_file_list (char **file_list, pattern_t *pattern,
         case FTS_D: /* Directory visited in preorder.  */
           if (ent->fts_level == FTS_ROOTLEVEL)
             {
-              if (!check_patterns (ent->fts_path,
-                                   excluded_directory_patterns))
+              if (!check_patterns (ent->fts_path, excluded_directory_patterns))
                 {
                   fts_set (fts, ent, FTS_SKIP);
                   break;
@@ -983,8 +981,7 @@ process_file_list (char **file_list, pattern_t *pattern,
                 }
             }
           else if (!(options & OPT_RECURSIVE)
-                   || !check_name (ent->fts_name,
-                                   excluded_directory_patterns))
+                   || !check_name (ent->fts_name, excluded_directory_patterns))
             {
               fts_set (fts, ent, FTS_SKIP);
               break;
@@ -1216,6 +1213,10 @@ main (int argc, char **argv)
           cflags |= REG_ICASE;
           break;
 
+        case INTERACTIVE_OPTION:
+          options |= OPT_PROMPT;
+          break;
+
         case KEEP_TIMES_OPTION:
           options |= OPT_KEEP_TIMES;
           break;
@@ -1228,10 +1229,6 @@ main (int argc, char **argv)
             }
           else
             replacement_string = optarg;
-          break;
-
-        case INTERACTIVE_OPTION:
-          options |= OPT_PROMPT;
           break;
 
         case 'q':
@@ -1309,8 +1306,7 @@ main (int argc, char **argv)
     {
       print_invocation ();
       free_included_excluded_patterns ();
-      if (file_list != NULL)
-        free (file_list);
+      free (file_list);
       return EXIT_FAILURE;
     }
 
@@ -1333,8 +1329,7 @@ main (int argc, char **argv)
     {
       rrep_error (ERR_ALLOC_BUFFER, NULL);
       free_included_excluded_patterns ();
-      if (file_list != NULL)
-        free (file_list);
+      free (file_list);
       return EXIT_FAILURE;
     }
   buffer_size = INIT_BUFFER_SIZE;
@@ -1343,10 +1338,8 @@ main (int argc, char **argv)
   if (parse_pattern (pattern_string, &pattern, cflags) == FAILURE)
     {
       free_included_excluded_patterns ();
-      if (file_list != NULL)
-        free (file_list);
-      if (buffer != NULL)
-        free (buffer);
+      free (file_list);
+      free (buffer);
       return EXIT_FAILURE;
     }
 
@@ -1357,10 +1350,8 @@ main (int argc, char **argv)
       free_included_excluded_patterns ();
       free_replace (&replacement);
       free_pattern (&pattern);
-      if (file_list != NULL)
-        free (file_list);
-      if (buffer != NULL)
-        free (buffer);
+      free (file_list);
+      free (buffer);
       return EXIT_FAILURE;
     }
 
@@ -1386,14 +1377,10 @@ main (int argc, char **argv)
   free_included_excluded_patterns ();
   free_replace (&replacement);
   free_pattern (&pattern);
-  if (verbose_buffer != NULL)
-    free (verbose_buffer);
-  if (file_buffer != NULL)
-    free (file_buffer);
-  if (buffer != NULL)
-    free (buffer);
-  if (file_list != NULL)
-    free (file_list);
+  free (verbose_buffer);
+  free (file_buffer);
+  free (buffer);
+  free (file_list);
 
   if (failure_flag)
     return EXIT_FAILURE;

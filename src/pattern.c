@@ -73,7 +73,7 @@ check_word_part (const char *pos, mbstate_t *ps)
   return iswalnum ((wint_t) wc) || wc == L'_';
 }
 
-/* Check if the character at position start is the beginning of a word.  */
+/* Checks if the character at position start is the beginning of a word.  */
 static bool
 check_word_start (const char *line, const char *start, mbstate_t before_state,
                   size_t before_len)
@@ -84,8 +84,8 @@ check_word_start (const char *line, const char *start, mbstate_t before_state,
   return !check_word_part (start - before_len, &before_state);
 }
 
-/* Check if the character at the position len bytes after start is the end of a
-   word.  */
+/* Checks if the character at the position len bytes after start is the end of
+   a word.  */
 static bool
 check_word_end (const char *start, size_t len, mbstate_t start_state)
 {
@@ -323,8 +323,7 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
               /* Check whole word in two steps.  */
               if (check_word_start (line, first, before_state, before_len))
                 {
-                  if (check_word_end (first, match[0].rm_eo - so,
-                                      first_state))
+                  if (check_word_end (first, match[0].rm_eo - so, first_state))
                     return 0;
                   /* Check if a shorter match is possible.  */
                   eo = find_last_word_gap (start, so, match[0].rm_eo,
@@ -483,12 +482,7 @@ free_replace (replace_t *replacement)
   if (replacement->part != NULL)
     {
       for (i = 0; i < replacement->nsub + 1; i++)
-        {
-          if (replacement->part[i] != NULL)
-            {
-              free (replacement->part[i]);
-            }
-        }
+        free (replacement->part[i]);
       free (replacement->part);
       replacement->part = NULL;
     }
@@ -529,7 +523,7 @@ parse_replace (const char *string, replace_t *replacement)
     return SUCCESS;
 
   /* Do three swipes over string.  */
-  /* First swipe: count number of subpatterns.  */
+  /* First swipe: count number of sub-expressions.  */
   memset (&state, 0, sizeof (state));
   next = string;
   while (*next != '\0')

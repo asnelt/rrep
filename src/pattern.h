@@ -37,8 +37,8 @@ typedef struct
   size_t string_len; /* Length of string.  */
   char **part; /* Parts of the replacement string.  */
   size_t *part_len; /* Lengths of the parts.  */
-  int *sub; /* Indices of regular expression subpatterns.  */
-  size_t nsub; /* Number of subpatterns in replacement.  */
+  int *sub; /* Indices of regular expression sub-expressions.  */
+  size_t nsub; /* Number of sub-expressions in replacement.  */
 } replace_t;
 
 /* Determines the byte length of the multibyte character at position pos and

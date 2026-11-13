@@ -137,7 +137,7 @@ read_line (FILE *fp, char **line, size_t *line_len, const char *file_name)
                   return FAILURE;
                 }
               /* Reallocate memory.  */
-              tmp = realloc (buffer, 2 * buffer_size);
+              tmp = (char *) realloc (buffer, 2 * buffer_size);
               if (tmp == NULL)
                 {
                   rrep_error (ERR_REALLOC_BUFFER, file_name);
@@ -208,7 +208,7 @@ append_verbose (const char *string, const size_t string_len,
             }
           new_size *= 2;
         }
-      tmp = realloc (verbose_buffer, new_size);
+      tmp = (char *) realloc (verbose_buffer, new_size);
       if (tmp == NULL)
         {
           rrep_error (ERR_ALLOC_VERBOSE, file_name);

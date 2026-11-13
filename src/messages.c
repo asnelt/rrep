@@ -42,14 +42,13 @@
 void
 print_version (void)
 {
-  printf ("%s\n\n", PACKAGE_STRING);
+  printf ("%s\n", PACKAGE_STRING);
   printf (_("\
 Copyright (C) 2011, 2013, 2019, 2022, 2026 %s\n\
 License GPLv3+: GNU GPL version 3 or later \
 <https://gnu.org/licenses/gpl.html>\n\
 This is free software: you are free to change and redistribute it.\n\
 There is NO WARRANTY, to the extent permitted by law.\n"), AUTHORS);
-  printf ("\n");
 }
 
 /* Prints usage information to fp.  */
@@ -71,36 +70,35 @@ Replace PATTERN by REPLACEMENT in each FILE or standard input.\n"));
 PATTERN is, by default, a basic regular expression (BRE).  REPLACEMENT may\n\
 contain the special character & to refer to that portion of the line which\n\
 matched, and the special escapes \\1 through \\9 to refer to the\n\
-corresponding matching sub-expressions in PATTERN.\n"));
+corresponding matching sub-expressions in PATTERN.  \\\\, \\& and \\n insert\n\
+a backslash, & and newline, respectively.\n"));
   printf (_("Example: %s 'hello world' 'Hello, World!' menu.h main.c\n"),
           program_name);
   printf ("\n");
   printf (_("\
 Options:\n\
-  -E, --extended-regexp          PATTERN is an extended regular expression\
- (ERE)\n\
+  -E, --extended-regexp          PATTERN is an extended regular expression\n\
   -F, --fixed-strings            PATTERN and REPLACEMENT are fixed strings\n\
   -r, --recursive                process directories recursively\n\
   -R, --dereference-recursive    likewise, but follow all symbolic links\n\
       --include=FILE_PATTERN     process only files that match FILE_PATTERN\n\
-      --exclude=FILE_PATTERN     files that match FILE_PATTERN will be\
- skipped\n\
-      --exclude-dir=DIR_PATTERN  directories that match DIR_PATTERN will be\
- skipped\n\
-  -S, --suffix=SUFFIX            backup with suffix SUFFIX\n\
+      --exclude=FILE_PATTERN     skip files that match FILE_PATTERN\n\
+      --exclude-dir=DIR_PATTERN  skip directories that match DIR_PATTERN\n\
+  -S, --suffix=SUFFIX            override default backup suffix\n\
   -V, --version                  print version information and exit\n\
   -a, --all                      do not ignore files starting with .\n\
-  -b                             backup before overwriting files\n\
-      --backup[=CONTROL]         like -b but accepts a version control\
+  -b                             back up before overwriting files\n\
+      --backup[=CONTROL]         like -b but accept a version control\
  argument\n\
       --binary                   do not ignore binary files\n\
-      --dry-run                  simulation mode\n\
+      --dry-run                  simulate replacement without modifying\
+ files\n\
   -e, --regexp=PATTERN           use PATTERN for matching\n\
   -h, --help                     display this help and exit\n\
   -i, --ignore-case              ignore case distinctions\n\
+      --interactive              prompt before modifying a file\n\
       --keep-times               keep access and modification times\n\
   -p, --replace-with=REPLACEMENT use REPLACEMENT for substitution\n\
-      --interactive              prompt before modifying a file\n\
   -q, --quiet, --silent          suppress all normal messages\n\
   -s, --no-messages              suppress error messages\n\
   -v, --verbose                  print changed lines\n\
@@ -130,7 +128,7 @@ void
 print_invocation (void)
 {
   print_usage (stderr);
-  fprintf (stderr, _("Try `%s --help' for more information.\n"), program_name);
+  fprintf (stderr, _("Try '%s --help' for more information.\n"), program_name);
 }
 
 /* Prints the error message of saved_errno.  */
@@ -197,12 +195,12 @@ rrep_error (const int errcode, const char *file_name)
       break;
     case ERR_ALLOC_FILEBUFFER:
       fprintf (stderr,
-               _("%s: %s: could not allocate memory for file_buffer: "),
+               _("%s: %s: could not allocate memory for file buffer: "),
                program_name, file_name);
       print_errno (saved_errno);
       break;
     case ERR_ALLOC_FILELIST:
-      fprintf (stderr, _("%s: could not allocate memory for file_list: "),
+      fprintf (stderr, _("%s: could not allocate memory for file list: "),
                program_name);
       print_errno (saved_errno);
       break;
@@ -235,7 +233,7 @@ rrep_error (const int errcode, const char *file_name)
       break;
     case ERR_REALLOC_FILEBUFFER:
       fprintf (stderr, _("\
-%s: %s: could not reallocate memory for file_buffer: "), program_name,
+%s: %s: could not reallocate memory for file buffer: "), program_name,
                file_name);
       print_errno (saved_errno);
       break;
@@ -305,7 +303,7 @@ print_regerror (const int errcode, regex_t *compiled)
     return;
 
   len = regerror (errcode, compiled, NULL, 0);
-  message = malloc (len);
+  message = (char *) malloc (len * sizeof (char));
   if (message != NULL)
     {
       regerror (errcode, compiled, message, len);
@@ -406,9 +404,9 @@ print_dry (void)
 {
   if (options & OPT_DRY && !(options & OPT_QUIET))
     {
-      printf (_("Simulation mode: no files are modified.\n"));
+      printf (_("Simulation mode: no files are modified\n"));
       if (!(options & OPT_VERBOSE))
-        printf (_("PATTERN found in the following files:\n"));
+        printf (_("Pattern found in the following files:\n"));
     }
 }
 
