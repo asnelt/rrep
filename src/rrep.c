@@ -449,7 +449,11 @@ prepare_file_status (int fd)
     return;
   flags &= ~O_NONBLOCK;
   if (options & OPT_KEEP_TIMES && O_NOATIME != 0)
-    flags |= O_NOATIME;
+    {
+      if (fcntl (fd, F_SETFL, flags | O_NOATIME) == 0)
+        return;
+    }
+  /* O_NOATIME not required or failed, so try without.  */
   fcntl (fd, F_SETFL, flags);
 }
 
