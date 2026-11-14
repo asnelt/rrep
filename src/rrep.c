@@ -975,7 +975,8 @@ process_file_list (char **file_list, pattern_t *pattern,
         case FTS_D: /* Directory visited in preorder.  */
           if (ent->fts_level == FTS_ROOTLEVEL)
             {
-              if (!check_patterns (ent->fts_path, excluded_directory_patterns))
+              if (!check_patterns (ent->fts_path,
+                                   excluded_directory_patterns))
                 {
                   fts_set (fts, ent, FTS_SKIP);
                   break;
@@ -989,7 +990,8 @@ process_file_list (char **file_list, pattern_t *pattern,
                 }
             }
           else if (!(options & OPT_RECURSIVE)
-                   || !check_name (ent->fts_name, excluded_directory_patterns))
+                   || !check_name (ent->fts_name,
+                                   excluded_directory_patterns))
             {
               fts_set (fts, ent, FTS_SKIP);
               break;

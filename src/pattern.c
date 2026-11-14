@@ -323,7 +323,8 @@ match_pattern (pattern_t *pattern, const char *line, size_t line_len,
               /* Check whole word in two steps.  */
               if (check_word_start (line, first, before_state, before_len))
                 {
-                  if (check_word_end (first, match[0].rm_eo - so, first_state))
+                  if (check_word_end
+                      (first, match[0].rm_eo - so, first_state))
                     return 0;
                   /* Check if a shorter match is possible.  */
                   eo = find_last_word_gap (start, so, match[0].rm_eo,
@@ -685,7 +686,7 @@ check_replace (const pattern_t *pattern, const replace_t *replacement)
     if ((size_t) replacement->sub[i] > pattern->compiled->re_nsub)
       {
         escape_substring[0] = '\\';
-        escape_substring[1] = '0' + replacement->sub[i];
+        escape_substring[1] = (char) ('0' + replacement->sub[i]);
         escape_substring[2] = '\0';
         rrep_error (ERR_INVALID_REFERENCE, escape_substring);
         return FAILURE;

@@ -45,10 +45,10 @@ print_version (void)
   printf ("%s\n", PACKAGE_STRING);
   printf (_("\
 Copyright (C) 2011, 2013, 2019, 2022, 2026 %s\n\
-License GPLv3+: GNU GPL version 3 or later \
-<https://gnu.org/licenses/gpl.html>\n\
+License GPLv3+: GNU GPL version 3 or later <%s>\n\
 This is free software: you are free to change and redistribute it.\n\
-There is NO WARRANTY, to the extent permitted by law.\n"), AUTHORS);
+There is NO WARRANTY, to the extent permitted by law.\n"),
+          AUTHORS, "https://gnu.org/licenses/gpl.html");
 }
 
 /* Prints usage information to fp.  */
