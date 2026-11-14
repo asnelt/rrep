@@ -191,7 +191,7 @@ The backup suffix is appended to the file name.
 For a simple backup, the suffix is @samp{~}, unless set with @samp{--suffix}
 or @env{SIMPLE_BACKUP_SUFFIX}.
 For a numbered backup, the suffix is @samp{.~@var{n}~}.
-Older backups are replaced.
+An existing simple backup is replaced.
 The version control method may be selected via the @samp{--backup} option or
 through the @env{VERSION_CONTROL} environment variable, where @samp{existing}
 is the default.
@@ -224,7 +224,7 @@ This option can be used to specify a pattern beginning with @samp{-}.
 @item -h
 @itemx --help
 @cindex help
-Display a help message that describes the command line options and exit.
+Display a help message that describes the command-line options and exit.
 
 @item -i
 @itemx --ignore-case
