@@ -337,10 +337,12 @@ print_file_header (const char *file_name)
           file_name, color_flag ? ANSI_RESET : "");
 }
 
-/* Prints replacement details for a line.  */
-void
-print_line_replacement (const size_t line_num, const char *old_line,
-                        size_t old_len, const char *new_line, size_t new_len)
+/* Prints replacement details for a line and returns the number of lines in the
+   replacement.  */
+size_t
+print_line_replacement (const size_t old_line_num, const size_t new_line_num,
+                        const char *old_line, size_t old_len,
+                        const char *new_line, size_t new_len)
 {
   bool color_flag;
   size_t i, line_counter;
@@ -364,11 +366,11 @@ print_line_replacement (const size_t line_num, const char *old_line,
   if (color_flag)
     fputs (ANSI_CYAN, stdout);
   if (line_counter > 1)
-    printf ("@@ -%lu +%lu,%lu @@", (unsigned long) line_num,
-            (unsigned long) line_num, (unsigned long) line_counter);
+    printf ("@@ -%lu +%lu,%lu @@", (unsigned long) old_line_num,
+            (unsigned long) new_line_num, (unsigned long) line_counter);
   else
-    printf ("@@ -%lu +%lu @@", (unsigned long) line_num,
-            (unsigned long) line_num);
+    printf ("@@ -%lu +%lu @@", (unsigned long) old_line_num,
+            (unsigned long) new_line_num);
   if (color_flag)
     fputs (ANSI_RESET, stdout);
   putchar ('\n');
@@ -396,6 +398,8 @@ print_line_replacement (const size_t line_num, const char *old_line,
         putchar ('\n');
         next_start = i + 1;
       }
+
+  return line_counter;
 }
 
 /* Prints the simulation message.  */

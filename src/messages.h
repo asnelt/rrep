@@ -82,9 +82,10 @@ extern void print_file_name (const char *);
 /* Prints a header for a changed file.  */
 extern void print_file_header (const char *);
 
-/* Prints replacement details for a line.  */
-extern void print_line_replacement (const size_t, const char *, size_t,
-                                    const char *, size_t);
+/* Prints replacement details for a line and returns the number of lines in the
+   replacement.  */
+extern size_t print_line_replacement (const size_t, const size_t, const char *,
+                                      size_t, const char *, size_t);
 
 /* Prints the simulation message.  */
 extern void print_dry (void);

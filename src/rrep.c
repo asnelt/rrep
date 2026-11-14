@@ -207,7 +207,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
                 const replace_t *replacement, const char *file_name,
                 size_t *file_len, size_t first_line_num)
 {
-  size_t line_num, line_len, start_len, before_len, adv_len;
+  size_t line_num, diff_line_num, line_len, start_len, before_len, adv_len;
   char *line, *start, *pos;
   int rr; /* Return value of read_line.  */
   int errcode; /* Return value of regexec.  */
@@ -238,6 +238,7 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
     }
 
   line_num = first_line_num - 1;
+  diff_line_num = 0;
   header_flag = false;
   line = NULL;
   /* Copy in to out with replaced string.  */
@@ -341,8 +342,11 @@ replace_string (FILE *in, FILE *out, pattern_t *pattern,
               print_file_header (file_name);
               header_flag = true;
             }
-          print_line_replacement (line_num, line, line_len, verbose_buffer,
-                                  verbose_buffer_fill);
+          diff_line_num += print_line_replacement (line_num,
+                                                   line_num + diff_line_num,
+                                                   line, line_len,
+                                                   verbose_buffer,
+                                                   verbose_buffer_fill) - 1;
         }
     }
   /* Set file_len if we are using file_buffer.  */
