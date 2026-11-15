@@ -23,7 +23,7 @@ rrep
 
 The ‘rrep’ utility replaces patterns in files.
 
-   This manual is for version 1.4.0 of rrep.
+   This manual is for version 1.4.1 of rrep.
 
    This file documents the ‘rrep’ utility which replaces patterns in
 files.
@@ -69,24 +69,24 @@ File: rrep.info,  Node: Invoking,  Next: Usage,  Prev: Introduction,  Up: Top
 
 The synopsis of ‘rrep’ is
 
-     rrep OPTIONS PATTERN REPLACEMENT INPUT_FILE_NAMES
+     rrep [OPTION]... PATTERN REPLACEMENT [FILE]...
 
-There can be zero or more OPTIONS.  PATTERN is, by default, a basic
-regular expression (BRE) that is searched in the INPUT_FILE_NAMES and
-replaced by REPLACEMENT.  REPLACEMENT may contain the special character
-‘&’ to refer to that portion of the line which matched, and the special
-escapes ‘\1’ through ‘\9’ to refer to the corresponding matching
-sub-expressions in PATTERN.  ‘\\’, ‘\&’ and ‘\n’ insert a ‘\’, ‘&’ and
-newline, respectively.  PATTERN and REPLACEMENT can also be set by the
-options ‘-e PATTERN’ and ‘-p REPLACEMENT’.  In that case, all the
-arguments following the options are seen as input files.  If no
-INPUT_FILE_NAMES are specified, or if ‘-’ is given as the only input
-file, then the standard input is read and the result is written to the
-standard output.  A file named ‘-’ can be given as ‘./-’.
+There can be zero or more options.  PATTERN is, by default, a basic
+regular expression (BRE) that is searched in each FILE and replaced by
+REPLACEMENT.  REPLACEMENT may contain the special character ‘&’ to refer
+to that portion of the line which matched, and the special escapes ‘\1’
+through ‘\9’ to refer to the corresponding matching sub-expressions in
+PATTERN.  ‘\\’, ‘\&’ and ‘\n’ insert a ‘\’, ‘&’ and newline,
+respectively.  PATTERN and REPLACEMENT can also be set by the options
+‘-e PATTERN’ and ‘-p REPLACEMENT’.  In that case, all the arguments
+following the options are seen as input files.  If no FILE is specified,
+or if ‘-’ is given as the only input file, then the standard input is
+read and the result is written to the standard output.  A file named ‘-’
+can be given as ‘./-’.
 
 * Menu:
 
-* Command-line Options::        Short and long names, grouped by category.
+* Command-line Options::        Short and long option names.
 * Exit Status::                 Exit status returned by ‘rrep’.
 
 
@@ -97,38 +97,38 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
 
 ‘-E’
 ‘--extended-regexp’
-     PATTERN is interpreted as an extended regular expression (ERE).
+     Interpret PATTERN as an extended regular expression (ERE).
 
 ‘-F’
 ‘--fixed-strings’
-     PATTERN and REPLACEMENT are interpreted as fixed strings, not as
-     regular expressions or escape sequences.
+     Interpret PATTERN and REPLACEMENT as fixed strings, not as regular
+     expressions or escape sequences.
 
 ‘-r’
 ‘--recursive’
-     Each directory that is given on the command line is processed
+     Process each directory that is given on the command line
      recursively.  Files and sub-directories starting with the ‘.’
      character are, by default, ignored, as are symbolic links, except
      if given on the command line.
 
 ‘-R’
 ‘--dereference-recursive’
-     Like recursive replacement, but all symbolic links are followed.
+     Like ‘--recursive’, but follow all symbolic links.
 
 ‘--include=FILE_PATTERN’
-     Only files are processed that match the pattern FILE_PATTERN.  For
+     Process only files that match the pattern FILE_PATTERN.  For
      conflicting ‘--include’ and ‘--exclude’ options, the last matching
      option is used.  ‘*’, ‘?’, and ‘[’...‘]’  can be used as wildcards
      in FILE_PATTERN.  Wildcards and backslash characters can be quoted
      with ‘\’.
 
 ‘--exclude=FILE_PATTERN’
-     Files that match the pattern FILE_PATTERN will be skipped, using
-     wildcard matching as described under ‘--include’.
+     Skip files that match the pattern FILE_PATTERN, using wildcard
+     matching as described under ‘--include’.
 
 ‘--exclude-dir=DIR_PATTERN’
-     Directories that match DIR_PATTERN will be skipped, using wildcard
-     matching as described under ‘--include’.
+     Skip directories that match DIR_PATTERN, using wildcard matching as
+     described under ‘--include’.
 
 ‘-S SUFFIX’
 ‘--suffix=SUFFIX’
@@ -137,28 +137,26 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
 
 ‘-V’
 ‘--version’
-     Print the version number of ‘rrep’.
+     Print version information and exit.
 
 ‘-a’
 ‘--all’
-     Files and sub-directories starting with the ‘.’ character in
-     recursively processed directories (see ‘--recursive’) are processed
-     as well.
+     Also process files and sub-directories starting with the ‘.’
+     character in recursively processed directories (see ‘--recursive’).
 
 ‘-b’
-     Backup before overwriting files.  The backup files are written into
-     the directory of the original file.  Equivalent to ‘--backup’
+     Back up before overwriting files.  The backup files are written
+     into the directory of the original file.  Equivalent to ‘--backup’
      without an argument.
 
 ‘--backup[=CONTROL]’
-     Like ‘-b’ but accepts a version control argument.  The backup
-     suffix is appended to the file name.  For a simple backup, the
-     suffix is ‘~’, unless set with ‘--suffix’ or
-     ‘SIMPLE_BACKUP_SUFFIX’.  For a numbered backup, the suffix is
-     ‘.~N~’.  Older backups are replaced.  The version control method
-     may be selected via the ‘--backup’ option or through the
-     ‘VERSION_CONTROL’ environment variable, where ‘existing’ is the
-     default.  Here are the values:
+     Like ‘-b’ but accept a version control argument.  The backup suffix
+     is appended to the file name.  For a simple backup, the suffix is
+     ‘~’, unless set with ‘--suffix’ or ‘SIMPLE_BACKUP_SUFFIX’.  For a
+     numbered backup, the suffix is ‘.~N~’.  An existing simple backup
+     is replaced.  The version control method may be selected via the
+     ‘--backup’ option or through the ‘VERSION_CONTROL’ environment
+     variable, where ‘existing’ is the default.  Here are the values:
         • ‘none’, ‘off’: never make backups (even if ‘--backup’ is
           given)
         • ‘numbered’, ‘t’: make numbered backups
@@ -171,7 +169,7 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
      contains the null character ‘\0’.
 
 ‘--dry-run’
-     The replacement is just simulated.  No file is actually modified.
+     Simulate the replacement.  No file is actually modified.
 
 ‘-e PATTERN’
 ‘--regexp=PATTERN’
@@ -180,33 +178,33 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
 
 ‘-h’
 ‘--help’
-     Display a help message that describes the command line options and
-     exit afterwards.
+     Display a help message that describes the command-line options and
+     exit.
 
 ‘-i’
 ‘--ignore-case’
-     Case distinctions in PATTERN are ignored.
+     Ignore case distinctions in PATTERN.
+
+‘--interactive’
+     Prompt the user each time before a file is modified.  The user can
+     then cancel the modification.
 
 ‘--keep-times’
-     The original access and modification times of files and directories
-     are restored after processing.
+     Restore the original access and modification times of files and
+     directories after processing.
 
 ‘-p REPLACEMENT’
 ‘--replace-with=REPLACEMENT’
      Use REPLACEMENT for substitution.
 
-‘--interactive’
-     Each time before a file is modified the user is prompted and can
-     cancel the modification.
-
 ‘-q’
 ‘--quiet’
 ‘--silent’
-     All normal output messages are suppressed.
+     Suppress all normal output messages.
 
 ‘-s’
 ‘--no-messages’
-     All error messages are suppressed.
+     Suppress all error messages.
 
 ‘-v’
 ‘--verbose’
@@ -214,11 +212,11 @@ File: rrep.info,  Node: Command-line Options,  Next: Exit Status,  Up: Invoking
 
 ‘-w’
 ‘--word-regexp’
-     Only those matches of PATTERN are replaced that match whole words.
+     Replace only those matches of PATTERN that match whole words.
 
 ‘-x’
 ‘--line-regexp’
-     Only those matches of PATTERN are replaced that match whole lines.
+     Replace only those matches of PATTERN that match whole lines.
 
 
 File: rrep.info,  Node: Exit Status,  Prev: Command-line Options,  Up: Invoking
@@ -242,10 +240,10 @@ string ‘Hello, World!’ in the files ‘menu.h’ and ‘main.c’.
      rrep -i 'hello.*world!*' 'Hello, world!' menu.h main.c
 
 All occurrences of the pattern ‘hello.*world!*’ like ‘hello world’,
-‘hello, world’, or ‘hello,, world!!’ (see regular expressions) are
-replaced by the string ‘Hello, world!’ in the files ‘menu.h’ and
-‘main.c’.  The ‘-i’ option causes ‘rrep’ to ignore cases, so, for
-instance, ‘HeLLo WoRlD’ will be replaced as well.
+‘hello, world’, or ‘hello,, world!!’ are replaced by the string ‘Hello,
+world!’ in the files ‘menu.h’ and ‘main.c’.  The ‘-i’ option causes
+‘rrep’ to ignore case, so, for instance, ‘HeLLo WoRlD’ will be replaced
+as well.
 
      rrep -e '-hello' --dry-run --verbose 'Hello' menu.h main.c
 
@@ -345,9 +343,8 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
 
                      Version 1.3, 3 November 2008
 
-     Copyright © 2000-2002, 2007-2008, 2010 Free Software Foundation,
-     Inc.
-     <http://fsf.org/>
+     Copyright © 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
+     <https://fsf.org/>
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
@@ -744,7 +741,7 @@ File: rrep.info,  Node: GNU Free Documentation License,  Up: Copying
      the GNU Free Documentation License from time to time.  Such new
      versions will be similar in spirit to the present version, but may
      differ in detail to address new problems or concerns.  See
-     <http://www.gnu.org/copyleft/>.
+     <https://www.gnu.org/licenses/>.
 
      Each version of the License is given a distinguishing version
      number.  If the Document specifies that a particular numbered
@@ -805,7 +802,7 @@ notices just after the title page:
        Free Documentation License''.
 
    If you have Invariant Sections, Front-Cover Texts and Back-Cover
-Texts, replace the "with...Texts."  line with this:
+Texts, replace the "with...Texts." line with this:
 
          with the Invariant Sections being LIST THEIR TITLES, with
          the Front-Cover Texts being LIST, and with the Back-Cover Texts
@@ -832,9 +829,9 @@ Index
 * all regular files:                     Command-line Options.
                                                               (line  52)
 * backup:                                Command-line Options.
-                                                              (line  57)
+                                                              (line  56)
 * binary files:                          Command-line Options.
-                                                              (line  78)
+                                                              (line  76)
 * bugs:                                  Reporting Bugs.      (line   6)
 * copying:                               Copying.             (line   6)
 * exclude directories:                   Command-line Options.
@@ -847,58 +844,58 @@ Index
 * fixed strings:                         Command-line Options.
                                                               (line  12)
 * help:                                  Command-line Options.
-                                                              (line  91)
+                                                              (line  89)
 * ignore case:                           Command-line Options.
-                                                              (line  96)
+                                                              (line  94)
 * include files:                         Command-line Options.
                                                               (line  27)
 * interactive:                           Command-line Options.
-                                                              (line 107)
+                                                              (line  97)
 * keep times:                            Command-line Options.
-                                                              (line  99)
+                                                              (line 101)
 * long backup:                           Command-line Options.
-                                                              (line  62)
+                                                              (line  61)
 * no messages:                           Command-line Options.
-                                                              (line 117)
-* pattern list:                          Command-line Options.
-                                                              (line  86)
+                                                              (line 115)
+* pattern:                               Command-line Options.
+                                                              (line  84)
 * problems:                              Reporting Bugs.      (line   6)
 * quiet:                                 Command-line Options.
-                                                              (line 113)
+                                                              (line 111)
 * recursive replacement:                 Command-line Options.
                                                               (line  17)
-* recursive replacement with symlink following: Command-line Options.
+* recursive replacement with symbolic link following: Command-line Options.
                                                               (line  24)
 * replacement string:                    Command-line Options.
-                                                              (line 104)
+                                                              (line 106)
 * replacing a pattern in multiple files: Introduction.        (line   6)
 * return status:                         Exit Status.         (line   6)
 * simulation:                            Command-line Options.
-                                                              (line  82)
+                                                              (line  80)
 * suffix:                                Command-line Options.
                                                               (line  43)
 * usage, examples:                       Usage.               (line   6)
 * verbose:                               Command-line Options.
-                                                              (line 121)
+                                                              (line 119)
 * version:                               Command-line Options.
                                                               (line  48)
 * whole lines:                           Command-line Options.
-                                                              (line 129)
+                                                              (line 127)
 * whole words:                           Command-line Options.
-                                                              (line 125)
+                                                              (line 123)
 
 
 Tag Table:
 Node: Top751
 Node: Introduction1553
 Node: Invoking2129
-Node: Command-line Options3361
-Node: Exit Status7594
-Node: Usage7762
-Node: Reporting Bugs10963
-Node: Copying11571
-Node: GNU Free Documentation License12661
-Node: Index37767
+Node: Command-line Options3320
+Node: Exit Status7442
+Node: Usage7610
+Node: Reporting Bugs10784
+Node: Copying11392
+Node: GNU Free Documentation License12482
+Node: Index37586
 
 End Tag Table
 

@@ -16,7 +16,7 @@ dnl
 dnl You should have received a copy of the GNU General Public License
 dnl along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-AC_INIT([rrep], [1.4.0], [asnelt@asnelt.org])
+AC_INIT([rrep], [1.4.1], [asnelt@asnelt.org])
 
 AC_CONFIG_AUX_DIR(build-aux)
 AC_CONFIG_SRCDIR(src/rrep.c)
