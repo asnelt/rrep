@@ -1,5 +1,5 @@
 /* rrep.h - declarations for rrep, a search and replace utility.
-   Copyright (C) 2011, 2026 Arno Onken <asnelt@asnelt.org>
+   Copyright (C) 2011, 2022, 2026 Arno Onken <asnelt@asnelt.org>
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #define OPT_ALL         0x0001 /* Process all files.  */
 #define OPT_BACKUP      0x0002 /* Backup files.  */
 #define OPT_BINARY      0x0004 /* Process binary files as well.  */
-#define OPT_DEREF       0x0008 /* Follow all symlinks.  */
+#define OPT_DEREF       0x0008 /* Follow all symbolic links.  */
 #define OPT_DRY         0x0010 /* Do not modify any files.  */
 #define OPT_FIXED       0x0020 /* Fixed strings PATTERN and REPLACEMENT.  */
 #define OPT_ICASE       0x0040 /* Ignore case distinctions.  */

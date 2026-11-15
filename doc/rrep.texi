@@ -88,13 +88,13 @@ If processed, a null character in a binary file also ends a line.
 The synopsis of @command{rrep} is
 
 @example
-rrep @var{options} @var{pattern} @var{replacement} @var{input_file_names}
+rrep [@var{option}]@dots{} @var{pattern} @var{replacement} [@var{file}]@dots{}
 @end example
 
 @noindent
-There can be zero or more @var{options}.
+There can be zero or more options.
 @var{pattern} is, by default, a basic regular expression (BRE) that is searched
-in the @var{input_file_names} and replaced by @var{replacement}.
+in each @var{file} and replaced by @var{replacement}.
 @var{replacement} may contain the special character @samp{&} to refer to that
 portion of the line which matched, and the special escapes @samp{\1}
 through @samp{\9} to refer to the corresponding matching sub-expressions in
@@ -104,13 +104,13 @@ respectively.
 @var{pattern} and @var{replacement} can also be set by the options
 @samp{-e @var{pattern}} and @samp{-p @var{replacement}}.
 In that case, all the arguments following the options are seen as input files.
-If no @var{input_file_names} are specified, or if @samp{-} is given as the only
-input file, then the standard input is read and the result is written to the
-standard output.
+If no @var{file} is specified, or if @samp{-} is given as the only input file,
+then the standard input is read and the result is written to the standard
+output.
 A file named @samp{-} can be given as @samp{./-}.
 
 @menu
-* Command-line Options::        Short and long names, grouped by category.
+* Command-line Options::        Short and long option names.
 * Exit Status::                 Exit status returned by @command{rrep}.
 @end menu
 
@@ -122,29 +122,29 @@ A file named @samp{-} can be given as @samp{./-}.
 @item -E
 @itemx --extended-regexp
 @cindex extended regular expression
-@var{pattern} is interpreted as an extended regular expression (ERE).
+Interpret @var{pattern} as an extended regular expression (ERE).
 
 @item -F
 @itemx --fixed-strings
 @cindex fixed strings
-@var{pattern} and @var{replacement} are interpreted as fixed strings, not as
-regular expressions or escape sequences.
+Interpret @var{pattern} and @var{replacement} as fixed strings, not as regular
+expressions or escape sequences.
 
 @item -r
 @itemx --recursive
 @cindex recursive replacement
-Each directory that is given on the command line is processed recursively.
+Process each directory that is given on the command line recursively.
 Files and sub-directories starting with the @samp{.} character are, by default,
 ignored, as are symbolic links, except if given on the command line.
 
 @item -R
 @itemx --dereference-recursive
-@cindex recursive replacement with symlink following
-Like recursive replacement, but all symbolic links are followed.
+@cindex recursive replacement with symbolic link following
+Like @samp{--recursive}, but follow all symbolic links.
 
 @item --include=@var{file_pattern}
 @cindex include files
-Only files are processed that match the pattern @var{file_pattern}.
+Process only files that match the pattern @var{file_pattern}.
 For conflicting @samp{--include} and @samp{--exclude} options, the last
 matching option is used.
 @samp{*}, @samp{?}, and @samp{[}...@samp{]} can be used as wildcards in
@@ -153,13 +153,13 @@ Wildcards and backslash characters can be quoted with @code{\}.
 
 @item --exclude=@var{file_pattern}
 @cindex exclude files
-Files that match the pattern @var{file_pattern} will be skipped, using wildcard
-matching as described under @samp{--include}.
+Skip files that match the pattern @var{file_pattern}, using wildcard matching
+as described under @samp{--include}.
 
 @item --exclude-dir=@var{dir_pattern}
 @cindex exclude directories
-Directories that match @var{dir_pattern} will be skipped, using wildcard
-matching as described under @samp{--include}.
+Skip directories that match @var{dir_pattern}, using wildcard matching as
+described under @samp{--include}.
 
 @item -S @var{suffix}
 @itemx --suffix=@var{suffix}
@@ -170,28 +170,28 @@ This option implicitly activates backups.
 @item -V
 @itemx --version
 @cindex version
-Print the version number of @command{rrep}.
+Print version information and exit.
 
 @item -a
 @itemx --all
 @cindex all regular files
-Files and sub-directories starting with the @samp{.} character in recursively
-processed directories (see @samp{--recursive}) are processed as well.
+Also process files and sub-directories starting with the @samp{.} character in
+recursively processed directories (see @samp{--recursive}).
 
 @item -b
 @cindex backup
-Backup before overwriting files.
+Back up before overwriting files.
 The backup files are written into the directory of the original file.
 Equivalent to @samp{--backup} without an argument.
 
 @item --backup[=@var{control}]
 @cindex long backup
-Like @samp{-b} but accepts a version control argument.
+Like @samp{-b} but accept a version control argument.
 The backup suffix is appended to the file name.
 For a simple backup, the suffix is @samp{~}, unless set with @samp{--suffix}
 or @env{SIMPLE_BACKUP_SUFFIX}.
 For a numbered backup, the suffix is @samp{.~@var{n}~}.
-Older backups are replaced.
+An existing simple backup is replaced.
 The version control method may be selected via the @samp{--backup} option or
 through the @env{VERSION_CONTROL} environment variable, where @samp{existing}
 is the default.
@@ -212,51 +212,50 @@ A file is regarded as binary if it contains the null character @samp{\0}.
 
 @item --dry-run
 @cindex simulation
-The replacement is just simulated.
+Simulate the replacement.
 No file is actually modified.
 
 @item -e @var{pattern}
 @itemx --regexp=@var{pattern}
-@cindex pattern list
+@cindex pattern
 Use @var{pattern} for matching.
 This option can be used to specify a pattern beginning with @samp{-}.
 
 @item -h
 @itemx --help
 @cindex help
-Display a help message that describes the command line options and exit
-afterwards.
+Display a help message that describes the command-line options and exit.
 
 @item -i
 @itemx --ignore-case
 @cindex ignore case
-Case distinctions in @var{pattern} are ignored.
+Ignore case distinctions in @var{pattern}.
+
+@item --interactive
+@cindex interactive
+Prompt the user each time before a file is modified.
+The user can then cancel the modification.
 
 @item --keep-times
 @cindex keep times
-The original access and modification times of files and directories are
-restored after processing.
+Restore the original access and modification times of files and directories
+after processing.
 
 @item -p @var{replacement}
 @itemx --replace-with=@var{replacement}
 @cindex replacement string
 Use @var{replacement} for substitution.
 
-@item --interactive
-@cindex interactive
-Each time before a file is modified the user is prompted and can cancel the
-modification.
-
 @item -q
 @itemx --quiet
 @itemx --silent
 @cindex quiet
-All normal output messages are suppressed.
+Suppress all normal output messages.
 
 @item -s
 @itemx --no-messages
 @cindex no messages
-All error messages are suppressed.
+Suppress all error messages.
 
 @item -v
 @itemx --verbose
@@ -266,12 +265,12 @@ Print changed lines together with the corresponding original lines.
 @item -w
 @itemx --word-regexp
 @cindex whole words
-Only those matches of @var{pattern} are replaced that match whole words.
+Replace only those matches of @var{pattern} that match whole words.
 
 @item -x
 @itemx --line-regexp
 @cindex whole lines
-Only those matches of @var{pattern} are replaced that match whole lines.
+Replace only those matches of @var{pattern} that match whole lines.
 
 @end table
 
@@ -302,10 +301,9 @@ rrep -i 'hello.*world!*' 'Hello, world!' menu.h main.c
 
 @noindent
 All occurrences of the pattern @samp{hello.*world!*} like @samp{hello world},
-@samp{hello, world}, or @samp{hello,, world!!} (see regular expressions) are
-replaced by the string @samp{Hello, world!} in the files @samp{menu.h} and
-@samp{main.c}.
-The @samp{-i} option causes @command{rrep} to ignore cases, so, for instance,
+@samp{hello, world}, or @samp{hello,, world!!} are replaced by the string
+@samp{Hello, world!} in the files @samp{menu.h} and @samp{main.c}.
+The @samp{-i} option causes @command{rrep} to ignore case, so, for instance,
 @samp{HeLLo WoRlD} will be replaced as well.
 
 @example
