@@ -1,3 +1,10 @@
+rrep (1.4.1-1) unstable; urgency=low
+
+  * New upstream release.
+  * Updated copyright for the new copy of the GFDL in doc/fdl.texi.
+
+ -- Arno Onken <asnelt@asnelt.org>  Sun, 15 Nov 2026 18:42:00 +0000
+
 rrep (1.4.0-1) unstable; urgency=low
 
   * New upstream release.
