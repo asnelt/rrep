@@ -1,3 +1,38 @@
+2026-11-15 16:56  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.in.1: Used ISO date for documentation.
+
+2026-11-14 23:02  Arno Onken  <asnelt@asnelt.org>
+
+	* fdl.texi, rrep.in.1, rrep.texi: Fixed documentation format issues.
+
+2026-11-14 17:06  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, pattern.c, rrep.c: Silenced GNU indent and
+	  xgettext warnings.
+
+2026-11-14 15:44  Arno Onken  <asnelt@asnelt.org>
+
+	* rrep.c: Made file status handling more robust.
+
+2026-11-14 15:26  Arno Onken  <asnelt@asnelt.org>
+
+	* messages.c, messages.h, rrep.c: Fixed printed line numbers.
+
+2026-11-13 22:05  Arno Onken  <asnelt@asnelt.org>
+
+	* Makefile.am, rrep.in.1, rrep.texi, POTFILES.in, Makefile.am,
+	  bufferio.c, messages.c, messages.h, pattern.c, pattern.h, rrep.c,
+	  rrep.h: Improved consistency.
+
+2026-11-11 22:08  Arno Onken  <asnelt@asnelt.org>
+
+	* POTFILES.in: Added missing file with translatable string.
+
+2026-11-11 21:57  Arno Onken  <asnelt@asnelt.org>
+
+	* bufferio.c: Avoided zero length memcpy.
+
 2026-10-25 20:04  Arno Onken  <asnelt@asnelt.org>
 
 	* bufferio.c, rrep.c: Made size checks stricter.
